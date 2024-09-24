@@ -5,8 +5,6 @@ toc: false
 
 
 {{< cards >}}
-  {{< card link="docs" title="Для кого этот курс и кто такие техписы" icon="book-open" >}}
-  {{< card link="about" title="About" icon="user" >}}
-  {{< card link="about" title="About" icon="user" >}}
-  {{< card link="about" title="About" icon="user" >}}
+  {{< card link="docs" title="Мини-курс по техдокументации" icon="book-open" >}}
+  {{< card link="about" title="Контакты" icon="user" >}}
 {{< /cards >}}
