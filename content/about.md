@@ -1,5 +1,5 @@
 ---
-title: Контакты
+title: Об авторе
 type: about
 ---
 
