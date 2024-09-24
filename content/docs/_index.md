@@ -1,9 +1,9 @@
 ---
-title: Documentation
+title: Techdocush
 next: about-course
 ---
 
-This is a demo of the theme's documentation layout.
+Мини-курс по технической документации
 
 
 ```
