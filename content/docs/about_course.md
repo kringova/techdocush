@@ -2,7 +2,8 @@
 title: Что это и для кого
 type: docs
 prev: /
-next: docs/folder/
+next: why-needed
+weight: 2
 ---
 
 Что такое техническая документация, как и где её писать будет полезно знать:

@@ -1,8 +1,9 @@
 ---
 title: Зачем писать документацию 
 type: docs
-prev: /
-next: docs/folder/
+prev: about-course
+next: 
+weight: 2
 ---
 
 Или «как убедить тимлида открыть вакансию техписа»
