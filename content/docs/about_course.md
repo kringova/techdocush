@@ -1,5 +1,5 @@
 ---
-title: Для кого этот курс и кто такие техписы
+title: Что это и для кого
 type: docs
 prev: /
 next: docs/folder/
