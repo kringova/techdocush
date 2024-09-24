@@ -3,11 +3,10 @@ title: TehcdocUsh
 toc: false
 ---
 
-Привет!
-
-## Explore
 
 {{< cards >}}
-  {{< card link="docs" title="Docs" icon="book-open" >}}
+  {{< card link="docs" title="Для кого этот курс и кто такие техписы" icon="book-open" >}}
+  {{< card link="about" title="About" icon="user" >}}
+  {{< card link="about" title="About" icon="user" >}}
   {{< card link="about" title="About" icon="user" >}}
 {{< /cards >}}
