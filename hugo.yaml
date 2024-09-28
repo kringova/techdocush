@@ -4,7 +4,7 @@ title: Ringova
 # import hextra as module
 module:
   imports:
-  - path: github.com/imfing/hextra
+  - path: github.com/kringova/hextra
 
 markup:
   # allow raw html
