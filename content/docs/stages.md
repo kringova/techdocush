@@ -4,7 +4,7 @@ type: docs
 prev: /
 next: 
 weight: 
-hidden: true
+draft: true
 ---
 
 И разница между уровнями специалиста
