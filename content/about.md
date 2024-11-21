@@ -53,6 +53,7 @@ Head of Tech Editorial
 ## Образование
 
 Два технических вуза с упором в разработку, элективы по дизайну и управлению проектами
+
 ДПО в управлении и психологии
 
 {{% steps %}}
@@ -90,37 +91,27 @@ Head of Tech Editorial
 
 ### Спикер
 
-
-Я — начальник |
-    [One-to-one. Зачем разговаривать с сотрудниками. Екатерина Ушакова, Ozon Tech](https://vk.com/video-115026656_456239351)
-
-
-Слово Техлида |
-    [Подкаст с Екатериной Ушаковой: тонкости профессии технического писателя](https://vk.com/video-224033402_456239019)
-
-
-ТыжДевочка. Подкаст о девушках в ИТ |
-    [Технический писатель — это не только про ГОСТы](https://music.yandex.ru/album/17574609/track/105036662)
-
-Kaspersky Tech. База знаний здорового техписа | 
-    [Делаем Базу Знаний из подручных материалов](https://www.youtube.com/live/uWU0oPimbDQ?si=LCto4g9skh4tb19L&t=3160)
-
-TeamSnack TechWriters |
-    [Мастерство в технической докумнетации](https://www.youtube.com/live/KZ1g1EPuixw?si=hmwfb9bsh3NlLs9t&t=5288)
-
-[Стачка Ульяновск 2023](https://2023.nastachku.ru/) |
-    [Введение в техническую документацию](https://www.youtube.com/watch?v=K2EkkCMBbxU)
-
-
-[Стачка Ульяновск 2024](https://ul24.nastachku.ru/) |
-    [Агрегатные состояния внутренней документации](https://www.youtube.com/watch?v=Tc6_wuJFFdI)
+|  Активность  | Запись  |
+|--------------|---------|
+|  Подкаст Я — начальник | [One-to-one. Зачем разговаривать с сотрудниками. Екатерина Ушакова, Ozon Tech](https://vk.com/video-115026656_456239351)   |
+| Подкаст Слово Техлида | [Подкаст с Екатериной Ушаковой: тонкости профессии технического писателя](https://vk.com/video-224033402_456239019) |
+| Подкаст ТыжДевочка. Подкаст о девушках в ИТ |
+    [Технический писатель — это не только про ГОСТы](https://music.yandex.ru/album/17574609/track/105036662) |
+| Митап Kaspersky Tech. База знаний здорового техписа | 
+    [Делаем Базу Знаний из подручных материалов](https://www.youtube.com/live/uWU0oPimbDQ?si=LCto4g9skh4tb19L&t=3160) |
+| Митап TeamSnack TechWriters |
+    [Мастерство в технической докумнетации](https://www.youtube.com/live/KZ1g1EPuixw?si=hmwfb9bsh3NlLs9t&t=5288) |
+| Конференция [Стачка Ульяновск 2023](https://2023.nastachku.ru/) |
+    [Введение в техническую документацию](https://www.youtube.com/watch?v=K2EkkCMBbxU) |
+| Конференция [Стачка Ульяновск 2024](https://ul24.nastachku.ru/) |
+    [Агрегатные состояния внутренней документации](https://www.youtube.com/watch?v=Tc6_wuJFFdI) |
     
 
 ### Организатор
 
-[Стачка Санкт-Петербург 2024](https://spb24.nastachku.ru/) | [Cекция «Техническая документация»](https://spb24.nastachku.ru/doklady?features_hash=13-393)
+[Стачка Санкт-Петербург 2024](https://spb24.nastachku.ru/) — [Cекция «Техническая документация»](https://spb24.nastachku.ru/doklady?features_hash=13-393)
 
-[DevFest Omsk 2024](https://www.devfestomsk.ru/) | [Трек техдокументации](https://vk.com/video/@devfestomsk?list=f9acfc58d5cb2db4fa&preview=&screen=&webcast=&z=video-215824498_456239083)
+[DevFest Omsk 2024](https://www.devfestomsk.ru/) — [Трек техдокументации](https://vk.com/video/@devfestomsk?list=f9acfc58d5cb2db4fa&preview=&screen=&webcast=&z=video-215824498_456239083)
 
 Techdoc Meetup [0](https://www.youtube.com/live/EZY9MSeHkfk?feature=share) | [1](https://www.youtube.com/live/xqev76iddio?si=E0Cgbbi6eOcjmM-2) | [3](https://www.youtube.com/live/t2MYG7ewcbA?si=9ez9ByS-RRLvk-Mg)
 
