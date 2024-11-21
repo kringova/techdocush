@@ -3,7 +3,7 @@ title: Ушакова Екатерина
 type: about
 ---
 
-{{ $image := resources.Get "kringova/techdocush/static/img/ushka.jpg" }}
+{{ $image := .Resources.Get "ushka.jpg" }}
 
 {{ $image := $image.Fit "400x400" }}
 
