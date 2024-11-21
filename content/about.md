@@ -3,7 +3,7 @@ title: Ушакова Екатерина
 type: about
 ---
 
-![Фото](static/img/Slice 6.png)
+![Фото](/img/Slice 6.png)
 
 г. Москва
 
