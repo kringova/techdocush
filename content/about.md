@@ -3,7 +3,7 @@ title: Ушакова Екатерина
 type: about
 ---
 
-![Фото](/img/ushka.jpg x0.5)
+<img src="/img/ushka.jpg" alt="drawing" width="200"/>
 
 ## Технический писатель | Head of Editorial
 
