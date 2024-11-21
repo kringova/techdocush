@@ -20,8 +20,7 @@ weight: 3
 
 ### Fancy онлайн-редакторы
 
-Google docs, Notion
-
+Google docs, Notion  
 Confluence, Wiki
 
 ### Языки разметки
