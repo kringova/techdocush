@@ -3,9 +3,7 @@ title: Ушакова Екатерина
 type: about
 ---
 
-![Фото](/img/ushka.jpg)
-
-г. Москва
+![Фото](/img/Kate.jpg)
 
 ## Технический писатель | Head of Editorial
 
