@@ -100,19 +100,6 @@ Head of Tech Editorial
 
 {{< icon "bookmark" >}} Личный tg-канал об управлении знаниями и командами: [Ушакова — директор буковок](https://t.me/+4s0vAcmepQZmYjdi)
 
-### Спикер
-
-|  Активность  | Запись  |
-|--------------|---------|
-|  Подкаст Я — начальник | [One-to-one. Зачем разговаривать с сотрудниками. Екатерина Ушакова, Ozon Tech](https://vk.com/video-115026656_456239351)   |
-| Подкаст Слово Техлида | [Подкаст с Екатериной Ушаковой: тонкости профессии технического писателя](https://vk.com/video-224033402_456239019) |
-| Подкаст ТыжДевочка. Подкаст о девушках в ИТ | [Технический писатель — это не только про ГОСТы](https://music.yandex.ru/album/17574609/track/105036662) |
-| Митап Kaspersky Tech. База знаний здорового техписа | [Делаем Базу Знаний из подручных материалов](https://www.youtube.com/live/uWU0oPimbDQ?si=LCto4g9skh4tb19L&t=3160) |
-| Митап TeamSnack TechWriters | [Мастерство в технической докумнетации](https://www.youtube.com/live/KZ1g1EPuixw?si=hmwfb9bsh3NlLs9t&t=5288) |
-| Конференция [Стачка Ульяновск 2023](https://2023.nastachku.ru/) | [Введение в техническую документацию](https://www.youtube.com/watch?v=K2EkkCMBbxU) |
-| Конференция [Стачка Ульяновск 2024](https://ul24.nastachku.ru/) | [Агрегатные состояния внутренней документации](https://www.youtube.com/watch?v=Tc6_wuJFFdI) |
-    
-
 ### Организатор
 
 [Стачка Санкт-Петербург 2024](https://spb24.nastachku.ru/) — [Cекция «Техническая документация»](https://spb24.nastachku.ru/doklady?features_hash=13-393)
@@ -126,3 +113,17 @@ Techdoc Meetup [0](https://www.youtube.com/live/EZY9MSeHkfk?feature=share) | [1]
 Route 256 — документация в управлении проектами
 
 Innopolis University — Technical Communication in IT
+
+### Спикер
+
+|  Активность  | Запись  |
+|--------------|---------|
+|  Подкаст Я — начальник | [One-to-one. Зачем разговаривать с сотрудниками. Екатерина Ушакова, Ozon Tech](https://vk.com/video-115026656_456239351)   |
+| Подкаст Слово Техлида | [Подкаст с Екатериной Ушаковой: тонкости профессии технического писателя](https://vk.com/video-224033402_456239019) |
+| Подкаст ТыжДевочка. Подкаст о девушках в ИТ | [Технический писатель — это не только про ГОСТы](https://music.yandex.ru/album/17574609/track/105036662) |
+| Митап Kaspersky Tech. База знаний здорового техписа | [Делаем Базу Знаний из подручных материалов](https://www.youtube.com/live/uWU0oPimbDQ?si=LCto4g9skh4tb19L&t=3160) |
+| Митап TeamSnack TechWriters | [Мастерство в технической докумнетации](https://www.youtube.com/live/KZ1g1EPuixw?si=hmwfb9bsh3NlLs9t&t=5288) |
+| Конференция [Стачка Ульяновск 2023](https://2023.nastachku.ru/) | [Введение в техническую документацию](https://www.youtube.com/watch?v=K2EkkCMBbxU) |
+| Конференция [Стачка Ульяновск 2024](https://ul24.nastachku.ru/) | [Агрегатные состояния внутренней документации](https://www.youtube.com/watch?v=Tc6_wuJFFdI) |
+    
+
