@@ -4,7 +4,7 @@ type: about
 ---
 
 
-![Фото](/img/ushka.jpg =x50)
+<img src="static/img/ushka.jpg" alt="фото" width="200"/>
 
 ## Технический писатель | Head of Editorial
 
