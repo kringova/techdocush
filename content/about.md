@@ -1,13 +1,12 @@
 ---
-title: Об авторе
+title: Ушакова Екатерина
 type: about
 ---
 
-{{ $image := .Resources.Get "static/img/ushka.jpg" }}
+{{ $image := resources.Get "static/img/ushka.jpg" }}
 
 {{ $image := $image.Fit "400x400" }}
 
-Ушакова Екатерина,
 г. Москва
 
 ## Технический писатель | Head of Editorial
