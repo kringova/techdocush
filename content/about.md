@@ -5,7 +5,7 @@ type: about
 
 ![Photo](/img/ushkatia.png)
 
-## Руководитель технических писателей
+## Руководитель отдела разработки текстов
 Head of Tech Editorial
 
 {{< icon "bell" >}} [Написать мне](https://t.me/ushkatia)
