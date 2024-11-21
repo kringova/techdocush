@@ -3,17 +3,16 @@ title: Об авторе
 type: about
 ---
 
-![Личное фото](/img/ushka.jpg)
+{{ $image := .Resources.Get "ushka.jpg" }}
 
-Ушакова Екатерина
+{{ $image := $image.Fit "400x400" }}
 
-21.05.1995
-
+Ушакова Екатерина,
 г. Москва
 
-{{< badge "Технический писатель" >}} {{< badge "Head of Editorial" >}}
+## Технический писатель | Head of Editorial
 
-[Написать мне](https://t.me/ushkatia)
+{{< icon "bell" >}} [Написать мне](https://t.me/ushkatia)
 
 Руковожу отделом технической документации и UX-редактуры Ozon Tech. С точки зрения продукта руковожу разработкой облачного файлообменника Ozon Диск и платформы документации Ozon Docs. У каждого из этих продуктов две аудитории: те, кто загружает файлы и тексты и те, кто их потребляем. Поэтому и у Диска, и у Docs'a по два контура, которые надо развивать с учётом своей аудитории. 
 В моём отделе технические писатели и UX-редакторы готовят тексты и для пользователей Ozon, и внутренние описания систем и регламенты. Ежедневная аудитория сопоставима с населением Владивостока.
@@ -82,3 +81,48 @@ type: about
 
 {{% /steps %}}
 
+## Публичные активности
+
+{{< icon "bookmark" >}} [tg-канал об управлении знаниями и командами](https://t.me/+4s0vAcmepQZmYjdi)
+
+### Спикер
+
+
+Я — начальник |
+    [One-to-one. Зачем разговаривать с сотрудниками. Екатерина Ушакова, Ozon Tech](https://vk.com/video-115026656_456239351)
+
+
+Слово Техлида |
+    [Подкаст с Екатериной Ушаковой: тонкости профессии технического писателя](https://vk.com/video-224033402_456239019)
+
+
+ТыжДевочка. Подкаст о девушках в ИТ |
+    [Технический писатель — это не только про ГОСТы](https://music.yandex.ru/album/17574609/track/105036662)
+
+Kaspersky Tech. База знаний здорового техписа | 
+    [Делаем Базу Знаний из подручных материалов](https://www.youtube.com/live/uWU0oPimbDQ?si=LCto4g9skh4tb19L&t=3160)
+
+TeamSnack TechWriters |
+    [Мастерство в технической докумнетации](https://www.youtube.com/live/KZ1g1EPuixw?si=hmwfb9bsh3NlLs9t&t=5288)
+
+[Стачка Ульяновск 2023](https://2023.nastachku.ru/) |
+    [Введение в техническую документацию](https://www.youtube.com/watch?v=K2EkkCMBbxU)
+
+
+[Стачка Ульяновск 2024](https://ul24.nastachku.ru/) |
+    [Агрегатные состояния внутренней документации](https://www.youtube.com/watch?v=Tc6_wuJFFdI)
+    
+
+### Организатор
+
+[Стачка Санкт-Петербург 2024](https://spb24.nastachku.ru/) | [Cекция «Техническая документация»](https://spb24.nastachku.ru/doklady?features_hash=13-393)
+
+[DevFest Omsk 2024](https://www.devfestomsk.ru/) | [Трек техдокументации](https://vk.com/video/@devfestomsk?list=f9acfc58d5cb2db4fa&preview=&screen=&webcast=&z=video-215824498_456239083)
+
+Techdoc Meetup [0](https://www.youtube.com/live/EZY9MSeHkfk?feature=share) | [1](https://www.youtube.com/live/xqev76iddio?si=E0Cgbbi6eOcjmM-2) | [3](https://www.youtube.com/live/t2MYG7ewcbA?si=9ez9ByS-RRLvk-Mg)
+
+### Преподаватель
+
+Route 256 — документация в управлении проектами
+
+Innopolis University — Technical Communication in IT
