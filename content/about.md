@@ -95,16 +95,11 @@ Head of Tech Editorial
 |--------------|---------|
 |  Подкаст Я — начальник | [One-to-one. Зачем разговаривать с сотрудниками. Екатерина Ушакова, Ozon Tech](https://vk.com/video-115026656_456239351)   |
 | Подкаст Слово Техлида | [Подкаст с Екатериной Ушаковой: тонкости профессии технического писателя](https://vk.com/video-224033402_456239019) |
-| Подкаст ТыжДевочка. Подкаст о девушках в ИТ |
-    [Технический писатель — это не только про ГОСТы](https://music.yandex.ru/album/17574609/track/105036662) |
-| Митап Kaspersky Tech. База знаний здорового техписа | 
-    [Делаем Базу Знаний из подручных материалов](https://www.youtube.com/live/uWU0oPimbDQ?si=LCto4g9skh4tb19L&t=3160) |
-| Митап TeamSnack TechWriters |
-    [Мастерство в технической докумнетации](https://www.youtube.com/live/KZ1g1EPuixw?si=hmwfb9bsh3NlLs9t&t=5288) |
-| Конференция [Стачка Ульяновск 2023](https://2023.nastachku.ru/) |
-    [Введение в техническую документацию](https://www.youtube.com/watch?v=K2EkkCMBbxU) |
-| Конференция [Стачка Ульяновск 2024](https://ul24.nastachku.ru/) |
-    [Агрегатные состояния внутренней документации](https://www.youtube.com/watch?v=Tc6_wuJFFdI) |
+| Подкаст ТыжДевочка. Подкаст о девушках в ИТ | [Технический писатель — это не только про ГОСТы](https://music.yandex.ru/album/17574609/track/105036662) |
+| Митап Kaspersky Tech. База знаний здорового техписа | [Делаем Базу Знаний из подручных материалов](https://www.youtube.com/live/uWU0oPimbDQ?si=LCto4g9skh4tb19L&t=3160) |
+| Митап TeamSnack TechWriters | [Мастерство в технической докумнетации](https://www.youtube.com/live/KZ1g1EPuixw?si=hmwfb9bsh3NlLs9t&t=5288) |
+| Конференция [Стачка Ульяновск 2023](https://2023.nastachku.ru/) | [Введение в техническую документацию](https://www.youtube.com/watch?v=K2EkkCMBbxU) |
+| Конференция [Стачка Ульяновск 2024](https://ul24.nastachku.ru/) | [Агрегатные состояния внутренней документации](https://www.youtube.com/watch?v=Tc6_wuJFFdI) |
     
 
 ### Организатор
