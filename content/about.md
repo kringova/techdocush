@@ -3,9 +3,7 @@ title: Ушакова Екатерина
 type: about
 ---
 
-{{ $image := .Resources.Get "ushka.jpg" }}
-
-{{ $image := $image.Fit "400x400" }}
+![Фото](static/img/Slice 6.png)
 
 г. Москва
 
