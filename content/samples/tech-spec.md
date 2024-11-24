@@ -2,7 +2,7 @@
 title: Техническое задание на разработку модуля автоматической генерации отчетов
 type: docs
 prev: api-doc
-next: 
+next: user-manual
 weight: 2
 ---
 

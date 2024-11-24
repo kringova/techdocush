@@ -2,7 +2,7 @@
 title: Начало работы с API платежной системы PayConnect
 type: docs
 prev: _index
-next: 
+next: tech-spec
 weight: 1
 ---
 
