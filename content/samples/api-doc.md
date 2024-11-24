@@ -1,4 +1,10 @@
-# Начало работы с API платежной системы PayConnect
+---
+title: Начало работы с API платежной системы PayConnect
+type: docs
+prev: _index
+next: 
+weight: 1
+---
 
 ## Обзор
 
