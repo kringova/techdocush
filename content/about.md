@@ -3,7 +3,7 @@ title: Ушакова Екатерина
 type: about
 ---
 
-![Photo](/img/ushkatia.png)
+![Photo](/img/ushka.png)
 
 ## Руководитель отдела разработки текстов
 Менеджер проектов
