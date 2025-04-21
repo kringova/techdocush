@@ -5,8 +5,7 @@ type: about
 
 ![Photo](/img/Rectangle_20.png)
 
-## Руководитель отдела разработки текстов
-Менеджер проектов
+Менеджер проектов @ Yandex
 
 {{< icon "bell" >}} [Написать мне](https://t.me/ushkatia)
 
