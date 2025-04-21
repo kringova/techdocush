@@ -3,6 +3,10 @@ title: Ушакова Екатерина
 type: about
 ---
 
+{{< figure
+  src="/img/IMG_1890.JPG"
+  height=500
+>}}
 ![Photo](/img/IMG_1890.JPG)
 
 ## Руководитель отдела разработки текстов
