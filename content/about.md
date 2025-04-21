@@ -99,11 +99,13 @@ type: about
 
 ### Организатор
 
+[Стачка Ульяновск 2025](https://ul25.nastachku.ru/) — [Секция «Техническая документация»](https://ul25.nastachku.ru/technical-documentation-ul25)
+
 [Стачка Санкт-Петербург 2024](https://spb24.nastachku.ru/) — [Cекция «Техническая документация»](https://spb24.nastachku.ru/doklady?features_hash=13-393)
 
 [DevFest Omsk 2024](https://www.devfestomsk.ru/) — [Трек техдокументации](https://vk.com/video/@devfestomsk?list=f9acfc58d5cb2db4fa&preview=&screen=&webcast=&z=video-215824498_456239083)
 
-Techdoc Meetup [0](https://www.youtube.com/live/EZY9MSeHkfk?feature=share) | [1](https://www.youtube.com/live/xqev76iddio?si=E0Cgbbi6eOcjmM-2) | [3](https://www.youtube.com/live/t2MYG7ewcbA?si=9ez9ByS-RRLvk-Mg)
+Techdoc Meetup [0](https://www.youtube.com/live/EZY9MSeHkfk?feature=share) | [1](https://www.youtube.com/live/xqev76iddio?si=E0Cgbbi6eOcjmM-2) | [3](https://www.youtube.com/live/t2MYG7ewcbA?si=9ez9ByS-RRLvk-Mg) | [6](https://www.youtube.com/live/zMKQlGvhWtI?si=Ufi0WGmeLDPumKyU)
 
 ### Преподаватель
 
