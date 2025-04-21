@@ -5,7 +5,7 @@ type: about
 
 {{< figure
   src="/img/IMG_1890.JPG"
-  height=500
+  height=500px
 >}}
 ![Photo](/img/IMG_1890.JPG)
 
