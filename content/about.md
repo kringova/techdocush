@@ -116,9 +116,9 @@ Innopolis University — Technical Communication in IT
 
 |  Активность  | Запись  |
 |--------------|---------|
-| Конференция [Стачка Ульяновск 2023](https://2023.nastachku.ru/) | [Введение в техническую документацию](https://www.youtube.com/watch?v=K2EkkCMBbxU) |
+| Конференция [Strong Team Summer 2025](https://conference.strongteam.tech/) | [Одна профессия, чтобы управлять ими всеми](https://youtu.be/RH0jxx3L26E?si=lIH_bYhYkkV_RM1a) |
 | Конференция [Стачка Ульяновск 2024](https://ul24.nastachku.ru/) | [Агрегатные состояния внутренней документации](https://www.youtube.com/watch?v=Tc6_wuJFFdI) |
-| Конференция [Strong Team Summer](https://conference.strongteam.tech/) | [Одна профессия, чтобы управлять ими всеми](https://youtu.be/RH0jxx3L26E?si=lIH_bYhYkkV_RM1a) |
+| Конференция [Стачка Ульяновск 2023](https://2023.nastachku.ru/) | [Введение в техническую документацию](https://www.youtube.com/watch?v=K2EkkCMBbxU) |
 |  Подкаст Я — начальник | [One-to-one. Зачем разговаривать с сотрудниками. Екатерина Ушакова, Ozon Tech](https://vk.com/video-115026656_456239351)   |
 | Подкаст Слово Техлида | [Подкаст с Екатериной Ушаковой: тонкости профессии технического писателя](https://vk.com/video-224033402_456239019) |
 | Подкаст ТыжДевочка. Подкаст о девушках в ИТ | [Технический писатель — это не только про ГОСТы](https://music.yandex.ru/album/17574609/track/105036662) |
