@@ -94,6 +94,10 @@ type: about
 
 ### Организатор
 
+[Стачка Санкт-Петербург 2025](https://spb25.nastachku.ru/) — [Секция «Техническая документация»](https://spb25.nastachku.ru/technical-documentation-spb25)
+
+[WriteConf 2025](https://writeconf.ru/) — Подготовка спикеров, концепта конференции
+
 [Стачка Ульяновск 2025](https://ul25.nastachku.ru/) — [Секция «Техническая документация»](https://ul25.nastachku.ru/technical-documentation-ul25)
 
 [Стачка Санкт-Петербург 2024](https://spb24.nastachku.ru/) — [Cекция «Техническая документация»](https://spb24.nastachku.ru/doklady?features_hash=13-393)
@@ -112,12 +116,12 @@ Innopolis University — Technical Communication in IT
 
 |  Активность  | Запись  |
 |--------------|---------|
+| Конференция [Стачка Ульяновск 2023](https://2023.nastachku.ru/) | [Введение в техническую документацию](https://www.youtube.com/watch?v=K2EkkCMBbxU) |
+| Конференция [Стачка Ульяновск 2024](https://ul24.nastachku.ru/) | [Агрегатные состояния внутренней документации](https://www.youtube.com/watch?v=Tc6_wuJFFdI) |
+| Конференция [Strong Team Summer](https://conference.strongteam.tech/) | [Одна профессия, чтобы управлять ими всеми](https://youtu.be/RH0jxx3L26E?si=lIH_bYhYkkV_RM1a) |
 |  Подкаст Я — начальник | [One-to-one. Зачем разговаривать с сотрудниками. Екатерина Ушакова, Ozon Tech](https://vk.com/video-115026656_456239351)   |
 | Подкаст Слово Техлида | [Подкаст с Екатериной Ушаковой: тонкости профессии технического писателя](https://vk.com/video-224033402_456239019) |
 | Подкаст ТыжДевочка. Подкаст о девушках в ИТ | [Технический писатель — это не только про ГОСТы](https://music.yandex.ru/album/17574609/track/105036662) |
 | Митап Kaspersky Tech. База знаний здорового техписа | [Делаем Базу Знаний из подручных материалов](https://www.youtube.com/live/uWU0oPimbDQ?si=LCto4g9skh4tb19L&t=3160) |
 | Митап TeamSnack TechWriters | [Мастерство в технической докумнетации](https://www.youtube.com/live/KZ1g1EPuixw?si=hmwfb9bsh3NlLs9t&t=5288) |
-| Конференция [Стачка Ульяновск 2023](https://2023.nastachku.ru/) | [Введение в техническую документацию](https://www.youtube.com/watch?v=K2EkkCMBbxU) |
-| Конференция [Стачка Ульяновск 2024](https://ul24.nastachku.ru/) | [Агрегатные состояния внутренней документации](https://www.youtube.com/watch?v=Tc6_wuJFFdI) |
-    
 
