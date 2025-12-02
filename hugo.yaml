@@ -18,11 +18,11 @@ markup:
 
 menu:
   main:
+    - name: Услуги
+      pageRef: /services
+      weight: 1
     - name: Docs
       pageRef: /docs
-      weight: 1
-    - name: About
-      pageRef: /about
       weight: 2
     - name: Contact ↗
       url: "https://t.me/+4s0vAcmepQZmYjdi"
@@ -34,13 +34,18 @@ menu:
 
 
 params:
+  defaultTheme: light
+  theme:
+    default: light
+  disableThemeToggle: true
+
   navbar:
     displayTitle: true
     displayLogo: false
 
   footer:
     displayCopyright: false
-    displayPoweredBy: true
+    displayPoweredBy: false
 
   editURL:
     enable: false

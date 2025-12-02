@@ -1,0 +1,433 @@
+/* ============================================
+   HERO SECTION - Split screen layout
+   ============================================ */
+.landing-hero {
+  padding: 0;
+  overflow: hidden;
+}
+
+.landing-hero__split {
+  display: flex;
+  flex-wrap: wrap;
+  min-height: 600px;
+}
+
+.landing-hero__image {
+  flex: 1 1 400px;
+  position: relative;
+  min-height: 600px;
+  line-height: 0;
+}
+
+.landing-hero__image img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  transform: none;
+  display: block;
+  vertical-align: bottom;
+}
+
+.landing-hero__content {
+  flex: 1 1 500px;
+  display: flex;
+  align-items: center;
+  padding: 4rem 3rem 4rem 6rem;
+  background: #fff;
+}
+
+.landing-hero__text {
+  max-width: 560px;
+}
+
+.landing-hero__eyebrow {
+  font-size: 0.9rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6b7280;
+  margin-bottom: 0.75rem;
+}
+
+.landing-hero__title {
+  font-size: clamp(2.2rem, 3vw, 2.8rem);
+  font-weight: 800;
+  margin: 0 0 0.9rem;
+  line-height: 1.1;
+}
+
+.landing-hero__lead {
+  font-size: 1.02rem;
+  margin: 0 0 0.5rem;
+}
+
+.landing-hero__sub {
+  margin: 0 0 1rem;
+  color: #6b7280;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.landing-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.landing-hero__primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.8rem 1.8rem;
+  border-radius: 0.6rem;
+  background: #111827;
+  color: #f9fafb;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1.05rem;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.landing-hero__primary:hover {
+  background: #020617;
+  transform: translateY(-2px);
+}
+
+.landing-hero__secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.8rem 1.6rem;
+  border-radius: 0.6rem;
+  background: #f3f4f6;
+  color: #1f2937;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 1rem;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.landing-hero__secondary:hover {
+  background: #e5e7eb;
+  color: #111827;
+  text-decoration: none;
+}
+
+/* ============================================
+   CONTENT LAYOUT
+   ============================================ */
+.landing-content {
+  margin: 0 auto;
+  max-width: 1100px;
+  padding: 0 1.5rem;
+}
+
+.landing-section {
+  position: relative;
+  padding: 3rem 0 3rem;
+  margin: 0;
+}
+
+.landing-section + .landing-section {
+  margin-top: 0;
+  padding-top: 1.6rem;
+}
+
+.landing-section h2 {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  font-size: 2rem;
+  font-weight: 800;
+  color: #111827;
+}
+
+.landing-content > .landing-section:first-of-type h2 {
+  text-align: center;
+  font-size: 2.2rem;
+  margin-bottom: 2.5rem;
+}
+
+.landing-section h2 a {
+  display: none;
+}
+
+/* ============================================
+   SECTION BACKGROUNDS
+   ============================================ */
+.landing-section--panel::before,
+.landing-section--muted::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 100vw;
+  height: 100%;
+  transform: translateX(-50%);
+  z-index: -1;
+}
+
+.landing-section--panel::before {
+  background: #f9fafb;
+}
+
+.landing-section--muted::before {
+  background: #f3f4f6;
+}
+
+/* Status block - compact, centered */
+.landing-section--status {
+  text-align: center;
+  padding: 2.5rem 1.5rem 3rem;
+  background: #fafbfc;
+}
+
+.landing-section--status h2 {
+  font-size: 1.8rem;
+  margin-bottom: 1.2rem;
+  font-weight: 700;
+}
+
+.landing-section--status p {
+  max-width: 650px;
+  margin: 0 auto 0.5rem;
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
+.landing-section--status p strong {
+  color: #111827;
+  font-weight: 600;
+}
+
+.landing-section--status a {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 1rem;
+  font-weight: 600;
+  font-size: 1.05rem;
+  color: #111827;
+  text-decoration: underline;
+  text-decoration-color: rgba(17, 24, 39, 0.3);
+  text-underline-offset: 3px;
+  transition: text-decoration-color 0.2s ease;
+}
+
+.landing-section--status a:hover {
+  text-decoration-color: #111827;
+}
+
+/* ============================================
+   GRID LAYOUTS
+   ============================================ */
+.landing-grid3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.5rem;
+}
+
+.landing-grid2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem;
+}
+
+@media (max-width: 768px) {
+  .landing-grid2,
+  .landing-grid3 {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}
+
+/* ============================================
+   CARDS
+   ============================================ */
+.landing-card {
+  padding: 2.2rem 2.4rem 2.4rem;
+  background: #ffffff;
+  border-radius: 1rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.landing-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+}
+
+.landing-card h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.landing-card p {
+  margin: 0 0 1rem;
+  font-size: 1rem;
+  line-height: 1.65;
+}
+
+.landing-card p:last-child {
+  margin-bottom: 0;
+  color: #1f2937;
+  font-weight: 500;
+}
+
+.landing-card-simple {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.landing-card-simple h3 {
+  margin-top: 0;
+  font-size: 1.15rem;
+  margin-bottom: 0.4rem;
+  color: #111827;
+  font-weight: 700;
+}
+
+/* ============================================
+   BUTTONS
+   ============================================ */
+.landing-grid3__actions,
+.landing-grid2__actions {
+  margin-top: 1.8rem;
+  text-align: center;
+}
+
+.landing-grid3__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.8rem 2rem;
+  border-radius: 0.6rem;
+  border: none;
+  background: #111827;
+  color: #f9fafb !important;
+  text-decoration: none !important;
+  font-size: 1.05rem;
+  font-weight: 600;
+  transition: background 0.2s ease;
+}
+
+.landing-grid3__cta:hover {
+  background: #020617;
+}
+
+.landing-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.8rem 1.6rem;
+  border-radius: 0.6rem;
+  background: #f3f4f6;
+  color: #1f2937 !important;
+  text-decoration: none !important;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.landing-btn-secondary:hover {
+  background: #e5e7eb;
+  color: #111827 !important;
+}
+
+/* ============================================
+   TYPOGRAPHY
+   ============================================ */
+.landing-content p {
+  margin: 0 0 0.85rem;
+  line-height: 1.7;
+}
+
+.landing-content h2 {
+  margin: 2.2rem 0 0.9rem;
+}
+
+.landing-content h3 {
+  margin: 1.8rem 0 0.8rem;
+  font-weight: 800;
+  color: #000;
+  font-size: 1.4rem;
+}
+
+.landing-content em {
+  color: #6b7280;
+  font-size: 0.95rem;
+  font-style: normal;
+}
+
+.landing-grid2 + h3 {
+  margin-top: 3rem;
+  font-size: 1.2rem;
+}
+
+.landing-content ul,
+.landing-content ol {
+  margin: 0.4rem 0 1rem 1.4rem;
+  padding: 0;
+  list-style-position: outside;
+}
+
+.landing-content ul {
+  list-style-type: disc;
+}
+
+.landing-content li {
+  margin: 0.2rem 0;
+  padding-left: 0.3rem;
+}
+
+.landing-content a {
+  color: #111827;
+  text-decoration: underline;
+  text-decoration-color: rgba(17, 24, 39, 0.3);
+  text-underline-offset: 3px;
+  transition: text-decoration-color 0.2s ease;
+}
+
+.landing-content a:hover {
+  color: #000;
+  text-decoration-color: #111827;
+}
+
+.landing-grid3__cta,
+.landing-hero__primary,
+.landing-hero__secondary {
+  text-decoration: none !important;
+}
+
+.landing-grid3__cta {
+  color: #f9fafb !important;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 768px) {
+  .landing-hero__split {
+    flex-direction: column-reverse;
+  }
+
+  .landing-hero__image {
+    flex: 0 0 350px;
+    min-height: 350px;
+  }
+
+  .landing-hero__content {
+    padding: 2.5rem 1.5rem;
+  }
+
+  .landing-section--panel,
+  .landing-section--muted {
+    padding-left: 1.2rem;
+    padding-right: 1.2rem;
+  }
+}
