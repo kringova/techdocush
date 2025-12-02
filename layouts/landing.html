@@ -1,0 +1,45 @@
+{{ define "main" }}
+  <link rel="stylesheet" href="{{ "/css/landing.css" | relURL }}">
+
+  <section class="landing-hero">
+    <div class="landing-hero__split">
+      <div class="landing-hero__content">
+        <div class="landing-hero__text">
+          <p class="landing-hero__eyebrow">Технический писатель · Руководитель редакции</p>
+          <h1 class="landing-hero__title">{{ .Title }}</h1>
+
+          {{ with .Params.description }}
+            <p class="landing-hero__lead">{{ . }}</p>
+          {{ end }}
+
+          <p class="landing-hero__sub">
+            Работаю с внутренней и продуктовой документацией, помогаю техкомандам и бизнесу договориться на человеческом языке —
+            без лишнего канцелярита и с заботой о читателе.
+          </p>
+
+          <div class="landing-hero__actions">
+            {{ with .Params.cta_link }}
+              <a href="{{ . }}" class="landing-hero__primary">
+                {{ default "Связаться в Telegram" $.Params.cta_text }}
+              </a>
+            {{ end }}
+            <a href="https://t.me/ringova" class="landing-hero__secondary">
+              tg‑канал @ringova
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="landing-hero__image">
+        {{ with .Params.image }}
+          <img src="{{ . }}" alt="{{ $.Title }}">
+        {{ end }}
+      </div>
+    </div>
+  </section>
+
+  <section class="landing-content">
+    {{ .Content }}
+  </section>
+{{ end }}
+
+
