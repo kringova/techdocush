@@ -59,3 +59,31 @@
   }
 }
 
+/* Hide "On this page" heading in ToC */
+aside.hextra-toc nav > p,
+aside.hextra-toc nav > div:first-child,
+.hextra-toc p:first-child,
+.hextra-toc .hextra-scrollbar > p:first-child,
+.hextra-toc .hextra-scrollbar > div:first-child {
+  display: none !important;
+}
+
+/* Make ToC readable over colored bands */
+aside.hextra-toc,
+.hextra-toc,
+aside.hextra-toc > div,
+.hextra-toc > div,
+aside.hextra-toc nav,
+.hextra-toc nav,
+aside.hextra-toc .hextra-scrollbar,
+.hextra-toc .hextra-scrollbar {
+  background: rgba(255, 255, 255, 0.78) !important;
+  backdrop-filter: blur(6px);
+  border-radius: 0.75rem;
+}
+
+/* Ensure ToC is above the colored sections */
+aside.hextra-toc {
+  position: sticky !important;
+  z-index: 100 !important;
+}

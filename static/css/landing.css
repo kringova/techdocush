@@ -61,7 +61,8 @@
 
 .landing-hero__lead {
   font-size: 1.02rem;
-  margin: 0 0 0.5rem;
+  margin: 0 0 1.5rem;
+  line-height: 1.65;
 }
 
 .landing-hero__sub {

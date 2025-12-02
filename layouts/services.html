@@ -1,0 +1,15 @@
+{{ define "main" }}
+  <link rel="stylesheet" href="{{ "/css/services.css" | relURL }}">
+
+  <section class="services-page">
+    <div class="services-header">
+      <h1 class="services-title">{{ .Title }}</h1>
+      <p class="services-intro">{{ .Content | safeHTML | plainify | truncate 200 }}</p>
+    </div>
+
+    <div class="services-content">
+      {{ .Content }}
+    </div>
+  </section>
+{{ end }}
+
