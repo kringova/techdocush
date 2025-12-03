@@ -388,15 +388,17 @@
 
 .landing-content a {
   color: #111827;
-  text-decoration: underline;
-  text-decoration-color: rgba(17, 24, 39, 0.3);
-  text-underline-offset: 3px;
-  transition: text-decoration-color 0.2s ease;
+  text-decoration: none;
+  background-image: linear-gradient(to right, #111827 0%, #111827 100%);
+  background-size: 0% 1px;
+  background-position: 0% 100%;
+  background-repeat: no-repeat;
+  transition: background-size 0.3s ease, color 0.2s ease;
 }
 
 .landing-content a:hover {
   color: #000;
-  text-decoration-color: #111827;
+  background-size: 100% 1px;
 }
 
 .landing-grid3__cta,

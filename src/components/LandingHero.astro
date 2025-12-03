@@ -1,0 +1,62 @@
+---
+export interface Props {
+  eyebrow?: string;
+  title: string;
+  description?: string;
+  sub?: string;
+  ctaText?: string;
+  ctaLink?: string;
+  image?: string;
+}
+
+const {
+  eyebrow = "Ringova · Эксперт по знаниям и коммуникации в ИТ",
+  title,
+  description,
+  sub,
+  ctaText = "Связаться в Telegram",
+  ctaLink = "https://t.me/ushkatia",
+  image = "/img/photo4.jpg",
+} = Astro.props;
+---
+
+<link rel="stylesheet" href="/css/landing.css" />
+
+<section class="landing-hero">
+  <div class="landing-hero__split">
+    <div class="landing-hero__content">
+      <div class="landing-hero__text">
+        <p class="landing-hero__eyebrow">{eyebrow}</p>
+        <h1 class="landing-hero__title">{title}</h1>
+
+        {description && (
+          <p class="landing-hero__lead">{description}</p>
+        )}
+
+        {sub && (
+          <p class="landing-hero__sub">{sub}</p>
+        )}
+
+        <div class="landing-hero__actions">
+          <a href={ctaLink} class="cta-primary">
+            {ctaText}
+          </a>
+          <a href="https://t.me/ringova" class="cta-secondary">
+            tg‑канал @ringova
+          </a>
+        </div>
+      </div>
+    </div>
+    <div class="landing-hero__image">
+      <img 
+        src={image} 
+        alt={title}
+        loading="lazy"
+        decoding="async"
+        width="800"
+        height="600"
+      />
+    </div>
+  </div>
+</section>
+

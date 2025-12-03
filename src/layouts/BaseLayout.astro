@@ -1,0 +1,287 @@
+---
+import Header from '../components/Header.astro';
+
+export interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description } = Astro.props;
+---
+
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="description" content={description || title} />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+    <style is:global>
+      :root {
+        /* Цвета - минималистичная схема */
+        --color-primary: #111827;
+        --color-text: #111827;
+        --color-text-muted: #6b7280;
+        --color-text-light: #9ca3af;
+        --color-bg: #ffffff;
+        --color-bg-muted: #f9fafb;
+        --color-bg-panel: #f3f4f6;
+        --color-border: #e5e7eb;
+        --color-border-light: #f3f4f6;
+        --color-accent-hover: #000000;
+        --color-accent-active: #111827;
+        --gradient-cta: linear-gradient(135deg, #111827 0%, #000000 100%);
+        --gradient-cta-hover: linear-gradient(135deg, #000000 0%, #111827 100%);
+        --transition-fast: 0.15s ease;
+        --transition-base: 0.2s ease;
+        --transition-slow: 0.3s ease;
+        --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        --radius-md: 0.5rem;
+        --radius-lg: 0.75rem;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      /* Улучшенные шрифты */
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif, 'Inter', system-ui;
+        font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+        font-variation-settings: 'opsz' 32;
+        line-height: 1.7;
+      }
+
+      /* Улучшенная типографика для заголовков */
+      h1, h2, h3 {
+        letter-spacing: -0.02em;
+        line-height: 1.2;
+      }
+
+      h1 {
+        font-weight: 800;
+      }
+
+      h2 {
+        font-weight: 700;
+      }
+
+      h3 {
+        font-weight: 600;
+      }
+
+      /* Анимации */
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Анимации появления для блоков */
+      .section-animate {
+        opacity: 0;
+        transform: translateY(30px);
+        transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+      }
+
+      .section-animate.visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .card-animate {
+        opacity: 0;
+        transform: translateY(20px);
+        transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+      }
+
+      .card-animate.visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      /* Задержки для последовательного появления */
+      .landing-grid2 .card-animate:nth-child(1) { transition-delay: 0ms; }
+      .landing-grid2 .card-animate:nth-child(2) { transition-delay: 150ms; }
+      .landing-grid2 .card-animate:nth-child(3) { transition-delay: 300ms; }
+      .landing-grid2 .card-animate:nth-child(4) { transition-delay: 450ms; }
+
+      .services-principles .card-animate:nth-child(1) { transition-delay: 0ms; }
+      .services-principles .card-animate:nth-child(2) { transition-delay: 150ms; }
+      .services-principles .card-animate:nth-child(3) { transition-delay: 300ms; }
+
+      /* Фоновая анимация для кнопок */
+      .cta-primary::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: left 0.5s;
+      }
+
+      .cta-primary:hover::before {
+        left: 100%;
+      }
+
+      /* Компоненты */
+      .cta-primary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.8rem 1.8rem;
+        border-radius: var(--radius-md);
+        background: #111827 !important;
+        color: #ffffff !important;
+        text-decoration: none !important;
+        font-weight: 600;
+        font-size: 1.05rem;
+        transition: all var(--transition-base);
+        border: none;
+        cursor: pointer;
+        box-shadow: var(--shadow-sm);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .cta-primary:hover {
+        background: #000000 !important;
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+      }
+
+      .cta-primary:active {
+        transform: translateY(0);
+        box-shadow: var(--shadow-sm);
+      }
+
+      /* Фоновая анимация для кнопок */
+      .cta-primary::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: left 0.5s;
+      }
+
+      .cta-primary:hover::before {
+        left: 100%;
+      }
+
+      .cta-secondary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.8rem 1.6rem;
+        border-radius: var(--radius-md);
+        background: var(--color-bg-panel);
+        color: var(--color-text);
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 1rem;
+        transition: all var(--transition-base);
+        border: 1px solid var(--color-border);
+      }
+
+      .cta-secondary:hover {
+        background: var(--color-bg-muted);
+        border-color: var(--color-text-muted);
+        color: var(--color-accent-hover);
+      }
+
+      .card {
+        transition: all var(--transition-base);
+      }
+
+      .card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-lg);
+      }
+
+      /* Улучшенные ссылки с анимированным underline */
+      a:not(.cta-primary):not(.cta-secondary):not(.services-nav__item):not(.site-header__link) {
+        color: var(--color-text);
+        text-decoration: none;
+        background-image: linear-gradient(to right, var(--color-text) 0%, var(--color-text) 100%);
+        background-size: 0% 1px;
+        background-position: 0% 100%;
+        background-repeat: no-repeat;
+        transition: background-size 0.3s ease, color 0.2s ease;
+      }
+
+      a:not(.cta-primary):not(.cta-secondary):not(.services-nav__item):not(.site-header__link):hover {
+        color: var(--color-accent-hover);
+        background-size: 100% 1px;
+      }
+
+      /* Визуальные разделители для секций */
+      .section-divider {
+        height: 1px;
+        background: linear-gradient(to right, transparent, var(--color-border), transparent);
+        margin: 3rem 0;
+        border: none;
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      /* Кнопка "Наверх" */
+      .back-to-top {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: var(--gradient-cta);
+        color: #fff;
+        border: none;
+        cursor: pointer;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        box-shadow: var(--shadow-lg);
+        transition: all var(--transition-base);
+        z-index: 100;
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      .back-to-top.visible {
+        display: flex;
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .back-to-top:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-xl);
+      }
+
+      .back-to-top svg {
+        width: 20px;
+        height: 20px;
+      }
+
+
+    </style>
+  </head>
+  <body>
+    <Header />
+    <slot />
+  </body>
+</html>

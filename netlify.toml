@@ -1,6 +1,8 @@
 [build]
 publish = "public"
-command = "hugo --gc --minify -b ${DEPLOY_PRIME_URL}"
+# Гибридный билд: Astro для лендинга и услуг, Hugo для документации
+command = "chmod +x build.sh && ./build.sh"
 
 [build.environment]
 HUGO_VERSION = "0.132.2"
+NODE_VERSION = "20"

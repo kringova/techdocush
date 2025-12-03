@@ -1,0 +1,185 @@
+---
+const currentPath = Astro.url.pathname;
+const isServices = currentPath.startsWith('/services');
+const isDocs = currentPath.startsWith('/docs');
+---
+
+<header class="site-header">
+  <nav class="site-header__nav">
+    <a href="/" class="site-header__logo">Ringova</a>
+    <ul class="site-header__menu">
+      <li>
+        <a href="/" class={currentPath === '/' ? 'site-header__link site-header__link--active' : 'site-header__link'}>
+          Главная
+        </a>
+      </li>
+      <li>
+        <a href="/services" class={isServices ? 'site-header__link site-header__link--active' : 'site-header__link'}>
+          Услуги
+        </a>
+      </li>
+      <li>
+        <a href="/docs" class={isDocs ? 'site-header__link site-header__link--active' : 'site-header__link'}>
+          Docs
+        </a>
+      </li>
+      <li>
+        <a href="https://t.me/+4s0vAcmepQZmYjdi" class="site-header__link site-header__link--external" target="_blank" rel="noopener">
+          Contact ↗
+        </a>
+      </li>
+    </ul>
+    <button class="site-header__mobile-toggle" aria-label="Открыть меню" aria-expanded="false">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+  </nav>
+</header>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .site-header__nav {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 1rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .site-header__logo {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #111827;
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+
+  .site-header__logo:hover {
+    color: #000;
+  }
+
+  .site-header__menu {
+    display: flex;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    gap: 2rem;
+    align-items: center;
+  }
+
+  .site-header__link {
+    color: #6b7280;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.95rem;
+    transition: color 0.2s ease;
+    position: relative;
+  }
+
+  .site-header__link:hover {
+    color: #111827;
+  }
+
+  .site-header__link--active {
+    color: #111827;
+  }
+
+  .site-header__link--active::after {
+    content: '';
+    position: absolute;
+    bottom: -0.5rem;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #111827;
+  }
+
+  .site-header__link--external {
+    color: #111827;
+  }
+
+  .site-header__mobile-toggle {
+    display: none;
+    flex-direction: column;
+    gap: 4px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+  }
+
+  .site-header__mobile-toggle span {
+    width: 24px;
+    height: 2px;
+    background: #111827;
+    transition: all 0.3s ease;
+  }
+
+  @media (max-width: 768px) {
+    .site-header__nav {
+      padding: 1rem 1.5rem;
+    }
+
+    .site-header__menu {
+      position: fixed;
+      top: 60px;
+      left: 0;
+      right: 0;
+      background: white;
+      flex-direction: column;
+      padding: 2rem;
+      gap: 1.5rem;
+      border-bottom: 1px solid #e5e7eb;
+      transform: translateY(-100%);
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .site-header__menu[aria-expanded="true"] {
+      transform: translateY(0);
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .site-header__mobile-toggle {
+      display: flex;
+    }
+  }
+</style>
+
+<script>
+  // Мобильное меню
+  document.addEventListener('DOMContentLoaded', () => {
+    const toggle = document.querySelector('.site-header__mobile-toggle');
+    const menu = document.querySelector('.site-header__menu');
+    
+    if (toggle && menu) {
+      toggle.addEventListener('click', () => {
+        const isExpanded = toggle.getAttribute('aria-expanded') === 'true';
+        toggle.setAttribute('aria-expanded', !isExpanded);
+        menu.setAttribute('aria-expanded', !isExpanded);
+      });
+
+      // Закрываем меню при клике на ссылку
+      const links = menu.querySelectorAll('a');
+      links.forEach(link => {
+        link.addEventListener('click', () => {
+          toggle.setAttribute('aria-expanded', 'false');
+          menu.setAttribute('aria-expanded', 'false');
+        });
+      });
+    }
+  });
+</script>
+

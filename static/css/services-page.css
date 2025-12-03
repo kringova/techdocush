@@ -2,21 +2,99 @@
    SERVICES PAGE - Section-based layout
    ============================================ */
 
+/* Скрываем автоматический заголовок страницы "Услуги" */
+article > h1:first-child,
+.td-content > h1:first-child,
+main article h1:not(.services-hero__title) {
+  display: none !important;
+}
+
+/* Убираем все отступы перед hero-секцией */
+body:has(.services-hero) main,
+body:has(.services-hero) article,
+body:has(.services-hero) .td-content,
+article:has(.services-hero),
+article .services-hero:first-child,
+article:has(.services-hero) > *:first-child {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+.td-content:has(.services-hero),
+main article:has(.services-hero),
+main:has(.services-hero) article {
+  padding-top: 0 !important;
+  margin-top: 0 !important;
+}
+
+/* Убираем отступы у всех элементов перед hero */
+.services-hero:first-child,
+.services-hero:first-of-type,
+article > .services-hero:first-child,
+main > .services-hero:first-child {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+/* Обёртка для контента, как на landing page */
+.services-content-wrapper {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+/* Улучшенная типографика для читаемости */
+.services-content-wrapper {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* Исключение для блока "Как я работаю" */
+.service-section--intro .services-content-wrapper {
+  max-width: 100%;
+}
+
+.services-content-wrapper p {
+  line-height: 1.7;
+}
+
+.services-content-wrapper li {
+  line-height: 1.6;
+}
+
+.services-content-wrapper h3 {
+  line-height: 1.3;
+}
+
+/* Hero должен быть вне ограничений article */
+article .services-hero {
+  width: 100vw;
+  position: relative;
+  left: 50%;
+  right: 50%;
+  margin-left: -50vw;
+  margin-right: -50vw;
+  max-width: none;
+}
+
 .service-section {
   position: relative;
   padding: 3.5rem 0;
-  z-index: 1; /* content above background band */
+  z-index: 0;
 }
 
+/* Фон секций на всю ширину экрана */
 .service-section::before {
   content: "";
   position: absolute;
-  top: 0;
+  inset: 0;
   left: 50%;
+  right: 50%;
+  margin-left: -50vw;
+  margin-right: -50vw;
   width: 100vw;
-  height: 100%;
-  transform: translateX(-50%);
-  z-index: -1; /* band behind everything, including ToC */
+  z-index: -1;
+  pointer-events: none;
 }
 
 .service-section--intro::before {
@@ -29,6 +107,151 @@
 
 .service-section--muted::before {
   background: #f3f4f6;
+}
+
+/* HERO на странице услуг - как на главной */
+.services-hero {
+  padding: 0 !important;
+  margin: 0 !important;
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+  overflow: hidden;
+  width: 100vw;
+  position: relative;
+  left: 50%;
+  right: 50%;
+  margin-left: -50vw;
+  margin-right: -50vw;
+}
+
+.services-hero__split {
+  display: flex;
+  flex-wrap: wrap;
+  min-height: 500px;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.services-hero__content {
+  flex: 1 1 500px;
+  display: flex;
+  align-items: center;
+  padding: 4rem 3rem 4rem 6rem;
+  background: #fff;
+}
+
+.services-hero__text {
+  max-width: 560px;
+}
+
+.services-hero__title {
+  font-size: clamp(2.2rem, 3vw, 2.8rem);
+  font-weight: 800;
+  margin: 0 0 0.9rem;
+  line-height: 1.1;
+  color: #111827;
+}
+
+.services-hero__lead.services-intro {
+  margin: 0 0 1.5rem;
+  font-size: 1.02rem;
+  line-height: 1.65;
+  color: #374151;
+}
+
+.services-hero__sub {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #6b7280;
+}
+
+.services-hero__nav {
+  flex: 1 1 400px;
+  position: relative;
+  min-height: 500px;
+  line-height: 0;
+  background: #f9fafb;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+.services-hero__nav-inner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 4rem 6rem 4rem 3rem;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.services-hero__nav-title {
+  margin: 0 0 0.9rem;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #6b7280;
+}
+
+@media (max-width: 900px) {
+  .services-hero__split {
+    flex-direction: column;
+  }
+
+  .services-hero__content {
+    padding: 4rem 3rem;
+  }
+
+  .services-hero__nav {
+    min-height: auto;
+  }
+
+  .services-hero__nav-inner {
+    position: relative;
+    padding: 3rem;
+  }
+}
+
+/* Intro paragraph above first section on services page (используется внутри hero) */
+.services-intro {
+  font-size: 1.05rem;
+}
+
+/* Top navigation with anchors to services (в hero справа) */
+.services-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.services-nav__item {
+  display: flex;
+  align-items: center;
+  padding: 1rem 1.4rem;
+  border-radius: 0.75rem;
+  background: #fff;
+  color: #111827;
+  font-size: 0.95rem;
+  font-weight: 500;
+  text-decoration: none;
+  border: 1.5px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.services-nav__item:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+  color: #111827;
 }
 
 /* Service headings */
@@ -53,7 +276,7 @@
   font-size: 0.95rem;
   font-weight: 700;
   color: #111827;
-  margin: 1.5rem 0 0.5rem;
+  margin: 1.2rem 0 0.35rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -92,22 +315,9 @@
   line-height: 1.65;
 }
 
-/* CTA buttons */
-.service-section a[href*="t.me"] {
-  display: inline-block;
-  padding: 0.8rem 1.8rem;
-  background: #111827;
-  color: #fff !important;
-  text-decoration: none !important;
-  border-radius: 0.6rem;
-  font-weight: 600;
+/* CTA buttons - используем классы из components.css */
+.service-section .cta-primary {
   margin: 1.5rem 0 0.5rem;
-  transition: background 0.2s ease, transform 0.2s ease;
-}
-
-.service-section a[href*="t.me"]:hover {
-  background: #000;
-  transform: translateY(-2px);
 }
 
 /* Intro section (Как я работаю) */
@@ -118,9 +328,39 @@
   margin: 0 0 1.5rem;
 }
 
-.service-section--intro p {
-  margin-bottom: 1.2rem;
-  line-height: 1.65;
+/* Principles as three cards - на всю ширину */
+.services-principles-wrapper {
+  width: 100%;
+  max-width: 100%;
+  padding: 0 2rem;
+}
+
+.services-principles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.services-principles__card {
+  background: #fff;
+  border-radius: 0.9rem;
+  padding: 1.4rem 1.5rem;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.06);
+  border: 1px solid #e5e7eb;
+  font-size: 0.98rem;
+  line-height: 1.6;
+}
+
+.services-principles__card p {
+  margin-bottom: 0;
+}
+
+@media (max-width: 900px) {
+  .services-principles {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* FAQ section styling */

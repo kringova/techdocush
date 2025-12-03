@@ -1,0 +1,73 @@
+---
+export interface Props {
+  id: string;
+  icon: string;
+  title: string;
+  description: string;
+  forWhom?: string;
+  result?: string[];
+  process?: string[];
+  includes?: string;
+  ctaText: string;
+  ctaLink: string;
+  variant?: 'muted' | 'panel';
+}
+
+const {
+  id,
+  icon,
+  title,
+  description,
+  forWhom,
+  result,
+  process,
+  includes,
+  ctaText,
+  ctaLink,
+  variant = 'muted',
+} = Astro.props;
+---
+
+<section class={`service-section service-section--${variant}`} id={id}>
+  <h3>{icon} {title}</h3>
+  <p>{description}</p>
+
+  {forWhom && (
+    <>
+      <p><strong>Для кого</strong></p>
+      <p>{forWhom}</p>
+    </>
+  )}
+
+  {result && result.length > 0 && (
+    <>
+      <p><strong>Результат{result.length > 1 ? 'ы' : ''}</strong></p>
+      <ul>
+        {result.map((item) => (
+          <li>{item}</li>
+        ))}
+      </ul>
+    </>
+  )}
+
+  {process && process.length > 0 && (
+    <>
+      <p><strong>Как это будет происходить</strong></p>
+      <ol>
+        {process.map((item) => (
+          <li>{item}</li>
+        ))}
+      </ol>
+    </>
+  )}
+
+  {includes && (
+    <>
+      <p><strong>Что входит</strong></p>
+      <p>{includes}</p>
+    </>
+  )}
+
+  <a href={ctaLink}>{ctaText}</a>
+</section>
+

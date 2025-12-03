@@ -1,0 +1,135 @@
+---
+export interface FAQItem {
+  question: string;
+  answer: string;
+}
+
+export interface Props {
+  items: FAQItem[];
+}
+
+const { items } = Astro.props;
+---
+
+<section class="service-section service-section--muted">
+  <h3>Часто задаваемые вопросы</h3>
+
+  <div class="faq-list">
+    {items.map((item, index) => (
+      <div class="faq-item">
+        <button 
+          class="faq-question" 
+          aria-expanded="false"
+          aria-controls={`faq-answer-${index}`}
+          id={`faq-question-${index}`}
+        >
+          <span>{item.question}</span>
+          <span class="faq-icon" aria-hidden="true">+</span>
+        </button>
+        <div 
+          class="faq-answer" 
+          id={`faq-answer-${index}`}
+          role="region"
+          aria-labelledby={`faq-question-${index}`}
+        >
+          <p>{item.answer}</p>
+        </div>
+      </div>
+    ))}
+  </div>
+</section>
+
+<style>
+  .faq-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .faq-item {
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    background: #fff;
+    transition: box-shadow 0.2s ease;
+  }
+
+  .faq-item:hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  }
+
+  .faq-question {
+    width: 100%;
+    padding: 1.25rem 1.5rem;
+    background: none;
+    border: none;
+    text-align: left;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #111827;
+    transition: background 0.2s ease;
+  }
+
+  .faq-question:hover {
+    background: #f9fafb;
+  }
+
+  .faq-question span:first-child {
+    flex: 1;
+  }
+
+  .faq-icon {
+    font-size: 1.5rem;
+    font-weight: 300;
+    color: #6b7280;
+    transition: transform 0.3s ease, color 0.2s ease;
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .faq-question[aria-expanded="true"] .faq-icon {
+    transform: rotate(45deg);
+    color: #111827;
+  }
+
+  .faq-answer {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease, padding 0.3s ease;
+    padding: 0 1.5rem;
+  }
+
+  .faq-question[aria-expanded="true"] + .faq-answer {
+    max-height: 500px;
+    padding: 0 1.5rem 1.25rem;
+  }
+
+  .faq-answer p {
+    margin: 0;
+    line-height: 1.7;
+    color: #374151;
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const questions = document.querySelectorAll('.faq-question');
+    
+    questions.forEach((question) => {
+      question.addEventListener('click', () => {
+        const isExpanded = question.getAttribute('aria-expanded') === 'true';
+        question.setAttribute('aria-expanded', !isExpanded);
+      });
+    });
+  });
+</script>
+

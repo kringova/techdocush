@@ -1,7 +1,27 @@
-# Hugo output
-public/
-resources/
-.hugo_build.lock
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
 
-# Editor
-.vscode/
+# Testing
+coverage
+
+# Production
+astro-dist/
+dist/
+build/
+
+# Misc
+.DS_Store
+.env
+.env.local
+.env.production.local
+.env.development.local
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Hugo
+public/
