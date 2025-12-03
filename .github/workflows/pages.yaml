@@ -49,15 +49,20 @@ jobs:
         run: |
           wget -O ${{ runner.temp }}/hugo.deb https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_linux-amd64.deb \
           && sudo dpkg -i ${{ runner.temp }}/hugo.deb
-      - name: Build with Hugo
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci
+      - name: Build hybrid site (Hugo + Astro)
         env:
-          # For maximum backward compatibility with Hugo modules
           HUGO_ENVIRONMENT: production
           HUGO_ENV: production
         run: |
-          hugo \
-            --gc --minify \
-            --baseURL "${{ steps.pages.outputs.base_url }}/"
+          chmod +x build.sh
+          ./build.sh
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
