@@ -243,9 +243,33 @@ const { title, description } = Astro.props;
         transition: background-size 0.3s ease, color 0.2s ease;
       }
 
+      /* Подчеркивание для ссылок в параграфах */
+      p a:not(.cta-primary):not(.cta-secondary) {
+        text-decoration: underline;
+        text-decoration-color: rgba(0, 0, 0, 0.2);
+        text-underline-offset: 3px;
+      }
+
+      /* ›› только для ссылок НЕ в списках */
+      a:not(.cta-primary):not(.cta-secondary):not(.site-header__link):not(.site-footer a):not(li a):not(ul a):not(ol a)::after {
+        content: '››';
+        display: inline-block;
+        margin-left: 0.15rem;
+        font-size: 0.9em;
+        color: currentColor;
+        vertical-align: baseline;
+        transition: transform 0.2s ease, color 0.2s ease;
+        opacity: 0.6;
+      }
+
       a:not(.cta-primary):not(.cta-secondary):not(.site-header__link):not(.site-footer a):hover {
         color: var(--color-accent-3);
         background-size: 100% 2px;
+      }
+
+      a:not(.cta-primary):not(.cta-secondary):not(.site-header__link):not(.site-footer a):not(li a):not(ul a):not(ol a):hover::after {
+        transform: translateX(3px);
+        opacity: 1;
       }
 
       /* Визуальные разделители для секций */

@@ -208,17 +208,31 @@ article .services-hero {
 }
 
 .services-nav__item {
-  display: block;
+  display: inline-block;
   color: #374151;
   font-size: 1.15rem;
   font-weight: 400;
   text-decoration: none;
   line-height: 1.6;
   transition: all 0.2s ease;
+  position: relative;
 }
 
-.services-nav__item:hover {
-  /* Анимация подчеркивания наследуется из BaseLayout */
+.services-nav__item::after {
+  content: '››';
+  display: inline-block;
+  margin-left: 0.15rem;
+  font-size: 1rem;
+  color: #374151;
+  vertical-align: middle;
+  transition: transform 0.2s ease, color 0.2s ease;
+  opacity: 0.7;
+}
+
+.services-nav__item:hover::after {
+  transform: translateX(4px);
+  opacity: 1;
+  color: #D66F5F;
 }
 
 /* Service headings */
