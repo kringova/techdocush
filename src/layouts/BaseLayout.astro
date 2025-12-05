@@ -233,7 +233,7 @@ const { title, description } = Astro.props;
       }
 
       /* Ссылки с анимированным underline */
-      a:not(.cta-primary):not(.cta-secondary):not(.services-nav__item):not(.site-header__link):not(.site-footer a) {
+      a:not(.cta-primary):not(.cta-secondary):not(.site-header__link):not(.site-footer a) {
         color: var(--color-text);
         text-decoration: none;
         background-image: linear-gradient(to right, var(--color-accent-3) 0%, var(--color-accent-3) 100%);
@@ -243,7 +243,7 @@ const { title, description } = Astro.props;
         transition: background-size 0.3s ease, color 0.2s ease;
       }
 
-      a:not(.cta-primary):not(.cta-secondary):not(.services-nav__item):not(.site-header__link):not(.site-footer a):hover {
+      a:not(.cta-primary):not(.cta-secondary):not(.site-header__link):not(.site-footer a):hover {
         color: var(--color-accent-3);
         background-size: 100% 2px;
       }
