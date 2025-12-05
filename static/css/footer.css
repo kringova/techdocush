@@ -1,8 +1,9 @@
 .site-footer {
-  margin-top: 0;
+  margin: 0;
+  padding: 0;
+  width: 100%;
   background: #020617;
   color: #e5e7eb;
-  padding: 0;
 }
 
 .site-footer__inner {
@@ -17,18 +18,21 @@
 .site-footer__brand {
   font-weight: 600;
   margin-bottom: 0.4rem;
+  color: #f3f4f6;
 }
 
 .site-footer__text {
   margin: 0;
   font-size: 0.9rem;
-  color: #9ca3af;
+  color: #c8c8c8;
+  line-height: 1.6;
 }
 
 .site-footer__heading {
   margin: 0 0 0.6rem;
   font-size: 0.95rem;
   font-weight: 600;
+  color: #f3f4f6;
 }
 
 .site-footer__list {
@@ -38,19 +42,26 @@
   font-size: 0.9rem;
 }
 
+.site-footer__list li {
+  color: #c8c8c8;
+}
+
 .site-footer__list li + li {
   margin-top: 0.25rem;
 }
 
+.site-footer__list a,
 .site-footer a {
-  color: #e5e7eb;
+  color: #9ca3af !important;
   text-decoration: none;
   transition: color 0.2s ease;
+  font-weight: 400;
 }
 
+.site-footer__list a:hover,
 .site-footer a:hover {
   text-decoration: underline;
-  color: #f3f4f6; /* Lighter on hover */
+  color: #e5e7eb !important;
 }
 
 @media (max-width: 768px) {

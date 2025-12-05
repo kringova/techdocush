@@ -255,11 +255,19 @@ article .services-hero {
 }
 
 /* Service headings */
-.service-section h3 {
-  font-size: 1.6rem;
-  font-weight: 700;
+.service-section h2 {
+  font-size: 1.8rem;
+  font-weight: 800;
   color: #111827;
   margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+.service-section h3 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #111827;
+  margin-top: 1.5rem;
   margin-bottom: 0.8rem;
 }
 
@@ -279,6 +287,78 @@ article .services-hero {
   margin: 1.2rem 0 0.35rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+}
+
+/* Двухколоночный layout для блоков услуг:
+   заголовок и лид сверху, под ними два столбца */
+.service-section--split {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.service-section__header {
+  width: 100%;
+}
+
+.service-section__header h3 {
+  margin-top: 0;
+}
+
+.service-section__header p {
+  margin-bottom: 0;
+}
+
+.service-section__content {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1.2fr);
+  gap: 3rem;
+  align-items: flex-start;
+}
+
+.service-section__main {
+  min-width: 0;
+}
+
+.service-section__aside {
+  min-width: 0;
+}
+
+.service-aside-card {
+  background: #ffffff;
+  border-radius: 0.9rem;
+  padding: 1.8rem 1.9rem;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.06);
+  border: 1px solid #e5e7eb;
+}
+
+.service-aside-card h4 {
+  margin-top: 0;
+  margin-bottom: 0.8rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.service-aside-card p {
+  margin: 0 0 1.2rem;
+  font-size: 0.96rem;
+  line-height: 1.6;
+}
+
+.service-aside-card .cta-primary {
+  width: 100%;
+  justify-content: center;
+}
+
+@media (max-width: 900px) {
+  .service-section__content {
+    grid-template-columns: 1fr;
+  }
+
+  .service-aside-card {
+    margin-top: 1rem;
+  }
 }
 
 /* Lists with arrows */
@@ -326,6 +406,7 @@ article .services-hero {
   font-weight: 800;
   color: #000;
   margin: 0 0 1.5rem;
+  text-align: center;
 }
 
 /* Principles as three cards - на всю ширину */

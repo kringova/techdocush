@@ -9,13 +9,13 @@
 .landing-hero__split {
   display: flex;
   flex-wrap: wrap;
-  min-height: 600px;
+  min-height: 700px;
 }
 
 .landing-hero__image {
   flex: 1 1 400px;
   position: relative;
-  min-height: 600px;
+  min-height: 700px;
   line-height: 0;
 }
 
@@ -36,7 +36,7 @@
   flex: 1 1 500px;
   display: flex;
   align-items: center;
-  padding: 4rem 3rem 4rem 6rem;
+  padding: 4rem 3rem 4rem 4rem;
   background: #fff;
 }
 

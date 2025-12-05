@@ -17,61 +17,96 @@ const { title, description } = Astro.props;
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="generator" content={Astro.generator} />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <title>{title}</title>
     <style is:global>
       :root {
-        /* Цвета - минималистичная схема */
-        --color-primary: #111827;
-        --color-text: #111827;
-        --color-text-muted: #6b7280;
-        --color-text-light: #9ca3af;
-        --color-bg: #ffffff;
-        --color-bg-muted: #f9fafb;
-        --color-bg-panel: #f3f4f6;
-        --color-border: #e5e7eb;
-        --color-border-light: #f3f4f6;
-        --color-accent-hover: #000000;
-        --color-accent-active: #111827;
-        --gradient-cta: linear-gradient(135deg, #111827 0%, #000000 100%);
-        --gradient-cta-hover: linear-gradient(135deg, #000000 0%, #111827 100%);
-        --transition-fast: 0.15s ease;
+        /* Новая цветовая палитра - персиково-терракотовая */
+        --color-bg: #FFF5E9;
+        --color-bg-panel: #FFFFFF;
+        --color-accent-1: #FFCEB6;
+        --color-accent-2: #F3A48B;
+        --color-accent-3: #D66F5F;
+        --color-text: #2A2A2A;
+        --color-text-muted: #666666;
+        --color-border: rgba(214, 111, 95, 0.2);
+        
+        /* Типографика - чёткая шкала */
+        --font-size-xs: 14px;
+        --font-size-sm: 16px;
+        --font-size-base: 18px;
+        --font-size-lg: 20px;
+        --font-size-xl: 24px;
+        --font-size-2xl: 32px;
+        --font-size-3xl: 48px;
+        
+        /* Отступы - вертикальный ритм */
+        --spacing-xs: 16px;
+        --spacing-sm: 24px;
+        --spacing-md: 32px;
+        --spacing-lg: 64px;
+        --spacing-xl: 80px;
+        
+        /* Радиусы */
+        --radius-sm: 4px;
+        --radius-md: 6px;
+        
+        /* Переходы */
         --transition-base: 0.2s ease;
         --transition-slow: 0.3s ease;
-        --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-        --radius-md: 0.5rem;
-        --radius-lg: 0.75rem;
       }
 
       html {
         scroll-behavior: smooth;
+        margin: 0;
+        padding: 0;
       }
 
-      /* Улучшенные шрифты */
+      /* Новая типографика - Inter */
       body {
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif, 'Inter', system-ui;
-        font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
-        font-variation-settings: 'opsz' 32;
-        line-height: 1.7;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        font-size: var(--font-size-base);
+        line-height: 1.5;
+        color: var(--color-text);
+        background: var(--color-bg);
+        margin: 0;
+        padding: 0;
       }
 
-      /* Улучшенная типографика для заголовков */
-      h1, h2, h3 {
-        letter-spacing: -0.02em;
-        line-height: 1.2;
-      }
-
+      /* Заголовки */
       h1 {
+        font-size: var(--font-size-3xl);
         font-weight: 800;
+        line-height: 1.1;
+        letter-spacing: -0.02em;
+        color: var(--color-text);
+        margin: 0 0 var(--spacing-sm) 0;
       }
 
       h2 {
+        font-size: var(--font-size-2xl);
         font-weight: 700;
+        line-height: 1.2;
+        letter-spacing: -0.01em;
+        color: var(--color-text);
+        margin: 0 0 var(--spacing-sm) 0;
       }
 
       h3 {
+        font-size: var(--font-size-xl);
         font-weight: 600;
+        line-height: 1.3;
+        color: var(--color-text);
+        margin: 0 0 var(--spacing-xs) 0;
+      }
+
+      p {
+        font-size: var(--font-size-base);
+        line-height: 1.5;
+        color: var(--color-text);
+        margin: 0 0 var(--spacing-xs) 0;
       }
 
       /* Анимации */
@@ -135,97 +170,82 @@ const { title, description } = Astro.props;
         left: 100%;
       }
 
-      /* Компоненты */
+      /* Компоненты - новые CTA кнопки */
       .cta-primary {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        padding: 0.8rem 1.8rem;
+        padding: 1rem 2rem;
         border-radius: var(--radius-md);
-        background: #111827 !important;
+        background: var(--color-accent-3) !important;
         color: #ffffff !important;
         text-decoration: none !important;
         font-weight: 600;
-        font-size: 1.05rem;
+        font-size: var(--font-size-lg);
         transition: all var(--transition-base);
         border: none;
         cursor: pointer;
-        box-shadow: var(--shadow-sm);
         position: relative;
         overflow: hidden;
       }
 
       .cta-primary:hover {
-        background: #000000 !important;
+        background: #C45A4A !important;
         transform: translateY(-2px);
-        box-shadow: var(--shadow-md);
       }
 
       .cta-primary:active {
         transform: translateY(0);
-        box-shadow: var(--shadow-sm);
-      }
-
-      /* Фоновая анимация для кнопок */
-      .cta-primary::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-        transition: left 0.5s;
-      }
-
-      .cta-primary:hover::before {
-        left: 100%;
       }
 
       .cta-secondary {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        padding: 0.8rem 1.6rem;
+        padding: 1rem 2rem;
         border-radius: var(--radius-md);
-        background: var(--color-bg-panel);
+        background: transparent;
         color: var(--color-text);
         text-decoration: none;
         font-weight: 500;
-        font-size: 1rem;
+        font-size: var(--font-size-base);
         transition: all var(--transition-base);
-        border: 1px solid var(--color-border);
+        border: 1.5px solid var(--color-accent-3);
       }
 
       .cta-secondary:hover {
-        background: var(--color-bg-muted);
-        border-color: var(--color-text-muted);
-        color: var(--color-accent-hover);
+        background: var(--color-accent-3);
+        color: #ffffff;
       }
 
+      /* Карточки - новый стиль */
       .card {
+        background: var(--color-bg-panel);
+        border-radius: var(--radius-md);
+        padding: var(--spacing-md);
         transition: all var(--transition-base);
+        border: 1px solid transparent;
       }
 
       .card:hover {
-        transform: translateY(-4px);
-        box-shadow: var(--shadow-lg);
+        border-color: var(--color-accent-1);
+        transform: translateY(-2px);
       }
 
-      /* Улучшенные ссылки с анимированным underline */
-      a:not(.cta-primary):not(.cta-secondary):not(.services-nav__item):not(.site-header__link) {
+      /* Ссылки с анимированным underline */
+      a:not(.cta-primary):not(.cta-secondary):not(.services-nav__item):not(.site-header__link):not(.site-footer a) {
         color: var(--color-text);
         text-decoration: none;
-        background-image: linear-gradient(to right, var(--color-text) 0%, var(--color-text) 100%);
-        background-size: 0% 1px;
+        background-image: linear-gradient(to right, var(--color-accent-3) 0%, var(--color-accent-3) 100%);
+        background-size: 0% 2px;
         background-position: 0% 100%;
         background-repeat: no-repeat;
         transition: background-size 0.3s ease, color 0.2s ease;
       }
 
-      a:not(.cta-primary):not(.cta-secondary):not(.services-nav__item):not(.site-header__link):hover {
-        color: var(--color-accent-hover);
-        background-size: 100% 1px;
+      a:not(.cta-primary):not(.cta-secondary):not(.services-nav__item):not(.site-header__link):not(.site-footer a):hover {
+        color: var(--color-accent-3);
+        background-size: 100% 2px;
       }
 
       /* Визуальные разделители для секций */
@@ -247,14 +267,13 @@ const { title, description } = Astro.props;
         width: 48px;
         height: 48px;
         border-radius: 50%;
-        background: var(--gradient-cta);
+        background: var(--color-accent-3);
         color: #fff;
         border: none;
         cursor: pointer;
         display: none;
         align-items: center;
         justify-content: center;
-        box-shadow: var(--shadow-lg);
         transition: all var(--transition-base);
         z-index: 100;
         opacity: 0;
@@ -269,12 +288,32 @@ const { title, description } = Astro.props;
 
       .back-to-top:hover {
         transform: translateY(-4px);
-        box-shadow: var(--shadow-xl);
+        background: #C45A4A;
       }
 
       .back-to-top svg {
         width: 20px;
         height: 20px;
+      }
+
+      /* CTA блок с персиковым фоном */
+      .cta-block {
+        background: linear-gradient(135deg, var(--color-accent-1) 0%, var(--color-accent-2) 100%);
+        padding: var(--spacing-xl) var(--spacing-md);
+        border-radius: var(--radius-md);
+        text-align: center;
+        color: var(--color-text);
+      }
+
+      .cta-block h2 {
+        color: var(--color-text);
+        margin-bottom: var(--spacing-sm);
+      }
+
+      .cta-block p {
+        font-size: var(--font-size-lg);
+        margin-bottom: var(--spacing-md);
+        color: var(--color-text);
       }
 
 

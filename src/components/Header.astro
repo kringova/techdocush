@@ -1,7 +1,7 @@
 ---
 const currentPath = Astro.url.pathname;
 const isServices = currentPath.startsWith('/services');
-const isDocs = currentPath.startsWith('/docs');
+const isActivities = currentPath.startsWith('/activities');
 ---
 
 <header class="site-header">
@@ -19,13 +19,13 @@ const isDocs = currentPath.startsWith('/docs');
         </a>
       </li>
       <li>
-        <a href="/docs" class={isDocs ? 'site-header__link site-header__link--active' : 'site-header__link'}>
-          Docs
+        <a href="/activities" class={isActivities ? 'site-header__link site-header__link--active' : 'site-header__link'}>
+          Выступления
         </a>
       </li>
       <li>
-        <a href="https://t.me/+4s0vAcmepQZmYjdi" class="site-header__link site-header__link--external" target="_blank" rel="noopener">
-          Contact ↗
+        <a href="https://t.me/+4s0vAcmepQZmYjdi" class="site-header__cta" target="_blank" rel="noopener">
+          Связаться
         </a>
       </li>
     </ul>
@@ -45,12 +45,15 @@ const isDocs = currentPath.startsWith('/docs');
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
     border-bottom: 1px solid #e5e7eb;
+    margin: 0;
+    padding: 0;
+    width: 100%;
   }
 
   .site-header__nav {
     max-width: 1400px;
     margin: 0 auto;
-    padding: 1rem 2rem;
+    padding: 1rem 4rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -104,8 +107,26 @@ const isDocs = currentPath.startsWith('/docs');
     background: #111827;
   }
 
-  .site-header__link--external {
-    color: #111827;
+  .site-header__cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.6rem 1.2rem;
+    border-radius: 6px;
+    background: transparent;
+    color: #2A2A2A;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+    border: 1.5px solid #D66F5F;
+  }
+
+  .site-header__cta:hover {
+    background: #C45A4A;
+    color: #ffffff !important;
+    text-decoration: none;
+    border-color: #C45A4A;
   }
 
   .site-header__mobile-toggle {
@@ -127,7 +148,7 @@ const isDocs = currentPath.startsWith('/docs');
 
   @media (max-width: 768px) {
     .site-header__nav {
-      padding: 1rem 1.5rem;
+      padding: 1rem 2rem;
     }
 
     .site-header__menu {
