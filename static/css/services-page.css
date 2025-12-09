@@ -437,6 +437,8 @@ article .services-hero {
   width: 100%;
   max-width: 100%;
   padding: 0 2rem;
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 
 .services-principles {
@@ -445,6 +447,8 @@ article .services-hero {
   gap: 1.3rem;
   max-width: 1300px;
   margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .services-principles__card {
@@ -458,6 +462,11 @@ article .services-hero {
   min-height: 140px;
   display: flex;
   align-items: center;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
 }
 
 .services-principles__card p {
@@ -491,8 +500,20 @@ article .services-hero {
 }
 
 @media (max-width: 768px) {
+  .services-principles-wrapper {
+    padding: 0 1rem;
+  }
+
   .services-principles {
     grid-template-columns: 1fr;
+    gap: 1rem;
+    width: 100%;
+  }
+
+  .services-principles__card {
+    padding: 1.2rem 1rem;
+    min-height: auto;
+    font-size: 0.9rem;
   }
 }
 
