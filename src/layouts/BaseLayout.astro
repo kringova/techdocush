@@ -265,10 +265,10 @@ const { title, description } = Astro.props;
         text-decoration-color: #D66F5F;
       }
 
-      /* Ссылки в списках - вариант Г */
-      li a:not(.cta-primary):not(.cta-secondary),
-      ul a:not(.cta-primary):not(.cta-secondary),
-      ol a:not(.cta-primary):not(.cta-secondary) {
+      /* Ссылки в списках - вариант Г (исключаем футер) */
+      li a:not(.cta-primary):not(.cta-secondary):not(.site-footer a),
+      ul a:not(.cta-primary):not(.cta-secondary):not(.site-footer a),
+      ol a:not(.cta-primary):not(.cta-secondary):not(.site-footer a) {
         color: #4B5563;
         text-decoration: underline;
         text-decoration-color: #D66F5F;
@@ -277,9 +277,9 @@ const { title, description } = Astro.props;
         transition: color 0.2s ease, text-decoration-thickness 0.2s ease;
       }
 
-      li a:not(.cta-primary):not(.cta-secondary):hover,
-      ul a:not(.cta-primary):not(.cta-secondary):hover,
-      ol a:not(.cta-primary):not(.cta-secondary):hover {
+      li a:not(.cta-primary):not(.cta-secondary):not(.site-footer a):hover,
+      ul a:not(.cta-primary):not(.cta-secondary):not(.site-footer a):hover,
+      ol a:not(.cta-primary):not(.cta-secondary):not(.site-footer a):hover {
         color: #D66F5F;
         text-decoration-thickness: 2px;
       }

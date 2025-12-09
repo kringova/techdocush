@@ -386,18 +386,17 @@
 }
 
 .landing-content a {
-  color: #111827;
-  text-decoration: none;
-  background-image: linear-gradient(to right, #111827 0%, #111827 100%);
-  background-size: 0% 1px;
-  background-position: 0% 100%;
-  background-repeat: no-repeat;
-  transition: background-size 0.3s ease, color 0.2s ease;
+  color: #4B5563;
+  text-decoration: underline;
+  text-decoration-color: #D66F5F;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  transition: color 0.2s ease, text-decoration-thickness 0.2s ease;
 }
 
 .landing-content a:hover {
-  color: #000;
-  background-size: 100% 1px;
+  color: #D66F5F;
+  text-decoration-thickness: 2px;
 }
 
 .landing-grid3__cta,

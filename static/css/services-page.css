@@ -217,7 +217,7 @@ article .services-hero {
 
   /* Увеличиваем touch targets для навигации */
   .services-nav__item {
-    padding: 0.75rem 0;
+    padding: 0.5rem 0;
     min-height: 44px;
     display: flex;
     align-items: center;
@@ -234,7 +234,7 @@ article .services-hero {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.85rem;
+  gap: 0.25rem;
   width: 100%;
 }
 
@@ -244,9 +244,10 @@ article .services-hero {
   font-size: 1.15rem;
   font-weight: 400;
   text-decoration: none;
-  line-height: 1.6;
+  line-height: 1.5;
   transition: all 0.2s ease;
   position: relative;
+  padding: 0.25rem 0;
 }
 
 .services-nav__item::after {
@@ -614,8 +615,12 @@ article hr {
     color: #ffffff !important;
   }
 
+  .services-nav {
+    gap: 0.2rem;
+  }
+
   .services-nav__item {
-    padding: 0.75rem 0;
+    padding: 0.5rem 0;
     min-height: 44px;
     display: flex;
     align-items: center;
