@@ -262,15 +262,29 @@ const description = "Ex-руководитель редакций Ozon и Янд
   <script>
     // Анимации при скролле для блоков и карточек
     document.addEventListener('DOMContentLoaded', () => {
+      // Проверяем поддержку IntersectionObserver
+      if (typeof IntersectionObserver === 'undefined') {
+        // Fallback: показываем все элементы сразу, если IntersectionObserver не поддерживается
+        const animatedElements = document.querySelectorAll('.section-animate, .card-animate');
+        animatedElements.forEach(el => {
+          el.classList.add('visible');
+        });
+        return;
+      }
+
+      // Оптимизация для мобильных: более мягкие параметры
+      const isMobile = window.innerWidth <= 768;
       const observerOptions = {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
+        threshold: isMobile ? 0.01 : 0.05,
+        rootMargin: isMobile ? '0px 0px -10px 0px' : '0px 0px -30px 0px'
       };
 
       const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
           if (entry.isIntersecting) {
             entry.target.classList.add('visible');
+            // Отключаем наблюдение после показа, чтобы не тратить ресурсы
+            observer.unobserve(entry.target);
           }
         });
       }, observerOptions);

@@ -29,7 +29,6 @@
   object-position: center top;
   transform: none;
   display: block;
-  vertical-align: bottom;
 }
 
 .landing-hero__content {
@@ -240,7 +239,7 @@
   .landing-grid2,
   .landing-grid3 {
     grid-template-columns: 1fr;
-    gap: 1.5rem;
+    gap: 1rem;
   }
 }
 
@@ -420,17 +419,44 @@
   }
 
   .landing-hero__image {
-    flex: 0 0 350px;
-    min-height: 350px;
+    flex: 0 0 300px;
+    min-height: 300px;
   }
 
   .landing-hero__content {
-    padding: 2.5rem 1.5rem;
+    padding: 2rem 1.5rem;
   }
 
   .landing-section--panel,
   .landing-section--muted {
-    padding-left: 1.2rem;
-    padding-right: 1.2rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+  }
+
+  /* Уменьшаем отступы для секций */
+  .landing-section {
+    padding: 2rem 1rem;
+  }
+
+  /* Увеличиваем touch targets */
+  .landing-hero__actions a {
+    min-height: 44px;
+    padding: 0.875rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Упрощаем анимации */
+  .landing-grid2,
+  .landing-grid3 {
+    gap: 1rem;
+  }
+
+  .landing-card,
+  .landing-card-simple {
+    padding: 1.5rem;
   }
 }

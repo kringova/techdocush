@@ -178,18 +178,49 @@ article .services-hero {
   border: none !important;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 768px) {
   .services-hero__split {
     flex-direction: column;
   }
 
   .services-hero__content {
-    padding: 4rem 3rem;
+    padding: 2rem 1.5rem;
   }
 
   .services-hero__nav {
     min-height: auto;
-    padding: 3rem;
+    padding: 2rem 1.5rem;
+  }
+
+  /* Отключаем sticky на мобильных */
+  .service-aside-card {
+    position: static;
+    top: auto;
+  }
+
+  /* Уменьшаем отступы */
+  .services-content-wrapper {
+    padding: 0 1rem;
+  }
+
+  .service-section {
+    padding: 2rem 0;
+  }
+
+  .service-section__content {
+    gap: 2rem;
+  }
+
+  .service-aside-card {
+    padding: 1.5rem;
+  }
+
+  /* Увеличиваем touch targets для навигации */
+  .services-nav__item {
+    padding: 0.75rem 0;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
   }
 }
 
@@ -332,13 +363,15 @@ article .services-hero {
   justify-content: center;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 768px) {
   .service-section__content {
     grid-template-columns: 1fr;
   }
 
   .service-aside-card {
     margin-top: 1rem;
+    position: static;
+    top: auto;
   }
 }
 
@@ -481,6 +514,69 @@ article hr {
   .service-section a[href*="t.me"] {
     display: block;
     text-align: center;
+  }
+
+  /* Дополнительные мобильные оптимизации */
+  .services-content-wrapper {
+    padding: 0 1rem;
+  }
+
+  .service-section {
+    padding: 2rem 0;
+  }
+
+  .service-section__content {
+    gap: 2rem;
+  }
+
+  .service-aside-card {
+    padding: 1rem 0.875rem;
+    position: static;
+    top: auto;
+    margin-top: 0;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
+    border: 1px solid #f3f4f6;
+    border-radius: 0.75rem;
+  }
+
+  .service-aside-card h4 {
+    font-size: 0.95rem;
+    margin-bottom: 0.75rem;
+    font-weight: 700;
+  }
+
+  /* Улучшаем отступы списка на мобильных */
+  .service-includes {
+    padding-left: 1.2rem;
+    margin: 0 0 1rem 0;
+  }
+
+  .service-includes li {
+    margin-bottom: 0.45rem;
+    line-height: 1.7;
+    font-size: 0.875rem;
+    padding-left: 0.3rem;
+    color: #4b5563;
+  }
+
+  .service-includes li:last-child {
+    margin-bottom: 0;
+  }
+
+  /* Компактная кнопка на мобильных */
+  .service-aside-card .cta-primary {
+    padding: 0.7rem 1.15rem;
+    font-size: 0.9rem;
+    margin-top: 0.75rem;
+    min-height: 44px;
+    font-weight: 600;
+  }
+
+  .services-nav__item {
+    padding: 0.75rem 0;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
   }
 }
 
