@@ -313,6 +313,7 @@ article .services-hero {
 
 .service-section__header h3 {
   margin-top: 0;
+  scroll-margin-top: 100px; /* Отступ для якорных ссылок с учётом sticky хедера */
 }
 
 .service-section__header p {
@@ -360,7 +361,15 @@ article .services-hero {
 
 .service-aside-card .cta-primary {
   width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   justify-content: center;
+  /* Мягкий цвет на десктопе */
+  background: #E88B7A !important;
+}
+
+.service-aside-card .cta-primary:hover {
+  background: #D66F5F !important;
 }
 
 @media (max-width: 768px) {
@@ -563,13 +572,25 @@ article hr {
     margin-bottom: 0;
   }
 
-  /* Компактная кнопка на мобильных */
+  /* Outline-стиль кнопки на мобильных */
   .service-aside-card .cta-primary {
     padding: 0.7rem 1.15rem;
     font-size: 0.9rem;
     margin-top: 0.75rem;
     min-height: 44px;
     font-weight: 600;
+    /* Outline-стиль: прозрачный фон, цветная рамка */
+    background: transparent !important;
+    color: #D66F5F !important;
+    border: 1.5px solid #D66F5F !important;
+    box-sizing: border-box;
+    max-width: 100%;
+  }
+
+  .service-aside-card .cta-primary:hover,
+  .service-aside-card .cta-primary:active {
+    background: #D66F5F !important;
+    color: #ffffff !important;
   }
 
   .services-nav__item {
