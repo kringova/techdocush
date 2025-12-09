@@ -425,7 +425,7 @@ const { title, description } = Astro.props;
 
         /* Делаем ссылки очевидными ТОЛЬКО внутри текста на мобильных */
         /* Ссылки в параграфах */
-        p a:not(.cta-primary):not(.cta-secondary):not(.services-nav__item) {
+        p a:not(.cta-primary):not(.cta-secondary):not(.services-nav__item):not(.site-header__link) {
           text-decoration: underline !important;
           text-decoration-color: #D66F5F !important;
           text-decoration-thickness: 1.5px !important;
@@ -439,8 +439,10 @@ const { title, description } = Astro.props;
           text-decoration-thickness: 1.5px !important;
         }
         
-        /* Убираем подчёркивания у навигации по услугам */
-        .services-nav__item {
+        /* Убираем подчёркивания у всей навигации */
+        .services-nav__item,
+        .site-header__link,
+        .site-header__cta {
           text-decoration: none !important;
         }
       }
