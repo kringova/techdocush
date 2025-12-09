@@ -422,6 +422,22 @@ const { title, description } = Astro.props;
         .cta-primary:hover {
           transform: none;
         }
+
+        /* Делаем ссылки очевидными ТОЛЬКО внутри текста на мобильных */
+        /* Ссылки в параграфах */
+        p a:not(.cta-primary):not(.cta-secondary) {
+          text-decoration: underline !important;
+          text-decoration-color: #D66F5F !important;
+          text-decoration-thickness: 1.5px !important;
+        }
+
+        /* Ссылки в списках внутри контента */
+        .landing-content li a:not(.cta-primary):not(.cta-secondary),
+        .service-section li a:not(.cta-primary):not(.cta-secondary) {
+          text-decoration: underline !important;
+          text-decoration-color: #D66F5F !important;
+          text-decoration-thickness: 1.5px !important;
+        }
       }
 
       /* Предотвращаем горизонтальный скролл */

@@ -388,12 +388,12 @@ const faqItems = [
           const href = this.getAttribute('href');
           if (href !== '#' && href.length > 1) {
             e.preventDefault();
-            const target = document.querySelector(href);
+            const targetId = href.substring(1);
+            const target = document.getElementById(targetId);
             if (target) {
-              const offsetTop = target.offsetTop - 80; // отступ для хедера
-              window.scrollTo({
-                top: offsetTop,
-                behavior: 'smooth'
+              target.scrollIntoView({ 
+                behavior: 'smooth',
+                block: 'start'
               });
             }
           }
