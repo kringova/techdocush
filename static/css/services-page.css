@@ -282,6 +282,7 @@ article .services-hero {
   color: #111827;
   margin-top: 1.5rem;
   margin-bottom: 0.8rem;
+  scroll-margin-top: 100px; /* Отступ для якорных ссылок с учётом sticky хедера */
 }
 
 .service-section h3 + p {

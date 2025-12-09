@@ -425,18 +425,23 @@ const { title, description } = Astro.props;
 
         /* Делаем ссылки очевидными ТОЛЬКО внутри текста на мобильных */
         /* Ссылки в параграфах */
-        p a:not(.cta-primary):not(.cta-secondary) {
+        p a:not(.cta-primary):not(.cta-secondary):not(.services-nav__item) {
           text-decoration: underline !important;
           text-decoration-color: #D66F5F !important;
           text-decoration-thickness: 1.5px !important;
         }
 
-        /* Ссылки в списках внутри контента */
+        /* Ссылки в списках внутри контента (НЕ навигация) */
         .landing-content li a:not(.cta-primary):not(.cta-secondary),
         .service-section li a:not(.cta-primary):not(.cta-secondary) {
           text-decoration: underline !important;
           text-decoration-color: #D66F5F !important;
           text-decoration-thickness: 1.5px !important;
+        }
+        
+        /* Убираем подчёркивания у навигации по услугам */
+        .services-nav__item {
+          text-decoration: none !important;
         }
       }
 
