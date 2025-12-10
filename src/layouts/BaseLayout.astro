@@ -257,7 +257,7 @@ const { title, description } = Astro.props;
       }
 
       /* Ссылки с анимированным underline */
-      a:not(.cta-primary):not(.cta-secondary):not(.site-header__link):not(.site-footer a) {
+      a:not(.cta-primary):not(.cta-secondary):not(.site-header__link):not(.site-header__cta):not(.site-footer a) {
         color: var(--color-text);
         text-decoration: none;
         background-image: linear-gradient(to right, var(--color-accent-3) 0%, var(--color-accent-3) 100%);
@@ -265,6 +265,12 @@ const { title, description } = Astro.props;
         background-position: 0% 100%;
         background-repeat: no-repeat;
         transition: background-size 0.3s ease, color 0.2s ease;
+      }
+      
+      /* Убираем все стили для ссылок в шапке */
+      .site-header__menu a {
+        background: none !important;
+        text-decoration: none !important;
       }
 
       /* Подчеркивание для ссылок в параграфах */
@@ -280,9 +286,9 @@ const { title, description } = Astro.props;
         text-decoration-color: #D66F5F;
       }
 
-      /* Ссылки в списках - вариант Г (исключаем футер) */
-      li a:not(.cta-primary):not(.cta-secondary):not(.site-footer a),
-      ul a:not(.cta-primary):not(.cta-secondary):not(.site-footer a),
+      /* Ссылки в списках - вариант Г (исключаем футер и навигацию в шапке) */
+      li:not(.site-header__menu li) a:not(.cta-primary):not(.cta-secondary):not(.site-footer a),
+      ul:not(.site-header__menu) a:not(.cta-primary):not(.cta-secondary):not(.site-footer a),
       ol a:not(.cta-primary):not(.cta-secondary):not(.site-footer a) {
         color: #4B5563;
         text-decoration: underline;
@@ -292,8 +298,8 @@ const { title, description } = Astro.props;
         transition: color 0.2s ease, text-decoration-thickness 0.2s ease;
       }
 
-      li a:not(.cta-primary):not(.cta-secondary):not(.site-footer a):hover,
-      ul a:not(.cta-primary):not(.cta-secondary):not(.site-footer a):hover,
+      li:not(.site-header__menu li) a:not(.cta-primary):not(.cta-secondary):not(.site-footer a):hover,
+      ul:not(.site-header__menu) a:not(.cta-primary):not(.cta-secondary):not(.site-footer a):hover,
       ol a:not(.cta-primary):not(.cta-secondary):not(.site-footer a):hover {
         color: #D66F5F;
         text-decoration-thickness: 2px;
