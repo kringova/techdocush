@@ -1,0 +1,140 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Footer from '../components/Footer.astro';
+---
+
+<BaseLayout title="Спасибо за прочтение — Екатерина Ушакова | Ringova" description="Страница для читателей книги «Если ты — технический писатель, то начни с этой книги». Оставьте обратную связь.">
+  <link rel="stylesheet" href="/css/services-page.css" />
+
+  <section class="frombook-hero">
+    <div class="frombook-hero__inner">
+      <div class="frombook-hero__cover">
+        <img src="/img/book-cover.jpg" alt="Обложка книги «Если ты — технический писатель, то начни с этой книги»" />
+      </div>
+      <div class="frombook-hero__text">
+        <h1>Спасибо, что прочитали!</h1>
+        <p>
+          Я рада, что книга оказалась у вас в руках. Надеюсь, она была полезной —
+          или хотя бы заставила задуматься о чём-то новом. Мне очень важно знать,
+          что вы думаете.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <div class="frombook-content">
+    <section class="frombook-section">
+      <h2>Оставьте анонимный отзыв</h2>
+      <p>Расскажите, что понравилось, чего не хватило, что можно улучшить — любая обратная связь ценна.</p>
+
+      <a href="https://forms.yandex.ru/u/69d66b4eeb6146961a4aac13" class="cta-primary" target="_blank" rel="noopener">
+        Оставить отзыв
+      </a>
+    </section>
+
+    <section class="frombook-section">
+      <h2>Хотите поговорить лично?</h2>
+      <p>Если хотите оставить не анонимный отзыв или просто обсудить что-то из книги — напишите мне.</p>
+      <div class="frombook-contacts">
+        <a href="https://t.me/ushkatia" class="cta-primary" target="_blank" rel="noopener">
+          Написать в Telegram
+        </a>
+        <a href="mailto:katerynaush@ya.ru?subject=%5B%D0%9E%D0%A1%20%D0%BF%D0%BE%20%D0%BA%D0%BD%D0%B8%D0%B3%D0%B5%5D" class="cta-secondary">
+          Написать на почту
+        </a>
+      </div>
+    </section>
+  </div>
+
+  <Footer />
+
+</BaseLayout>
+
+<style>
+  .frombook-hero {
+    padding: var(--spacing-xl) var(--spacing-md) var(--spacing-lg);
+    max-width: 960px;
+    margin: 0 auto;
+  }
+
+  .frombook-hero__inner {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-lg);
+  }
+
+  .frombook-hero__cover {
+    flex-shrink: 0;
+    width: 280px;
+  }
+
+  .frombook-hero__cover img {
+    width: 100%;
+    height: auto;
+    border-radius: var(--radius-md);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  }
+
+  .frombook-hero__text h1 {
+    font-size: var(--font-size-2xl);
+    font-weight: 800;
+    color: var(--color-text);
+    margin-bottom: var(--spacing-xs);
+    line-height: 1.2;
+  }
+
+  .frombook-hero__text p {
+    font-size: var(--font-size-base);
+    color: var(--color-text-muted);
+    line-height: 1.7;
+  }
+
+  .frombook-content {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 0 var(--spacing-md) var(--spacing-xl);
+  }
+
+  .frombook-section {
+    margin-bottom: var(--spacing-lg);
+  }
+
+  .frombook-section h2 {
+    font-size: var(--font-size-xl);
+    font-weight: 700;
+    color: var(--color-text);
+    margin-bottom: var(--spacing-xs);
+  }
+
+  .frombook-section p {
+    font-size: var(--font-size-base);
+    color: var(--color-text-muted);
+    line-height: 1.7;
+    margin-bottom: var(--spacing-sm);
+  }
+
+.frombook-contacts {
+    display: flex;
+    gap: var(--spacing-xs);
+    flex-wrap: wrap;
+  }
+
+  @media (max-width: 768px) {
+    .frombook-hero__inner {
+      flex-direction: column;
+      text-align: center;
+    }
+
+    .frombook-hero__cover {
+      width: 200px;
+    }
+
+    .frombook-contacts {
+      flex-direction: column;
+    }
+
+    .frombook-contacts a {
+      text-align: center;
+    }
+  }
+</style>

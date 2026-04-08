@@ -1,0 +1,163 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Footer from '../components/Footer.astro';
+---
+
+<BaseLayout title="Политика конфиденциальности — Ringova" description="Политика конфиденциальности и обработки персональных данных сайта ringova.com">
+  <link rel="stylesheet" href="/css/services-page.css" />
+
+  <div class="privacy-content">
+    <h1>Политика конфиденциальности</h1>
+    <p class="privacy-updated">Дата последнего обновления: 8 апреля 2026 г.</p>
+
+    <section>
+      <h2>1. Общие положения</h2>
+      <p>
+        Настоящая Политика конфиденциальности определяет порядок обработки персональных данных
+        посетителей сайта ringova.com (далее — «Сайт»).
+      </p>
+      <p>
+        Оператор персональных данных: Ушакова Екатерина (далее — «Оператор»).
+      </p>
+      <p>
+        Используя Сайт, вы соглашаетесь с условиями настоящей Политики.
+        Если вы не согласны с условиями, пожалуйста, покиньте Сайт.
+      </p>
+    </section>
+
+    <section>
+      <h2>2. Какие данные собираются</h2>
+      <p>Сайт собирает следующие данные с помощью сервиса Яндекс.Метрика:</p>
+      <ul>
+        <li>Cookie-файлы (идентификатор сессии, предпочтения пользователя)</li>
+        <li>IP-адрес (в анонимизированном виде)</li>
+        <li>Информация об устройстве и браузере (тип, версия, разрешение экрана)</li>
+        <li>Данные о посещении (просмотренные страницы, время на сайте, источник перехода)</li>
+      </ul>
+      <p>Сайт <strong>не собирает</strong> имена, адреса электронной почты, номера телефонов или иные данные, позволяющие напрямую идентифицировать личность, кроме случаев, когда вы добровольно предоставляете их (например, через форму обратной связи).</p>
+    </section>
+
+    <section>
+      <h2>3. Цели обработки данных</h2>
+      <ul>
+        <li>Анализ посещаемости и поведения пользователей на Сайте</li>
+        <li>Улучшение содержания и удобства использования Сайта</li>
+        <li>Обеспечение работоспособности Сайта</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>4. Cookie-файлы</h2>
+      <p>
+        Cookie — небольшие текстовые файлы, которые сохраняются в вашем браузере
+        при посещении Сайта.
+      </p>
+      <p>На Сайте используются:</p>
+      <ul>
+        <li><strong>Аналитические cookie</strong> — Яндекс.Метрика (счётчик 98485346) для сбора статистики посещений</li>
+        <li><strong>Функциональные cookie</strong> — сохранение вашего выбора относительно согласия на cookie</li>
+      </ul>
+      <p>
+        При первом посещении Сайта вам предлагается принять или отклонить использование
+        аналитических cookie. Аналитические cookie загружаются <strong>только после вашего согласия</strong>.
+      </p>
+    </section>
+
+    <section>
+      <h2>5. Передача данных третьим лицам</h2>
+      <p>
+        Данные аналитики обрабатываются сервисом Яндекс.Метрика (ООО «Яндекс», Россия).
+        Политика конфиденциальности Яндекса:
+        <a href="https://yandex.ru/legal/confidential/" target="_blank" rel="noopener">yandex.ru/legal/confidential</a>.
+      </p>
+      <p>Оператор не передаёт персональные данные иным третьим лицам и не продаёт их.</p>
+    </section>
+
+    <section>
+      <h2>6. Срок хранения данных</h2>
+      <p>
+        Cookie-файлы хранятся в вашем браузере. Вы можете удалить их в любой момент
+        через настройки браузера. Данные в Яндекс.Метрике хранятся в соответствии
+        с политикой Яндекса.
+      </p>
+    </section>
+
+    <section>
+      <h2>7. Ваши права</h2>
+      <p>В соответствии с Федеральным законом № 152-ФЗ «О персональных данных» вы имеете право:</p>
+      <ul>
+        <li>Отказаться от использования аналитических cookie (через баннер на Сайте или настройки браузера)</li>
+        <li>Запросить информацию об обрабатываемых данных</li>
+        <li>Потребовать удаления ваших данных</li>
+        <li>Отозвать согласие на обработку данных</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>8. Контакты</h2>
+      <p>По вопросам обработки персональных данных обращайтесь:</p>
+      <ul>
+        <li>Email: <a href="mailto:katerynaush@ya.ru">katerynaush@ya.ru</a></li>
+        <li>Telegram: <a href="https://t.me/ushkatia" target="_blank" rel="noopener">@ushkatia</a></li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>9. Изменения</h2>
+      <p>
+        Оператор оставляет за собой право обновлять настоящую Политику.
+        Актуальная версия всегда доступна на данной странице.
+      </p>
+    </section>
+
+  </div>
+
+  <Footer />
+</BaseLayout>
+
+<style>
+  .privacy-content {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: var(--spacing-xl) var(--spacing-md);
+  }
+
+  .privacy-content h1 {
+    font-size: var(--font-size-2xl);
+    margin-bottom: var(--spacing-xs);
+  }
+
+  .privacy-updated {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+    margin-bottom: var(--spacing-lg);
+  }
+
+  .privacy-content section {
+    margin-bottom: var(--spacing-md);
+  }
+
+  .privacy-content h2 {
+    font-size: var(--font-size-lg);
+    margin-bottom: var(--spacing-xs);
+  }
+
+  .privacy-content ul {
+    padding-left: var(--spacing-sm);
+    margin-bottom: var(--spacing-xs);
+  }
+
+  .privacy-content li {
+    margin-bottom: 8px;
+    line-height: 1.6;
+  }
+
+  .privacy-disclaimer {
+    margin-top: var(--spacing-lg);
+    padding: var(--spacing-xs);
+    background: var(--color-accent-1);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+  }
+</style>

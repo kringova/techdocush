@@ -1,0 +1,138 @@
+<!-- Cookie Consent Banner -->
+<div class="cookie-banner" id="cookie-banner">
+  <div class="cookie-banner__inner">
+    <p class="cookie-banner__text">
+      Этот сайт использует файлы cookie для аналитики.
+      <a href="/privacy">Политика конфиденциальности</a>
+    </p>
+    <div class="cookie-banner__actions">
+      <button class="cookie-banner__accept" id="cookie-accept">Принять</button>
+      <button class="cookie-banner__reject" id="cookie-reject">Отклонить</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const COOKIE_KEY = 'cookie_consent';
+  const banner = document.getElementById('cookie-banner');
+  const consent = localStorage.getItem(COOKIE_KEY);
+
+  function loadMetrika() {
+    if (window.ym) return;
+    (function(m,e,t,r,i,k,a){
+      m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+      m[i].l=1*new Date();
+      for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+      k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+    })(window, document,'script','https://mc.yandex.ru/metrika/tag.js', 'ym');
+    ym(98485346, 'init', {clickmap:true, accurateTrackBounce:true, trackLinks:true});
+  }
+
+  if (consent === 'accepted') {
+    loadMetrika();
+  } else if (consent === 'rejected') {
+    // Do nothing
+  } else {
+    banner?.classList.add('visible');
+  }
+
+  document.getElementById('cookie-accept')?.addEventListener('click', () => {
+    localStorage.setItem(COOKIE_KEY, 'accepted');
+    banner?.classList.remove('visible');
+    loadMetrika();
+  });
+
+  document.getElementById('cookie-reject')?.addEventListener('click', () => {
+    localStorage.setItem(COOKIE_KEY, 'rejected');
+    banner?.classList.remove('visible');
+  });
+</script>
+
+<style>
+  .cookie-banner {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    display: none;
+    background: var(--color-bg-panel);
+    border-top: 1px solid var(--color-border);
+    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.08);
+  }
+
+  .cookie-banner.visible {
+    display: block;
+  }
+
+  .cookie-banner__inner {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: var(--spacing-sm) var(--spacing-md);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-sm);
+  }
+
+  .cookie-banner__text {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+    margin: 0;
+  }
+
+  .cookie-banner__text a {
+    color: var(--color-accent-3) !important;
+    text-decoration: underline !important;
+  }
+
+  .cookie-banner__actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .cookie-banner__accept {
+    padding: 8px 20px;
+    border-radius: var(--radius-md);
+    background: var(--color-accent-3);
+    color: #fff;
+    border: none;
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background var(--transition-base);
+  }
+
+  .cookie-banner__accept:hover {
+    background: #C45A4A;
+  }
+
+  .cookie-banner__reject {
+    padding: 8px 20px;
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--color-text-muted);
+    border: 1px solid var(--color-border);
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+    transition: all var(--transition-base);
+  }
+
+  .cookie-banner__reject:hover {
+    border-color: var(--color-accent-3);
+    color: var(--color-text);
+  }
+
+  @media (max-width: 768px) {
+    .cookie-banner__inner {
+      flex-direction: column;
+      text-align: center;
+    }
+
+    .cookie-banner__actions {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+</style>
