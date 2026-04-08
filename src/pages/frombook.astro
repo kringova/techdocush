@@ -3,13 +3,13 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import Footer from '../components/Footer.astro';
 ---
 
-<BaseLayout title="Спасибо за прочтение — Екатерина Ушакова | Ringova" description="Страница для читателей книги «Если ты — технический писатель, то начни с этой книги». Оставьте обратную связь.">
+<BaseLayout title="Спасибо за прочтение — Екатерина Ушакова | Ringova" description="Страница для читателей книги «Если ты — технический писатель, то начни с этой книги». Оставьте обратную связь." image="/img/book-cover.webp" noindex={true}>
   <link rel="stylesheet" href="/css/services-page.css" />
 
   <section class="frombook-hero">
     <div class="frombook-hero__inner">
       <div class="frombook-hero__cover">
-        <img src="/img/book-cover.jpg" alt="Обложка книги «Если ты — технический писатель, то начни с этой книги»" />
+        <img src="/img/book-cover.webp" alt="Обложка книги «Если ты — технический писатель, то начни с этой книги»" loading="eager" />
       </div>
       <div class="frombook-hero__text">
         <h1>Спасибо, что прочитали!</h1>

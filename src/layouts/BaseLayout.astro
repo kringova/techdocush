@@ -5,9 +5,12 @@ import CookieConsent from '../components/CookieConsent.astro';
 export interface Props {
   title: string;
   description?: string;
+  image?: string;
+  noindex?: boolean;
 }
 
-const { title, description } = Astro.props;
+const { title, description, image = '/img/og-default.jpg', noindex = false } = Astro.props;
+const ogImage = image.startsWith('http') ? image : `https://ringova.com${image}`;
 ---
 
 <!doctype html>
@@ -15,6 +18,7 @@ const { title, description } = Astro.props;
   <head>
     <meta charset="UTF-8" />
     <meta name="description" content={description || title} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="generator" content={Astro.generator} />
@@ -22,7 +26,20 @@ const { title, description } = Astro.props;
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <title>{title}</title>
-    
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description || title} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:locale" content="ru_RU" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description || title} />
+    <meta name="twitter:image" content={ogImage} />
+
     <!-- Yandex.Metrika загружается через CookieConsent после согласия пользователя -->
     
     <style is:global>
