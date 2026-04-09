@@ -1,0 +1,378 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Footer from '../components/Footer.astro';
+---
+
+<BaseLayout
+  title="Книга «Если ты — технический писатель» — Екатерина Ушакова"
+  description="Книга о профессии технического писателя от практика с опытом в Ozon и Яндексе. Для тех, кто входит в профессию или хочет вырасти. 500 ₽ + доставка."
+  image="/img/book-cover.webp"
+>
+  <link rel="stylesheet" href="/css/services-page.css" />
+
+  <section class="book-hero">
+    <div class="book-hero__inner">
+      <div class="book-hero__cover">
+        <img
+          src="/img/book-cover.webp"
+          alt="Обложка книги «Если ты — технический писатель, то начни с этой книги»"
+          loading="eager"
+        />
+      </div>
+      <div class="book-hero__text">
+        <h1>Если ты — технический писатель, то начни с этой книги</h1>
+        <p class="book-hero__desc">
+          Практическое руководство по профессии технического писателя в России. От первых шагов без опыта до документации, которой пользуются.
+        </p>
+        <p class="book-hero__tagline">Хотите создавать документацию, которой пользуются? Начните с этой книги.</p>
+        <div class="book-hero__meta">
+          <span class="book-hero__author">Екатерина Ушакова</span>
+          <span class="book-hero__format">Бумажная книга · 500 ₽ + доставка</span>
+        </div>
+        <a
+          href="mailto:katerynaush@ya.ru?subject=%D0%97%D0%B0%D0%BA%D0%B0%D0%B7%20%D0%BA%D0%BD%D0%B8%D0%B3%D0%B8%20%C2%AB%D0%95%D1%81%D0%BB%D0%B8%20%D1%82%D1%8B%20%E2%80%94%20%D1%82%D0%B5%D1%85%D0%BD%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B9%20%D0%BF%D0%B8%D1%81%D0%B0%D1%82%D0%B5%D0%BB%D1%8C%C2%BB&body=%D0%97%D0%B4%D1%80%D0%B0%D0%B2%D1%81%D1%82%D0%B2%D1%83%D0%B9%D1%82%D0%B5!%0A%0A%D0%A5%D0%BE%D1%87%D1%83%20%D0%B7%D0%B0%D0%BA%D0%B0%D0%B7%D0%B0%D1%82%D1%8C%20%D0%BA%D0%BD%D0%B8%D0%B3%D1%83.%0A%0A%D0%9C%D0%BE%D1%91%20%D0%B8%D0%BC%D1%8F%3A%0A%D0%90%D0%B4%D1%80%D0%B5%D1%81%20%D0%B4%D0%BE%D1%81%D1%82%D0%B0%D0%B2%D0%BA%D0%B8%20(%D0%B2%D0%BA%D0%BB%D1%8E%D1%87%D0%B0%D1%8F%20%D0%B8%D0%BD%D0%B4%D0%B5%D0%BA%D1%81)%3A%0A%D0%A2%D0%B5%D0%BB%D0%B5%D1%84%D0%BE%D0%BD%3A%0A"
+          class="cta-primary book-cta"
+        >
+          Заказать
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <div class="book-content">
+
+    <div class="book-two-col">
+      <section class="book-section book-section--panel">
+        <h2>Для кого эта книга</h2>
+        <div class="book-list">
+          <div class="book-list__item">
+            <strong>Начинающим техписам</strong>
+            <p>Только получили первый оффер или ещё выбираете профессию — книга даёт ориентир на старте.</p>
+          </div>
+          <div class="book-list__item">
+            <strong>Техписам с опытом</strong>
+            <p>Уже работаете, но хочется системы и взгляда со стороны.</p>
+          </div>
+          <div class="book-list__item">
+            <strong>Аналитикам и продакт-менеджерам</strong>
+            <p>Разобраться, как устроена работа с документацией, и говорить с техписами на одном языке.</p>
+          </div>
+          <div class="book-list__item">
+            <strong>Разработчикам</strong>
+            <p>Пишете или читаете документацию, но не понимаете её логику — книга объяснит принципы.</p>
+          </div>
+          <div class="book-list__item">
+            <strong>Всем, кто работает с текстами в IT</strong>
+            <p>Редакторам, UX-райтерам и смежным ролям, которым интересна техническая коммуникация.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="book-section book-section--panel">
+        <h2>Что внутри</h2>
+        <div class="book-list">
+          <div class="book-list__item">
+            <strong>Вход в профессию</strong>
+            <p>Составление портфолио без опыта, вопросы на собеседованиях, план действий на первый год.</p>
+          </div>
+          <div class="book-list__item">
+            <strong>Аудитория документации</strong>
+            <p>Задачи и потребности читателей, метрики полезности, применимые методы исследования.</p>
+          </div>
+          <div class="book-list__item">
+            <strong>Сбор информации</strong>
+            <p>Проведение интервью с экспертами, работа с источниками, организация коммуникаций.</p>
+          </div>
+          <div class="book-list__item">
+            <strong>Написание и редактура</strong>
+            <p>Правила создания понятного текста, Tone of Voice, стайлгайд, глоссарий, шаблоны.</p>
+          </div>
+          <div class="book-list__item">
+            <strong>Работа в команде</strong>
+            <p>Модели взаимодействия, распределение ролей, применение генеративного ИИ, роль профессионального сообщества.</p>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <section class="book-section book-section--muted">
+      <h2>Как заказать</h2>
+      <div class="book-order">
+        <div class="book-order__steps">
+          <div class="book-order__step">
+            <div class="book-order__step-num">1</div>
+            <div>
+              <strong>Нажмите кнопку</strong>
+              <p>Откроется письмо с шаблоном.</p>
+            </div>
+          </div>
+          <div class="book-order__step">
+            <div class="book-order__step-num">2</div>
+            <div>
+              <strong>Отправьте письмо</strong>
+              <p>Получите в ответ стоимость доставки и реквизиты для оплаты через СБП.</p>
+            </div>
+          </div>
+          <div class="book-order__step">
+            <div class="book-order__step-num">3</div>
+            <div>
+              <strong>Ждите книгу</strong>
+              <p>После оплаты отправлю книгу и пришлю кассовый чек.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="book-order__card">
+          <div class="book-order__price">
+            <span class="book-order__price-value">500 ₽</span>
+            <span class="book-order__price-note">+ доставка</span>
+          </div>
+          <a
+            href="mailto:katerynaush@ya.ru?subject=%D0%97%D0%B0%D0%BA%D0%B0%D0%B7%20%D0%BA%D0%BD%D0%B8%D0%B3%D0%B8%20%C2%AB%D0%95%D1%81%D0%BB%D0%B8%20%D1%82%D1%8B%20%E2%80%94%20%D1%82%D0%B5%D1%85%D0%BD%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B9%20%D0%BF%D0%B8%D1%81%D0%B0%D1%82%D0%B5%D0%BB%D1%8C%C2%BB&body=%D0%97%D0%B4%D1%80%D0%B0%D0%B2%D1%81%D1%82%D0%B2%D1%83%D0%B9%D1%82%D0%B5!%0A%0A%D0%A5%D0%BE%D1%87%D1%83%20%D0%B7%D0%B0%D0%BA%D0%B0%D0%B7%D0%B0%D1%82%D1%8C%20%D0%BA%D0%BD%D0%B8%D0%B3%D1%83.%0A%0A%D0%9C%D0%BE%D1%91%20%D0%B8%D0%BC%D1%8F%3A%0A%D0%90%D0%B4%D1%80%D0%B5%D1%81%20%D0%B4%D0%BE%D1%81%D1%82%D0%B0%D0%B2%D0%BA%D0%B8%20(%D0%B2%D0%BA%D0%BB%D1%8E%D1%87%D0%B0%D1%8F%20%D0%B8%D0%BD%D0%B4%D0%B5%D0%BA%D1%81)%3A%0A%D0%A2%D0%B5%D0%BB%D0%B5%D1%84%D0%BE%D0%BD%3A%0A"
+            class="cta-primary"
+          >
+            Заказать
+          </a>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <Footer />
+
+</BaseLayout>
+
+<style>
+  .book-hero {
+    padding: var(--spacing-xl) var(--spacing-md) var(--spacing-lg);
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .book-hero__inner {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: var(--spacing-lg);
+    align-items: start;
+  }
+
+  .book-hero__cover img {
+    width: 100%;
+    height: auto;
+    border-radius: var(--radius-md);
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.14);
+  }
+
+  .book-hero__text h1 {
+    font-size: var(--font-size-2xl);
+    margin-bottom: var(--spacing-xs);
+  }
+
+  .book-hero__desc {
+    font-size: var(--font-size-base);
+    color: var(--color-text-muted);
+    line-height: 1.7;
+    margin-bottom: var(--spacing-sm);
+  }
+
+  .book-hero__meta {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: var(--spacing-md);
+  }
+
+  .book-hero__author {
+    font-weight: 600;
+    font-size: var(--font-size-base);
+    color: var(--color-text);
+  }
+
+  .book-hero__format {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+  }
+
+  .book-hero__tagline {
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    color: var(--color-accent-3);
+    font-style: italic;
+    margin-bottom: var(--spacing-sm);
+  }
+
+  .book-cta {
+    align-self: flex-start;
+  }
+
+  .book-content {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 var(--spacing-md) var(--spacing-xl);
+  }
+
+  .book-section {
+    padding: var(--spacing-lg) var(--spacing-md);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--spacing-md);
+  }
+
+  .book-section--muted {
+    background: var(--color-bg);
+  }
+
+  .book-section--panel {
+    background: var(--color-bg-panel);
+    border: 1px solid var(--color-border);
+  }
+
+  .book-section h2 {
+    margin-bottom: var(--spacing-md);
+  }
+
+  .book-two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+  }
+
+  .book-two-col .book-section {
+    margin-bottom: 0;
+  }
+
+  @media (max-width: 768px) {
+    .book-two-col {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* Unified list style for both columns */
+  .book-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+  }
+
+  .book-list__item {
+    padding-bottom: var(--spacing-xs);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .book-list__item:last-child {
+    padding-bottom: 0;
+    border-bottom: none;
+  }
+
+  .book-list__item strong {
+    display: block;
+    margin-bottom: 4px;
+    font-size: var(--font-size-base);
+    color: var(--color-text);
+  }
+
+  .book-list__item p {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+    margin: 0;
+    line-height: 1.6;
+  }
+
+  /* Order section */
+  .book-order {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: var(--spacing-lg);
+    align-items: start;
+  }
+
+  .book-order__steps {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+  }
+
+  .book-order__step {
+    display: flex;
+    gap: var(--spacing-sm);
+    align-items: flex-start;
+  }
+
+  .book-order__step-num {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--color-accent-1);
+    color: var(--color-accent-3);
+    font-weight: 700;
+    font-size: var(--font-size-base);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .book-order__step strong {
+    display: block;
+    margin-bottom: 4px;
+    font-size: var(--font-size-base);
+    color: var(--color-text);
+  }
+
+  .book-order__step p {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+    margin: 0;
+    line-height: 1.6;
+  }
+
+  .book-order__card {
+    background: var(--color-accent-1);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    text-align: center;
+  }
+
+  .book-order__price {
+    margin-bottom: var(--spacing-sm);
+  }
+
+  .book-order__price-value {
+    display: block;
+    font-size: var(--font-size-3xl);
+    font-weight: 800;
+    color: var(--color-text);
+    line-height: 1.1;
+  }
+
+  .book-order__price-note {
+    display: block;
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+    margin-top: 4px;
+  }
+
+  @media (max-width: 768px) {
+    .book-hero__inner {
+      grid-template-columns: 1fr;
+    }
+
+    .book-hero__cover {
+      max-width: 220px;
+      margin: 0 auto;
+    }
+
+    .book-hero__text {
+      text-align: center;
+    }
+
+    .book-hero__meta {
+      align-items: center;
+    }
+
+    .book-order {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
