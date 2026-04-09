@@ -61,7 +61,10 @@ const description = "Ex-руководитель редакций Ozon и Янд
     </section>
 
     <section class="landing-section landing-section--muted section-animate">
-      <h2>Опыт работы</h2>
+      <div class="section-heading-row">
+        <h2>Опыт работы</h2>
+        <a href="/resume.html" class="resume-link">Подробное резюме →</a>
+      </div>
 
       <div class="landing-experience">
         <div class="landing-experience-item timeline-item">
@@ -135,27 +138,6 @@ const description = "Ex-руководитель редакций Ozon и Янд
           </div>
         </div>
 
-        <div class="landing-experience-item timeline-item">
-          <div class="timeline-marker"></div>
-          <div class="timeline-content">
-            <h3>Роспартнёр</h3>
-            <p><em>Сентябрь 2017 — Август 2018</em></p>
-          <p>
-            Работала инженером по тестированию: писала на Python + Selenium автотесты для портала mos.ru. Ввела командные ритуалы: еженедельные созвоны, шаблоны задач на тестирование, регулярные отчёты по выполненным работам.
-          </p>
-          </div>
-        </div>
-
-        <div class="landing-experience-item timeline-item">
-          <div class="timeline-marker"></div>
-          <div class="timeline-content">
-            <h3>Зарница-Инновации</h3>
-            <p><em>Июнь 2017 — Август 2017</em></p>
-          <p>
-            Работала инженером-электронщиком: паяла, программировала и документировала стенд с рукой-манипулятором для школьников, увлечённых робототехникой. Участвовала в республиканской выставке с этой разработкой.
-          </p>
-          </div>
-        </div>
       </div>
     </section>
 
@@ -315,6 +297,26 @@ const description = "Ex-руководитель редакций Ozon и Янд
 </BaseLayout>
 
 <style>
+  .section-heading-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 1.5rem;
+  }
+
+  .section-heading-row h2 {
+    margin-bottom: 0;
+  }
+
+  .resume-link {
+    font-size: 13px;
+    color: #6b7280;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .resume-link:hover { color: #111827; }
+
   .landing-experience {
     display: flex;
     flex-direction: column;

@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Екатерина Ушакова — резюме</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto:wght@400;500;700;900&display=swap');
+
+        :root {
+            --accent: #111827;
+            --accent-light: #f9fafb;
+            --accent-border: #e5e7eb;
+            --text: #111827;
+            --text-secondary: #374151;
+            --text-dim: #6b7280;
+            --divider: #e5e7eb;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            color: var(--text);
+            background: #fff;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        .page { max-width: 800px; margin: 0 auto; padding: 60px 64px; }
+
+        /* Header */
+        .header {
+            padding-bottom: 32px;
+            border-bottom: 2px solid var(--text);
+            margin-bottom: 40px;
+        }
+
+        .header-main {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 24px;
+        }
+
+        .header-text { flex: 1; }
+
+        .header-photo img {
+            width: 96px;
+            height: 96px;
+            object-fit: cover;
+            object-position: center top;
+            border-radius: 8px;
+            display: block;
+        }
+
+        .header h1 {
+            font-family: 'Roboto', sans-serif;
+            font-size: 36px;
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 8px;
+        }
+
+        .header-title {
+            font-size: 16px;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+        }
+
+        .header-contacts {
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+            font-size: 13px;
+            color: var(--text-dim);
+        }
+
+        .header-contacts a {
+            color: var(--text-dim);
+            text-decoration: none;
+        }
+
+        .header-contacts a:hover { color: var(--text); }
+
+        /* Section */
+        h2 {
+            font-family: 'Roboto', sans-serif;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-dim);
+            margin-bottom: 20px;
+            margin-top: 40px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--divider);
+        }
+
+        /* Experience */
+        .exp-item {
+            display: grid;
+            grid-template-columns: 180px 1fr;
+            gap: 24px;
+            margin-bottom: 32px;
+            padding-bottom: 32px;
+            border-bottom: 1px solid var(--divider);
+        }
+
+        .exp-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .exp-meta {
+            padding-top: 2px;
+        }
+
+        .exp-company {
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+
+        .exp-period {
+            font-size: 12px;
+            color: var(--text-dim);
+            margin-bottom: 4px;
+        }
+
+        .exp-role {
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+
+        .exp-content p {
+            font-size: 13px;
+            line-height: 1.7;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+        }
+
+        .exp-content p:last-child { margin-bottom: 0; }
+
+        .exp-content ul {
+            margin: 8px 0 10px 0;
+            padding-left: 0;
+            list-style: none;
+        }
+
+        .exp-content li {
+            font-size: 13px;
+            line-height: 1.7;
+            color: var(--text-secondary);
+            padding: 2px 0 2px 16px;
+            position: relative;
+        }
+
+        .exp-content li::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 11px;
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: var(--text-dim);
+        }
+
+        blockquote {
+            margin: 12px 0;
+            padding: 12px 16px;
+            background: var(--accent-light);
+            border-left: 3px solid var(--accent-border);
+            font-style: italic;
+            color: var(--text-secondary);
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+        /* Education */
+        .edu-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .edu-item {
+            padding: 16px 20px;
+            background: var(--accent-light);
+            border-radius: 8px;
+        }
+
+        .edu-item h4 {
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
+
+        .edu-item .edu-period {
+            font-size: 12px;
+            color: var(--text-dim);
+            margin-bottom: 4px;
+        }
+
+        .edu-item .edu-degree {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .courses-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .courses-list li {
+            font-size: 13px;
+            color: var(--text-secondary);
+            padding: 3px 0 3px 16px;
+            position: relative;
+        }
+
+        .courses-list li::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 11px;
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: var(--text-dim);
+        }
+
+        .courses-list a { color: var(--text-secondary); }
+
+        /* Activities */
+        .activity-block { margin-bottom: 24px; }
+
+        .activity-block h3 {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+
+        .activity-block ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .activity-block li {
+            font-size: 13px;
+            line-height: 1.7;
+            color: var(--text-secondary);
+            padding: 3px 0 3px 16px;
+            position: relative;
+        }
+
+        .activity-block li::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 11px;
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: var(--text-dim);
+        }
+
+        .activity-block a { color: var(--text-secondary); }
+
+        @media print {
+            body { font-size: 12px; }
+            .page { padding: 32px 40px; max-width: none; }
+            h2 { margin-top: 28px; }
+            .exp-item { break-inside: avoid; }
+        }
+
+        @page { margin: 1.5cm; size: A4; }
+    </style>
+</head>
+<body>
+
+<div class="page">
+
+    <div class="header">
+        <div class="header-main">
+            <div class="header-text">
+                <h1>Екатерина Ушакова</h1>
+                <div class="header-title">Эксперт по технической документации и управлению редакциями</div>
+                <div class="header-contacts">
+                    <a href="https://ringova.com">ringova.com</a>
+                    <a href="https://t.me/ringova">t.me/ringova</a>
+                    <a href="https://t.me/ushkatia">t.me/ushkatia</a>
+                </div>
+            </div>
+            <div class="header-photo">
+                <img src="/img/photo4.jpg" alt="Екатерина Ушакова" />
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== EXPERIENCE ==================== -->
+
+    <h2>Опыт работы</h2>
+
+    <div class="exp-item">
+        <div class="exp-meta">
+            <div class="exp-company">Независимый консультант</div>
+            <div class="exp-period">2025 — настоящее время</div>
+        </div>
+        <div class="exp-content">
+            <p>Консультирую по найму технических редакторов, выстраиванию процессов документирования и управлению знаниями в компаниях до 1000 человек. Веду менторство для руководителей редакций и техписов.</p>
+        </div>
+    </div>
+
+    <div class="exp-item">
+        <div class="exp-meta">
+            <div class="exp-company">Яндекс</div>
+            <div class="exp-period">Февраль — октябрь 2025</div>
+            <div class="exp-role">Ведущий менеджер проектов, Техплатформа Городских сервисов</div>
+        </div>
+        <div class="exp-content">
+            <p>Помогала командам Яндекс.Такси, Лавки, Еды и других сервисов договориться о стандартах и процессах — документирование, поддержка, планирование.</p>
+            <ul>
+                <li>Запустила переход с полугодового на квартальное планирование — команды стали быстрее реагировать на изменения</li>
+                <li>Помогла команде поддержки внедрить ИИ в работу (отчёты, ответы, инструкции) — сократили время на рутину</li>
+                <li>Наняла техписателей и наладила их работу с командой разработки Техплатформы</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="exp-item">
+        <div class="exp-meta">
+            <div class="exp-company">Ozon Tech</div>
+            <div class="exp-period">Октябрь 2019 — январь 2025</div>
+            <div class="exp-role">Руководитель редакции технических писателей</div>
+        </div>
+        <div class="exp-content">
+            <p>Пришла развивать портал документации для продавцов: проводила интервью, выбирала техническое решение, выстраивала процесс постоянного обновления документации.</p>
+            <p>В июне 2020 перешла на руководителя отдела — вела не только техническую документацию, но и Базу Знаний для покупателей и продавцов. Тогда же начали активно расширять команду.</p>
+            <p>2021 год посвятили выстраиванию метрик документации и шлифовке процессов со смежниками: появились дашборды с информацией о поведении пользователей, связи документации с обращениями в поддержку и влиянии наших задач на смежные отделы. Перешли на работу по спринтам, избавились от постоянного потока срочных-горячих задач.</p>
+            <p>В 2022 активно развивали инструменты и стандарты внутри компании: полностью перешли на docs-as-code подход, разработали матрицу компетенций и задачник для точного определения грейда редакторов.</p>
+            <p>2023 год заложил фундамент публичным активностям: начали серию митапов Techdoc Meetup совместно с командой техписателей X5, выступили на Стачке и CrossConf, начали разработку курса по техническим коммуникациям для Университета Иннополис. Платформа документации дошла до стабильного состояния — перешли к разработке фич для смежных команд: единый источник, мультиязычность, интеграция через API.</p>
+            <blockquote>Команда сопровождала продукты полным набором текстов: от технического задания до публикаций анонсов в соцсетях. Чат-боты, тексты интерфейсов, документация API — всем этим занималась техническая редакция.</blockquote>
+            <p>В 2024 году DAU портала документации превысил население Владивостока. Посвятили год стабильности: оптимизировали ТТМ портала и внутреннего хранилища, обновили тестирование, следили за доступностью и стабильностью.</p>
+        </div>
+    </div>
+
+    <div class="exp-item">
+        <div class="exp-meta">
+            <div class="exp-company">Яндекс</div>
+            <div class="exp-period">Август 2018 — октябрь 2019</div>
+            <div class="exp-role">Технический писатель, Яндекс.Маркет</div>
+        </div>
+        <div class="exp-content">
+            <p>Первый опыт в техписах: API-документация, документы для продавцов Яндекс.Маркета, автоматизация на bash. Попала в команду после прохождения академии Гипербатона.</p>
+        </div>
+    </div>
+
+    <div class="exp-item">
+        <div class="exp-meta">
+            <div class="exp-company">Роспартнёр</div>
+            <div class="exp-period">Сентябрь 2017 — август 2018</div>
+            <div class="exp-role">Инженер по тестированию</div>
+        </div>
+        <div class="exp-content">
+            <p>Писала на Python + Selenium автотесты для портала mos.ru. Ввела командные ритуалы: еженедельные созвоны, шаблоны задач на тестирование, регулярные отчёты по выполненным работам.</p>
+        </div>
+    </div>
+
+    <div class="exp-item">
+        <div class="exp-meta">
+            <div class="exp-company">Зарница-Инновации</div>
+            <div class="exp-period">Июнь — август 2017</div>
+            <div class="exp-role">Инженер-электронщик</div>
+        </div>
+        <div class="exp-content">
+            <p>Паяла, программировала и документировала стенд с рукой-манипулятором для школьников, увлечённых робототехникой. Участвовала в республиканской выставке с этой разработкой.</p>
+        </div>
+    </div>
+
+    <!-- ==================== EDUCATION ==================== -->
+
+    <h2>Образование</h2>
+
+    <div class="edu-grid">
+        <div class="edu-item">
+            <h4>Университет Иннополис</h4>
+            <div class="edu-period">2015–2017</div>
+            <div class="edu-degree">Бакалавр, Информатика и ВТ<br>Программирование, алгоритмы, управление проектами, продуктовый дизайн</div>
+        </div>
+        <div class="edu-item">
+            <h4>ХНУРЭ</h4>
+            <div class="edu-period">2012–2015</div>
+            <div class="edu-degree">Бакалавр, Телекоммуникации<br>Сети связи, алгоритмы, основы программирования</div>
+        </div>
+        <div class="edu-item">
+            <h4>НИУ ВШЭ</h4>
+            <div class="edu-period">2020</div>
+            <div class="edu-degree">Управление цифровым продуктом<br>Юнит-экономика, метрики продукта, CJM, JTBD</div>
+        </div>
+        <div class="edu-item">
+            <h4>МИП</h4>
+            <div class="edu-period">2022–2023</div>
+            <div class="edu-degree">Клиническая психология<br>Психодиагностика, консультирование</div>
+        </div>
+    </div>
+
+    <div class="activity-block">
+        <h3>Курсы</h3>
+        <ul class="courses-list">
+            <li><a href="https://heroes.camp/">Product Heroes</a> — Илья Красинский</li>
+            <li><a href="https://glagol.me/">Публичные выступления</a> — Артём Гусев</li>
+            <li>Кастдев — <a href="https://t.me/zamesin">Ваня Замесин</a></li>
+        </ul>
+    </div>
+
+    <!-- ==================== ACTIVITIES ==================== -->
+
+    <h2>Публичные активности</h2>
+
+    <div class="activity-block">
+        <h3>Организация событий</h3>
+        <ul>
+            <li><a href="https://writeconf.ru/"><strong>WriteConf</strong></a> (2025, 2026) — Программный директор</li>
+            <li><a href="https://spb25.nastachku.ru/technical-documentation-spb25"><strong>Стачка Санкт-Петербург 2025</strong></a> — Куратор секции «Техническая документация»</li>
+            <li><a href="https://ul25.nastachku.ru/technical-documentation-ul25"><strong>Стачка Ульяновск 2025</strong></a> — Куратор секции «Техническая документация»</li>
+            <li><a href="https://spb24.nastachku.ru/doklady?features_hash=13-393"><strong>Стачка Санкт-Петербург 2024</strong></a> — Куратор секции</li>
+            <li><a href="https://vk.com/video/@devfestomsk?list=f9acfc58d5cb2db4fa"><strong>DevFest Omsk 2024</strong></a> — Куратор трека техдокументации</li>
+            <li><strong>Techdoc Meetup</strong> — Организатор серии митапов совместно с X5 Tech</li>
+        </ul>
+    </div>
+
+    <div class="activity-block">
+        <h3>Выступления на конференциях</h3>
+        <ul>
+            <li><a href="https://teamleadconf.ru/spb/2025"><strong>Saint TeamLead Conf 2025</strong></a> — Круглый стол «Индивидуальные планы развития»</li>
+            <li><a href="https://youtu.be/RH0jxx3L26E"><strong>Strong Team Summer 2025</strong></a> — «Одна профессия, чтобы управлять ими всеми»</li>
+            <li><a href="https://www.youtube.com/watch?v=Tc6_wuJFFdI"><strong>Стачка Ульяновск 2024</strong></a> — «Агрегатные состояния внутренней документации»</li>
+            <li><a href="https://www.youtube.com/watch?v=K2EkkCMBbxU"><strong>Стачка Ульяновск 2023</strong></a> — «Введение в техническую документацию»</li>
+            <li><a href="https://www.youtube.com/live/uWU0oPimbDQ?t=3160"><strong>Kaspersky Tech. База знаний здорового техписа</strong></a> — «Делаем Базу Знаний из подручных материалов»</li>
+            <li><a href="https://www.youtube.com/live/KZ1g1EPuixw?t=5288"><strong>TeamSnack TechWriters</strong></a> — «Мастерство в технической документации»</li>
+        </ul>
+    </div>
+
+    <div class="activity-block">
+        <h3>Подкасты и интервью</h3>
+        <ul>
+            <li><a href="https://vk.com/video-115026656_456239351"><strong>«Я — начальник»</strong></a> — One-to-one. Зачем разговаривать с сотрудниками</li>
+            <li><a href="https://vk.com/video-224033402_456239019"><strong>«Слово Техлида»</strong></a> — Тонкости профессии технического писателя</li>
+            <li><a href="https://music.yandex.ru/album/17574609/track/105036662"><strong>«ТыжДевочка»</strong></a> — «Технический писатель — это не только про ГОСТы»</li>
+        </ul>
+    </div>
+
+    <div class="activity-block">
+        <h3>Преподавание</h3>
+        <ul>
+            <li><strong>Innopolis University</strong> — Курс «Technical Communication in IT»</li>
+            <li><strong>Route 256</strong> — Авторский блок «Документация в управлении проектами»</li>
+        </ul>
+    </div>
+
+</div>
+
+</body>
+</html>
