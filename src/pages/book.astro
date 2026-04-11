@@ -18,6 +18,7 @@ import Footer from '../components/Footer.astro';
           alt="Обложка книги «Если ты — технический писатель, то начни с этой книги»"
           loading="eager"
         />
+        <p class="book-hero__specs">123 с. · Мягкий переплёт</p>
       </div>
       <div class="book-hero__text">
         <h1>Если ты — технический писатель,<br>то начни с этой книги</h1>
@@ -155,6 +156,14 @@ import Footer from '../components/Footer.astro';
     grid-template-columns: 280px 1fr;
     gap: var(--spacing-lg);
     align-items: start;
+  }
+
+  .book-hero__specs {
+    margin-top: var(--spacing-xs);
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+    text-align: center;
+    opacity: 0.7;
   }
 
   .book-hero__cover img {
