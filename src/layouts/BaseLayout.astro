@@ -22,9 +22,6 @@ const ogImage = image.startsWith('http') ? image : `https://ringova.com${image}`
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="generator" content={Astro.generator} />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <title>{title}</title>
 
     <!-- Open Graph -->
@@ -40,9 +37,17 @@ const ogImage = image.startsWith('http') ? image : `https://ringova.com${image}`
     <meta name="twitter:description" content={description || title} />
     <meta name="twitter:image" content={ogImage} />
 
-    <!-- Yandex.Metrika загружается через CookieConsent после согласия пользователя -->
+    <!-- Yandex.Metrika временно отключена до подачи уведомления в РКН -->
     
     <style is:global>
+      @font-face {
+        font-family: 'Inter';
+        font-style: normal;
+        font-weight: 100 900;
+        font-display: swap;
+        src: url('/fonts/inter-variable.woff2') format('woff2');
+      }
+
       :root {
         /* Новая цветовая палитра - персиково-терракотовая */
         --color-bg: #FFF5E9;
@@ -485,6 +490,8 @@ const ogImage = image.startsWith('http') ? image : `https://ringova.com${image}`
   <body>
     <Header />
     <slot />
+    <!-- CookieConsent временно отключён до подачи уведомления в РКН
     <CookieConsent />
+    -->
   </body>
 </html>
