@@ -37,8 +37,8 @@ const ogImage = image.startsWith('http') ? image : `https://ringova.com${image}`
     <meta name="twitter:description" content={description || title} />
     <meta name="twitter:image" content={ogImage} />
 
-    <!-- Yandex.Metrika временно отключена до подачи уведомления в РКН -->
-    
+
+
     <style is:global>
       @font-face {
         font-family: 'Inter';
@@ -490,8 +490,6 @@ const ogImage = image.startsWith('http') ? image : `https://ringova.com${image}`
   <body>
     <Header />
     <slot />
-    <!-- CookieConsent временно отключён до подачи уведомления в РКН
     <CookieConsent />
-    -->
   </body>
 </html>
