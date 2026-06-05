@@ -250,6 +250,19 @@ article .services-hero {
   padding: 0.25rem 0;
 }
 
+.services-nav__label {
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #9ca3af;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.services-nav__label--spaced {
+  margin-top: 1.25rem;
+}
+
 .services-nav__item::after {
   content: '››';
   display: inline-block;
