@@ -28,11 +28,22 @@ import Footer from '../components/Footer.astro';
         <p class="book-hero__tagline">Хотите создавать документацию, которой пользуются? Начните с этой книги.</p>
         <div class="book-hero__meta">
           <span class="book-hero__author">Екатерина Ушакова</span>
-          <span class="book-hero__format">Бумажная книга · тираж распродан</span>
+          <span class="book-hero__format">Бумажная книга</span>
         </div>
-        <a href="#sold-out" class="cta-primary book-cta">
-          Сообщить почту, когда допечатают
-        </a>
+        <p class="book-hero__interest-label">Тираж распродан, но вы можете оставить почту для связи:</p>
+        <form class="book-interest-form" data-product="book" novalidate>
+          <label for="interest-email" class="sr-only">Email</label>
+          <input
+            id="interest-email"
+            name="email"
+            type="email"
+            required
+            placeholder="you@example.com"
+            class="book-interest-form__input"
+          />
+          <button type="submit" class="cta-primary">Отправить</button>
+          <p class="book-interest-form__msg" role="status"></p>
+        </form>
       </div>
     </div>
   </section>
@@ -92,24 +103,6 @@ import Footer from '../components/Footer.astro';
         </div>
       </section>
     </div>
-
-    <section id="sold-out" class="book-section book-section--muted book-sold-out">
-      <h2>Тираж распродан</h2>
-      <p>Первый тираж весь разошёлся. Оставьте почту — напишу лично, как только будет допечатка.</p>
-      <form class="book-interest-form" data-product="book" novalidate>
-        <label for="interest-email" class="sr-only">Email</label>
-        <input
-          id="interest-email"
-          name="email"
-          type="email"
-          required
-          placeholder="you@example.com"
-          class="book-interest-form__input"
-        />
-        <button type="submit" class="cta-primary">Сообщить почту</button>
-        <p class="book-interest-form__msg" role="status"></p>
-      </form>
-    </section>
 
   </div>
 
@@ -231,8 +224,10 @@ import Footer from '../components/Footer.astro';
     margin-bottom: var(--spacing-sm);
   }
 
-  .book-cta {
-    align-self: flex-start;
+  .book-hero__interest-label {
+    font-size: var(--font-size-base);
+    color: var(--color-text);
+    margin-bottom: var(--spacing-xs);
   }
 
   .book-content {
@@ -306,15 +301,6 @@ import Footer from '../components/Footer.astro';
     color: var(--color-text-muted);
     margin: 0;
     line-height: 1.6;
-  }
-
-  /* Sold-out section */
-  .book-sold-out p {
-    font-size: var(--font-size-base);
-    color: var(--color-text-muted);
-    line-height: 1.7;
-    margin-bottom: var(--spacing-sm);
-    max-width: 60ch;
   }
 
   .sr-only {
