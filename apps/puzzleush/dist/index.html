@@ -4,7 +4,7 @@
  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
  <meta name="theme-color" content="#f5f3ed"><meta name="description" content="Судоку с объясняющими подсказками и японские кроссворды. Проходи уровни в своём темпе.">
  <title>Клеточки — судоку и японские кроссворды</title>
- <link rel="icon" type="image/svg+xml" href="./icon.svg"><link rel="stylesheet" href="./style.css?v=1.1.0">
+ <link rel="icon" type="image/svg+xml" href="./icon.svg"><link rel="stylesheet" href="./style.css?v=1.2.0">
 </head>
 <body>
 <svg class="icon-sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
@@ -27,6 +27,7 @@
   <a class="wordmark" href="./" aria-label="Клеточки, главная"><span class="brand-tile"><i></i><i></i><i></i><i></i></span>клеточки<span class="brand-dot">.</span></a>
   <span class="header-note">маленькая пауза для себя</span>
   <button id="progress-button" class="progress-button" aria-label="Открыть пройденные уровни"><span class="progress-mini" aria-hidden="true"></span><span id="total-progress">0 / 60</span><span class="desktop-label">пройдено</span></button>
+  <button id="help-button" class="text-button" hidden>Как играть</button>
  </header>
  <nav class="game-tabs" aria-label="Выбор игры">
   <button class="game-tab active" data-game="sudoku" aria-pressed="true"><svg><use href="#i-grid"/></svg>Судоку<span class="tab-count" id="sudoku-count">0/30</span></button>
@@ -42,7 +43,7 @@
    <section class="game-area" aria-label="Игровое поле и управление">
     <div class="board-meta"><div id="level-dots" class="level-dots" aria-label="Прогресс главы"></div><span id="board-caption">Уровень 1 · 45 открытых клеток</span></div>
     <div id="board-mount" class="board-mount"></div>
-    <div class="board-status" id="board-status" aria-live="polite"></div>
+    <div id="mistakes-status" class="mistakes-status" role="status" hidden></div><div class="board-status" id="board-status" aria-live="polite"></div>
     <div id="sudoku-controls">
      <div class="number-pad" aria-label="Ввод цифры"></div>
      <div class="tool-row">
@@ -85,6 +86,8 @@
 <dialog id="rules-dialog" class="rules-dialog"><div class="dialog-heading"><h2>Как играть</h2><button class="icon-button" data-close aria-label="Закрыть"><svg><use href="#i-close"/></svg></button></div><div id="rules-content"></div></dialog>
 <dialog id="confirm-dialog" class="confirm-dialog"><div class="eyebrow">НОВЫЙ ЛИСТ</div><h2>Начать заново?</h2><p>Очистится только текущее поле. Пройденные уровни останутся.</p><div class="hint-actions"><button id="confirm-restart" class="primary-button">Начать заново</button><button class="secondary-button" data-close>Продолжить решать</button></div></dialog>
 <dialog id="complete-dialog" class="complete-dialog"><div class="completion-art" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="eyebrow">ЕЩЁ ОДНА МАЛЕНЬКАЯ ПОБЕДА</div><h2 id="complete-title">Получилось!</h2><p id="complete-copy"></p><button id="next-level" class="primary-button">Следующий уровень<svg><use href="#i-arrow"/></svg></button><button class="text-button" data-close>Остаться на этом поле</button></dialog>
+<dialog id="reward-dialog" class="reward-dialog" aria-labelledby="reward-title"><div class="dialog-heading"><span class="eyebrow">НАГРАДА ЗА ПРОСМОТР РЕКЛАМЫ</span><button class="icon-button" data-close aria-label="Закрыть"><svg><use href="#i-close"/></svg></button></div><h2 id="reward-title"></h2><p id="reward-benefit" class="reward-benefit"></p><p id="reward-copy"></p><p id="reward-status" class="reward-note" role="status"></p><div class="hint-actions"><button id="reward-watch" class="primary-button">Смотреть рекламу</button><button class="secondary-button" data-close>Вернуться без просмотра</button></div></dialog>
+<dialog id="attempt-dialog" aria-labelledby="attempt-title"><div class="eyebrow">СУДОКУ · ТВОЯ ПАРТИЯ</div><h2 id="attempt-title"></h2><p id="attempt-copy"></p><div class="hint-actions"><button id="attempt-restore" class="primary-button">Продолжить за рекламу</button><button id="attempt-finish" class="secondary-button">Завершить партию</button><button id="attempt-levels" class="text-button">Выбрать другой уровень</button></div></dialog>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script type="module" src="./app.js?v=1.1.0"></script>
+<script type="module" src="./app.js?v=1.2.0"></script>
 </body></html>

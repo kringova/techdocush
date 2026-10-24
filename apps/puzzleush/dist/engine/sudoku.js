@@ -33,16 +33,25 @@ const hint = (technique,title,lead,detail,cells,extra={}) => ({technique,title,l
 
 // Every explanation carries an explicit placement or elimination, so tests can
 // verify its conclusion against all solutions of the current position.
-export function logicalStep(board, cs=candidates(board)) {
+export function contradictionHint(board, cs=candidates(board)) {
  const dup=conflicts(board);
  if(dup.length)return hint('conflict','Две одинаковые цифры','В выделенных клетках есть повтор.',`В одной строке, столбце или блоке каждая цифра встречается один раз. Проверь ${dup.map(shortCell).join(', ')} и отмени один из последних ходов.`,dup);
  const empty=board.findIndex((n,i)=>!n&&!cs[i].length);
- if(empty>=0)return hint('contradiction','Клетке не осталось числа',`Посмотри на ${cellName(empty)}.`,`В этой клетке исключены все цифры от 1 до 9. Проверь последние записи в её строке, столбце и блоке. Если ты снимала кандидатов, верни их кнопкой «Все кандидаты».`,[empty,...PEERS[empty]]);
+ if(empty>=0)return hint('contradiction','Клетке не осталось числа',`В ${shortCell(empty)} не подходит ни одна цифра.`,`В строке, столбце и блоке этой клетки исключены все цифры от 1 до 9. Проверь выделенные записи. Если ты снимала кандидатов, пересчитай их кнопкой «Все кандидаты».`,[empty,...PEERS[empty].filter(i=>board[i])]);
  for(let u=0;u<27;u++)for(const n of DIGITS){
   if(UNITS[u].some(i=>board[i]===n))continue;
   const places=UNITS[u].filter(i=>cs[i].includes(n));
-  if(!places.length)return hint('contradiction','Цифре не осталось места',`В ${unitName(u)} негде поставить ${n}.`,`Ни одна пустая клетка ${unitName(u)} не допускает ${n}. Проверь последние числа и снятые пометки.`,UNITS[u]);
+  if(!places.length){
+   const blanks=UNITS[u].filter(i=>!board[i]);
+   const blockers=[...new Set(blanks.flatMap(i=>PEERS[i].filter(j=>board[j]===n)))];
+   const reasons=blanks.map(i=>{const hits=PEERS[i].filter(j=>board[j]===n);return `${shortCell(i)}: ${hits.length?`мешает ${n} в ${hits.map(shortCell).join(', ')}`:'кандидат снят в пометках'}`;});
+   return hint('contradiction','Цифре не осталось места',`В ${unitName(u)} негде поставить ${n}.`,`Цифра ${n} обязательно нужна в ${unitName(u)}, но все её места перекрыты. ${reasons.join('; ')}. Проверь эти записи или отмени последние ходы. Если кандидат был снят вручную, пересчитай пометки.`,[...new Set([...UNITS[u],...blockers])],{blockers});
+  }
  }
+ return null;
+}
+export function logicalStep(board, cs=candidates(board)) {
+ const contradiction=contradictionHint(board,cs);if(contradiction)return contradiction;
  for(let i=0;i<81;i++)if(!board[i]&&cs[i].length===1){
   const n=cs[i][0];
   const used=[...new Set(PEERS[i].map(j=>board[j]).filter(Boolean))].sort();
@@ -108,10 +117,16 @@ export function logicalSolve(input, maxSteps=500) {
 }
 export function getHint(board, exclusions=emptyNotes()) {
  if(board.every(Boolean)&&!conflicts(board).length)return hint('complete','Поле заполнено','Все строки, столбцы и блоки собраны.','Проверь завершение уровня.',[]);
- const step=logicalStep(board,candidates(board,exclusions));if(step)return step;
+ const cs=candidates(board,exclusions),problem=contradictionHint(board,cs);if(problem)return problem;
+ // A locally legal entry can still make the puzzle impossible. Do not offer
+ // another placement in such a position or call a search result a logical rule.
+ if(solve(board,1).count===0){
+  const proof=logicalSolve(board),steps=proof.trace.map(s=>s.placement?`${shortCell(s.placement.cell)} = ${s.placement.value}`:s.title);
+  return hint('contradiction','Записи привели к тупику','С текущими числами судоку не имеет решения.',proof.reason&&steps.length<=12?`Проверка вынужденных шагов: ${steps.join(' → ')}. ${proof.reason.detail} Отмени последние записи и проверь отмеченные красным числа.`:'Проверка всех допустимых продолжений не нашла решения. Это результат поиска, а не отдельный логический приём. Проверь отмеченные красным числа и последние ходы.',proof.reason?.cells||[]);
+ }
+ const step=logicalStep(board,cs);if(step)return step;
  // A rare user-created position may need proof by contradiction. Never call a
  // search result a logical rule or silently insert the solution.
- const cs=candidates(board,exclusions);
  const order=cs.map((a,i)=>({a,i})).filter(x=>x.a.length>1).sort((a,b)=>a.a.length-b.a.length);
  for(const {a,i} of order)for(const n of a){
   const test=[...board];test[i]=n;

@@ -67,6 +67,11 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./public
+      - name: Keep matching Yandex game archives
+        uses: actions/upload-artifact@v4
+        with:
+          name: kletochki-yandex
+          path: apps/puzzleush/build/yandex/*.zip
 
   # Deployment job
   deploy:

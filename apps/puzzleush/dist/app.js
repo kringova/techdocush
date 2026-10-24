@@ -1,16 +1,26 @@
-import {DIGITS,PEERS,candidates,conflicts,emptyNotes,generateSudoku,getHint,shortCell} from './engine/sudoku.js?v=2';
+import {DIGITS,PEERS,candidates,conflicts,contradictionHint,emptyNotes,generateSudoku,getHint,shortCell} from './engine/sudoku.js?v=3';
 import {NONOGRAMS,lineState,nonogramSolved,autoCrossLines,correctBlackLine} from './engine/nonogram.js?v=2';
+import {createDoubleTap} from './engine/double-tap.js';
+import {createBenefits} from './engine/benefits.js';
+import {createPlatform} from './platform/adapter.js';
+import {mountOnboarding} from './platform/onboarding.js';
 import {STORAGE_KEY,LEGACY_STORAGE_KEY,SUDOKU_CHAPTERS,NONOGRAM_CHAPTERS,chapterFor,migrateProgressV1} from './engine/progress.js';
 
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const icon=name=>`<svg aria-hidden="true"><use href="#i-${name}"/></svg>`;
-const STORAGE=STORAGE_KEY;
+const isYandex=document.documentElement.dataset.platform==='yandex';
+const fixedGame=isYandex?document.documentElement.dataset.game:null;
+const STORAGE=isYandex?`kletochki-yandex-${fixedGame}-progress-v2`:STORAGE_KEY;
+let benefits=null,benefitsError=false;
+if(isYandex)try{benefits=createBenefits(localStorage,`kletochki-yandex-${fixedGame}-benefits-v1`);}catch{benefitsError=true;const memory=new Map();benefits=createBenefits({getItem:k=>memory.get(k)||null,setItem:(k,v)=>memory.set(k,v)},'session');}
+const platform=createPlatform({enabled:isYandex,onState(){document.body.dataset.platformPaused=String(platform.blocked());},onError(){toast('Связь с Яндексом недоступна. Рекламу можно попробовать позже.');}});
+const tapGesture=createDoubleTap();
 const clone=x=>structuredClone(x),range=n=>Array.from({length:n},(_,i)=>i);
 const fresh=()=>({version:2,activeGame:'sudoku',sudoku:{level:1,completed:{},saves:{}},nonogram:{level:1,completed:{},saves:{}},legacyCompleted:{sudoku:0,nonogram:0}});
 let storageAvailable=true,loadError=false,migrationNotice=false;
 function readStore(){
  try{
-  const raw=localStorage.getItem(STORAGE),legacy=raw?null:localStorage.getItem(LEGACY_STORAGE_KEY);if(!raw&&!legacy)return fresh();
+  const raw=localStorage.getItem(STORAGE),legacy=raw||isYandex?null:localStorage.getItem(LEGACY_STORAGE_KEY);if(!raw&&!legacy)return fresh();
   let data=JSON.parse(raw||legacy);if(legacy){data=migrateProgressV1(data);migrationNotice=true;}if(data.version!==2)throw Error('version');
   const out=fresh();out.activeGame=data.activeGame==='nonogram'?'nonogram':'sudoku';
   for(const g of ['sudoku','nonogram'])if(Number.isInteger(data.legacyCompleted?.[g])&&data.legacyCompleted[g]>=0)out.legacyCompleted[g]=data.legacyCompleted[g];
@@ -34,13 +44,18 @@ function readStore(){
   return out;
  }catch{loadError=true;storageAvailable=false;return fresh();}
 }
-let store=readStore(),game=store.activeGame,selected=-1,pencil=false,paint='fill',activeHint=null;
-let histories={sudoku:[],nonogram:[]},stroke=null,toastTimer,lastSudokuTap=null,zoomCell=32,fitNonogram=false;
+let store=readStore(),game=fixedGame||store.activeGame,selected=-1,pencil=false,paint='fill',activeHint=null;
+let histories={sudoku:[],nonogram:[]},stroke=null,toastTimer,zoomCell=32,fitNonogram=false;
+const puzzleKey=()=>generateSudoku(store.sudoku.level).puzzle.join('');
+const round=()=>isYandex&&game==='sudoku'?benefits.attempt(puzzleKey()):null;
+function canMove(){if(platform.blocked())return false;if(round()&&round().status!=='playing'){openAttempt();return false;}return true;}
+function syncGameplay(){platform.play(!document.hidden&&!$('dialog[open]')&&!current()?.won&&(!round()||round().status==='playing'));}
 function current(){return store[game].saves[store[game].level];}
 function ensureState(){
  const d=store[game],level=d.level;
  if(!d.saves[level])d.saves[level]=game==='sudoku'?{board:generateSudoku(level).puzzle,notes:emptyNotes(),exclusions:emptyNotes(),auto:false,won:false,hints:0}:{cells:Array(NONOGRAMS[level-1].grid.length*NONOGRAMS[level-1].grid[0].length).fill(-1),won:false};
  if(game==='sudoku'&&(selected<0||selected>80))selected=current().board.findIndex(n=>!n);
+ if(isYandex&&game==='sudoku'&&!round())benefits.startAttempt(puzzleKey(),crypto.randomUUID());
  if(game==='nonogram')current().cells=autoCrossLines(current().cells,NONOGRAMS[level-1].grid);
 }
 function save(){
@@ -50,14 +65,15 @@ function save(){
 }
 function toast(message){clearTimeout(toastTimer);$('#toast').textContent=message;$('#toast').classList.add('visible');toastTimer=setTimeout(()=>$('#toast').classList.remove('visible'),3600);}
 function pushHistory(){histories[game].push(clone(current()));if(histories[game].length>100)histories[game].shift();}
-function showDialog(id){const d=$(id);if(!d.open)d.showModal();}
-function hideDialog(id){$(id).close();}
-function render(){ensureState();renderChrome();renderBoard();renderControls();}
+function showDialog(id){const d=$(id);if(!d.open)d.showModal();syncGameplay();}
+function hideDialog(id){$(id).close();syncGameplay();}
+function render(){ensureState();renderChrome();renderBoard();renderControls();syncGameplay();}
 function renderChrome(){
  document.body.dataset.game=game;const level=store[game].level,chapter=chapterFor(game,level),total=Object.keys(store.sudoku.completed).length+Object.keys(store.nonogram.completed).length;
  $$('.game-tab').forEach(b=>{const yes=b.dataset.game===game;b.classList.toggle('active',yes);b.setAttribute('aria-pressed',yes);});
  $('#sudoku-count').textContent=`${Object.keys(store.sudoku.completed).length}/30`;$('#nonogram-count').textContent=`${Object.keys(store.nonogram.completed).length}/30`;
- $('#total-progress').textContent=`${total} / 60`;$('.progress-mini').style.setProperty('--progress',`${total/60*100}%`);
+ const shownTotal=isYandex?Object.keys(store[game].completed).length:total,maxTotal=isYandex?30:60;
+ $('#total-progress').textContent=`${shownTotal} / ${maxTotal}`;$('.progress-mini').style.setProperty('--progress',`${shownTotal/maxTotal*100}%`);
  $('#game-title').textContent=game==='sudoku'?'Судоку':'Японские';
  $('#game-subtitle').textContent=game==='sudoku'?'Девять цифр. По одной на каждое место.':'Собери рисунок, следуя числам.';
  $('#chapter-label').textContent=`${game==='sudoku'?'СЛОЖНОСТЬ':'ФОРМАТ'} · ${chapter.label.toUpperCase()}`;
@@ -82,16 +98,17 @@ function renderChrome(){
 }
 function renderBoard(){game==='sudoku'?renderSudoku():renderNonogram();}
 function renderSudoku(){
- const s=current(),p=generateSudoku(store.sudoku.level),bad=new Set(conflicts(s.board)),value=s.board[selected],peers=new Set(PEERS[selected]||[]),hintCells=new Set(activeHint?.cells||[]);
+ const s=current(),p=generateSudoku(store.sudoku.level),bad=new Set(s.board.flatMap((n,i)=>n&&n!==p.solution[i]?[i]:[])),duplicate=conflicts(s.board),problem=contradictionHint(s.board,s.auto?candidates(s.board,s.exclusions):candidates(s.board)),value=s.board[selected],peers=new Set(PEERS[selected]||[]),hintCells=new Set(activeHint?.cells||[]);
  $('#board-caption').textContent=`Уровень ${store.sudoku.level} · ${p.clues} открытых клеток`;
  $('#board-mount').innerHTML=`<div class="sudoku-board" role="group" aria-label="Судоку, девять строк и девять столбцов">${s.board.map((v,i)=>{
   const classes=['sudoku-cell',p.puzzle[i]?'given':'',i===selected?'selected':'',peers.has(i)?'peer':'',v&&value&&v===value?'same':'',bad.has(i)?'conflict':'',hintCells.has(i)?'hint-cell':''].filter(Boolean).join(' ');
-  const label=`Строка ${Math.floor(i/9)+1}, столбец ${i%9+1}: ${v?v+(p.puzzle[i]?', задано':''):'пусто'+(s.notes[i].length?', пометки '+s.notes[i].join(', '):'')}`;
-  return `<button class="${classes}" data-cell="${i}" aria-label="${label}" aria-pressed="${i===selected}" tabindex="${i===selected?0:-1}">${v||`<span class="notes" aria-hidden="true">${DIGITS.map(n=>`<span>${s.notes[i].includes(n)?n:''}</span>`).join('')}</span>`}</button>`;
+  const label=`Строка ${Math.floor(i/9)+1}, столбец ${i%9+1}: ${v?v+(p.puzzle[i]?', задано':bad.has(i)?', неверно':''):'пусто'+(s.notes[i].length?', пометки '+s.notes[i].join(', '):'')}`;
+  return `<button class="${classes}" data-cell="${i}" aria-label="${label}" aria-pressed="${i===selected}" aria-invalid="${bad.has(i)}" tabindex="${i===selected?0:-1}">${v||`<span class="notes" aria-hidden="true">${DIGITS.map(n=>`<span>${s.notes[i].includes(n)?n:''}</span>`).join('')}</span>`}</button>`;
  }).join('')}</div>`;
  $$('.sudoku-cell').forEach(b=>b.addEventListener('click',e=>{
-  const cell=Number(b.dataset.cell),now=performance.now(),twice=e.detail!==0&&lastSudokuTap?.cell===cell&&now-lastSudokuTap.time<=450;
-  lastSudokuTap=twice?null:{cell,time:now};selected=cell;activeHint=null;
+  if(!canMove())return;
+  const cell=Number(b.dataset.cell),twice=tapGesture.tap(cell,performance.now(),e.detail);
+  selected=cell;activeHint=null;
   if(twice&&!p.puzzle[cell]&&!s.board[cell]&&s.notes[cell].length===1){
    const value=s.notes[cell][0];if(candidates(s.board,s.exclusions)[cell].includes(value)){enterNumber(value,{asValue:true});return;}
    toast('Пометка противоречит полю. Пересчитай кандидатов.');
@@ -99,9 +116,11 @@ function renderSudoku(){
   renderBoard();$(`.sudoku-cell[data-cell="${selected}"]`).focus({preventScroll:true});
  }));
  const status=$('#board-status');status.classList.toggle('error',!!bad.size);
- status.textContent=s.won?'Уровень пройден. Можно открыть следующий.':bad.size?'Есть повтор цифры: проверь выделенные клетки.':selected>=0?`Строка ${Math.floor(selected/9)+1} · Столбец ${selected%9+1}${p.puzzle[selected]?' · Заданная цифра':pencil?' · Режим пометок':''}`:'Выбери пустую клетку.';
+ status.textContent=s.won?'Уровень пройден. Можно открыть следующий.':problem?.technique==='contradiction'?`${problem.lead} «Подсказка» объяснит причину.`:bad.size?`Неверных чисел: ${bad.size}. Они отмечены красным.${duplicate.length?' Есть повтор в строке, столбце или блоке.':''}`:selected>=0?`Строка ${Math.floor(selected/9)+1} · Столбец ${selected%9+1}${p.puzzle[selected]?' · Заданная цифра':pencil?' · Режим пометок':''}`:'Выбери пустую клетку.';
 }
 function renderControls(){
+ $('#mistakes-status').hidden=!(isYandex&&game==='sudoku');
+ if(isYandex&&game==='sudoku'){const a=round();$('#mistakes-status').textContent=a.status==='playing'?`Ошибки: ${a.errors} / 3`:'Партия остановлена';}
  if(game==='sudoku'){
   const s=current();$('.number-pad').classList.toggle('pencil',pencil);
   $('.number-pad').innerHTML=DIGITS.map(n=>{const left=9-s.board.filter(v=>v===n).length;return `<button class="number-button ${left<=0?'exhausted':''}" data-number="${n}" aria-label="${pencil?'Пометка':'Ввести'} ${n}">${n}<small>${left>0?left:'·'}</small></button>`;}).join('');
@@ -110,36 +129,40 @@ function renderControls(){
   $('#candidates-button').classList.toggle('active',s.auto);
   $('#candidates-button strong').textContent=s.auto?'Кандидаты расставлены':'Все кандидаты';
   $('#candidates-button small').textContent=s.auto?'Обновляются после каждого числа · нажми, чтобы пересчитать':'Расставить возможные цифры в пустых клетках';
+  if(isYandex){const unlocked=benefits.hasCandidates(puzzleKey());$('#candidates-button strong').textContent=unlocked?(s.auto?'Кандидаты расставлены':'Все кандидаты открыты'):'Все кандидаты · реклама';$('#candidates-button small').textContent=unlocked?'Доступны для этого уровня · пересчёт бесплатно':'Просмотр открывает автообновление для этого уровня';$('#hint-button span').textContent=`Подсказки: ${benefits.snapshot().hints}`;}
  }else{$$('[data-paint]').forEach(b=>{b.classList.toggle('active',b.dataset.paint===paint);b.setAttribute('aria-pressed',b.dataset.paint===paint);});$('#nonogram-undo').disabled=!histories.nonogram.length;}
 }
 function enterNumber(n,{asValue=false}={}){
- if(game!=='sudoku')return;const s=current(),p=generateSudoku(store.sudoku.level);
+ if(game!=='sudoku'||!canMove())return;const s=current(),p=generateSudoku(store.sudoku.level);
  if(s.won)return toast('Этот уровень пройден. Открой следующий или начни заново.');
  if(selected<0)return toast('Сначала выбери клетку.');
  if(p.puzzle[selected])return toast('Это заданная цифра. Выбери пустую клетку.');
- pushHistory();activeHint=null;lastSudokuTap=null;
+ pushHistory();activeHint=null;tapGesture.reset();
  if(pencil&&!asValue){
   if(s.board[selected]){histories.sudoku.pop();return toast('Пометки ставятся в пустой клетке.');}
   s.auto=false;const notes=s.notes[selected];s.notes[selected]=notes.includes(n)?notes.filter(v=>v!==n):[...notes,n].sort();
  }else{
-  if(s.board[selected])s.exclusions=emptyNotes();s.board[selected]=s.board[selected]===n?0:n;
+  const next=s.board[selected]===n?0:n;
+  if(isYandex&&next&&next!==p.solution[selected])try{benefits.mistake(puzzleKey());}catch{histories.sudoku.pop();return toast('Не удалось сохранить счётчик ошибок. Попробуй ещё раз.');}
+  if(s.board[selected])s.exclusions=emptyNotes();s.board[selected]=next;
   if(!s.board[selected])s.exclusions=emptyNotes();
   s.notes[selected]=[];
   if(s.auto)s.notes=candidates(s.board,s.exclusions);
   else for(const i of PEERS[selected])s.notes[i]=s.notes[i].filter(v=>!PEERS[i].some(j=>s.board[j]===v));
  }
- afterMove();
+ afterMove();if(round()?.status==='paused')openAttempt();
 }
 function erase(){
- if(game!=='sudoku')return;const s=current();if(s.won||selected<0||generateSudoku(store.sudoku.level).puzzle[selected])return;
+ if(game!=='sudoku'||!canMove())return;const s=current();if(s.won||selected<0||generateSudoku(store.sudoku.level).puzzle[selected])return;
  if(!s.board[selected]&&!s.notes[selected].length)return;
  pushHistory();s.board[selected]=0;s.notes[selected]=[];s.exclusions=emptyNotes();if(s.auto)s.notes=candidates(s.board);activeHint=null;afterMove();
 }
 function fillCandidates(){
- if(game!=='sudoku'||current().won)return;
+ if(game!=='sudoku'||current().won||!canMove())return;
+ if(isYandex&&!benefits.hasCandidates(puzzleKey()))return offerReward('candidates');
  pushHistory();const s=current();s.exclusions=emptyNotes();s.notes=candidates(s.board);s.auto=true;activeHint=null;save();render();toast('Все допустимые кандидаты расставлены.');
 }
-function undo(){if(!histories[game].length)return;store[game].saves[store[game].level]=histories[game].pop();activeHint=null;save();render();}
+function undo(){if(!canMove()||!histories[game].length)return;store[game].saves[store[game].level]=histories[game].pop();activeHint=null;save();render();}
 function afterMove(){
  const s=current();if(game==='nonogram')s.cells=autoCrossLines(s.cells,NONOGRAMS[store.nonogram.level-1].grid);
  const won=game==='sudoku'?s.board.every(Boolean)&&!conflicts(s.board).length:nonogramSolved(s.cells,NONOGRAMS[store.nonogram.level-1].grid);
@@ -170,7 +193,7 @@ function renderNonogram(){
  $('.nonogram-viewport').scrollLeft=position.left;$('.nonogram-viewport').scrollTop=position.top;
  $$('[data-zoom]').forEach(b=>b.addEventListener('click',()=>changeNonogramZoom(b.dataset.zoom)));
  const board=$('.nonogram-board');board.addEventListener('contextmenu',e=>e.preventDefault());board.addEventListener('pointerdown',startStroke);
- board.addEventListener('keydown',e=>{const b=e.target.closest('[data-pixel]');if(!b||current().won||(paint==='move'&&e.key.toLowerCase()!=='x'))return;const i=Number(b.dataset.pixel);if(e.key===' '||e.key==='Enter'||e.key==='x'||e.key==='X'){e.preventDefault();pushHistory();const v=e.key.toLowerCase()==='x'?0:paint==='cross'?0:1;current().cells[i]=current().cells[i]===v?-1:v;afterMove();$(`[data-pixel="${i}"]`)?.focus({preventScroll:true});}});
+ board.addEventListener('keydown',e=>{const b=e.target.closest('[data-pixel]');if(!b||current().won||platform.blocked()||(paint==='move'&&e.key.toLowerCase()!=='x'))return;const i=Number(b.dataset.pixel);if(e.key===' '||e.key==='Enter'||e.key==='x'||e.key==='X'){e.preventDefault();pushHistory();const v=e.key.toLowerCase()==='x'?0:paint==='cross'?0:1;current().cells[i]=current().cells[i]===v?-1:v;afterMove();$(`[data-pixel="${i}"]`)?.focus({preventScroll:true});}});
  const invalidRows=p.rows.filter((clue,r)=>!lineState(s.cells.slice(r*n,r*n+n),clue).valid).length;
  const invalidCols=p.cols.filter((clue,c)=>!lineState(range(n).map(r=>s.cells[r*n+c]),clue).valid).length;
  $('#board-status').classList.toggle('error',!!(invalidRows+invalidCols));
@@ -182,7 +205,7 @@ function changeNonogramZoom(action){
  renderBoard();const next=$('.nonogram-viewport');next.scrollLeft=x*next.scrollWidth-next.clientWidth/2;next.scrollTop=y*next.scrollHeight-next.clientHeight/2;
 }
 function startStroke(e){
- const b=e.target.closest('[data-pixel]');if(!b||current().won||stroke||![0,2].includes(e.button)||(paint==='move'&&e.button!==2))return;
+ const b=e.target.closest('[data-pixel]');if(!b||current().won||stroke||platform.blocked()||![0,2].includes(e.button)||(paint==='move'&&e.button!==2))return;
  e.preventDefault();const i=Number(b.dataset.pixel),target=e.button===2||paint==='cross'?0:1;
  pushHistory();stroke={value:current().cells[i]===target?-1:target,seen:new Set(),pointer:e.pointerId};paintCell(i);b.focus({preventScroll:true});
 }
@@ -190,15 +213,51 @@ function paintCell(i){
  if(!stroke||stroke.seen.has(i))return;stroke.seen.add(i);current().cells[i]=stroke.value;
  const cell=$(`[data-pixel="${i}"]`);if(cell){cell.classList.toggle('filled',stroke.value===1);cell.classList.toggle('crossed',stroke.value===0);cell.setAttribute('aria-pressed',stroke.value===1);}
 }
-document.addEventListener('pointermove',e=>{if(!stroke||e.pointerId!==stroke.pointer)return;e.preventDefault();const b=document.elementFromPoint(e.clientX,e.clientY)?.closest('[data-pixel]');if(b)paintCell(Number(b.dataset.pixel));},{passive:false});
+document.addEventListener('pointermove',e=>{if(!stroke||platform.blocked()||e.pointerId!==stroke.pointer)return;e.preventDefault();const b=document.elementFromPoint(e.clientX,e.clientY)?.closest('[data-pixel]');if(b)paintCell(Number(b.dataset.pixel));},{passive:false});
 document.addEventListener('pointerup',()=>{if(!stroke)return;stroke=null;afterMove();});
 document.addEventListener('pointercancel',()=>{if(stroke){stroke=null;afterMove();}});
 function openHint(){
  if(game!=='sudoku')return openRules();
- const s=current();activeHint=getHint(s.board,s.exclusions);s.hints++;if(activeHint.placement)selected=activeHint.placement.cell;save();renderBoard();
+ if(!canMove())return;
+ const s=current(),next=getHint(s.board,s.exclusions),fingerprint=JSON.stringify([s.board,s.exclusions]);
+ if(isYandex&&(next.placement||next.eliminations?.length)){
+  if(!benefits.canRead(fingerprint))return offerReward('hints');
+  try{benefits.readHint(fingerprint);}catch{return toast('Не удалось сохранить баланс подсказок. Попробуй ещё раз.');}
+ }
+ activeHint=next;s.hints++;if(activeHint.placement)selected=activeHint.placement.cell;save();renderBoard();renderControls();
  $('#hint-title').textContent=activeHint.title;$('#hint-lead').textContent=activeHint.lead;$('#hint-detail').textContent=activeHint.detail;$('#hint-detail').hidden=true;
  $('#explain-button').hidden=false;$('#eliminate-button').hidden=true;showDialog('#hint-dialog');
 }
+let rewardOffer=null;
+function offerReward(kind){
+ if(!isYandex)return;
+ rewardOffer={kind,puzzle:puzzleKey(),level:store.sudoku.level,attempt:round()?.id};
+ const copy={candidates:['Все кандидаты для уровня','Автоматические пометки','Просмотр рекламы откроет расстановку и автообновление кандидатов для этого уровня. Повторный пересчёт бесплатный.'],hints:['Три объясняющие подсказки','+3 подсказки','Один просмотр рекламы добавит три подсказки. Баланс сохраняется между уровнями; подсказки объясняют ход и не вводят цифру.'],revive:['Продолжить эту партию','Ещё три ошибки','Просмотр рекламы сохранит текущее поле и обнулит счётчик ошибок. Неверные записи останутся красными: их можно исправить.']}[kind];
+ $('#reward-title').textContent=copy[0];$('#reward-benefit').textContent=copy[1];$('#reward-copy').textContent=copy[2];$('#reward-status').textContent='Награда выдаётся только за подтверждённый просмотр.';$('#reward-watch').disabled=false;
+ showDialog('#reward-dialog');
+}
+$('#reward-watch').addEventListener('click',async()=>{
+ if(!rewardOffer||platform.blocked())return;const offer=rewardOffer,receipt=crypto.randomUUID();$('#reward-watch').disabled=true;$('#reward-status').textContent='Открываем рекламу…';
+ const result=await platform.rewarded(()=>{
+  const granted=offer.kind==='candidates'?benefits.grantCandidates(offer.puzzle,receipt):offer.kind==='hints'?benefits.grantHints(receipt):benefits.revive(offer.puzzle,offer.attempt,receipt);
+  if(!granted)throw Error('Reward no longer applies');
+ });
+ $('#reward-watch').disabled=false;
+ if(!result.rewarded){$('#reward-status').textContent=result.reason==='storage'?'Не удалось сохранить награду. Попробуй ещё раз.':'Просмотр не подтверждён. Награда не выдана; можно повторить или вернуться к игре.';return;}
+ rewardOffer=null;hideDialog('#reward-dialog');render();
+ if(offer.kind==='candidates'&&game==='sudoku'&&puzzleKey()===offer.puzzle)fillCandidates();
+ else if(offer.kind==='hints')toast('Добавлены три подсказки. Нажми «Подсказки», когда понадобится разбор.');
+ else{hideDialog('#attempt-dialog');toast('Партия восстановлена. Поле сохранено, снова доступны три ошибки.');}
+ syncGameplay();
+});
+function openAttempt(){
+ if(!isYandex||game!=='sudoku'||!round()||round().status==='playing')return;
+ const finished=round().status==='finished';$('#attempt-title').textContent=finished?'Партия завершена':'Четвёртая ошибка';$('#attempt-copy').textContent=finished?'Эта попытка закончена. Можно начать этот уровень заново или выбрать другой. Пройденные уровни сохранены.':'Поле сохранено. Посмотри рекламу, чтобы продолжить с новым лимитом трёх ошибок, или заверши эту партию.';
+ $('#attempt-restore').textContent=finished?'Начать новую партию':'Продолжить за рекламу';$('#attempt-finish').hidden=finished;showDialog('#attempt-dialog');
+}
+$('#attempt-restore').addEventListener('click',()=>{if(round()?.status==='finished'){hideDialog('#attempt-dialog');showDialog('#confirm-dialog');}else offerReward('revive');});
+$('#attempt-finish').addEventListener('click',()=>{benefits.finish(puzzleKey());hideDialog('#attempt-dialog');render();openLevels();});
+$('#attempt-levels').addEventListener('click',()=>{hideDialog('#attempt-dialog');openLevels();});
 $('#explain-button').addEventListener('click',()=>{$('#hint-detail').hidden=false;$('#explain-button').hidden=true;$('#eliminate-button').hidden=!activeHint?.eliminations?.length;});
 $('#eliminate-button').addEventListener('click',()=>{
  if(!activeHint?.eliminations?.length)return;pushHistory();const s=current();
@@ -213,7 +272,7 @@ function openLevels(){
  $('#levels-content').innerHTML=chapters.map(ch=>`<section class="level-chapter"><h3>${ch.label}</h3><div class="level-grid">${range(ch.end-ch.start+1).map(k=>{const n=ch.start+k,done=store[game].completed[n];return `<button class="level-item ${done?'done':''} ${n===store[game].level?'current':''}" data-level="${n}" aria-label="Уровень ${n}${done?', пройден':''}">${n}</button>`;}).join('')}</div></section>`).join('');
  $$('[data-level]').forEach(b=>b.addEventListener('click',()=>{hideDialog('#levels-dialog');setLevel(Number(b.dataset.level));}));showDialog('#levels-dialog');
 }
-function setLevel(level){store[game].level=level;histories[game]=[];selected=-1;activeHint=null;pencil=false;lastSudokuTap=null;fitNonogram=false;ensureState();save();render();window.scrollTo({top:0,behavior:'instant'});}
+function setLevel(level){store[game].level=level;histories[game]=[];selected=-1;activeHint=null;pencil=false;tapGesture.reset();fitNonogram=false;ensureState();save();render();window.scrollTo({top:0,behavior:'instant'});if(round()&&round().status!=='playing')openAttempt();}
 function openComplete(){
  const level=store[game].level;$('#complete-title').textContent=game==='sudoku'?'Всё сошлось!':NONOGRAMS[level-1].name;
  const count=Object.keys(store[game].completed).length;
@@ -221,10 +280,10 @@ function openComplete(){
  $('#next-level').innerHTML=level<30?`Следующий уровень${icon('arrow')}`:'К коллекции уровней';showDialog('#complete-dialog');
 }
 function openRules(){
- $('#rules-content').innerHTML=game==='sudoku'?`<p>Заполни поле цифрами от 1 до 9. В каждой строке, столбце и блоке 3×3 цифры встречаются по одному разу.</p><h3>Пометки и все кандидаты</h3><ul><li>Выбери клетку и нажми цифру. «Пометки» включают маленькие записи карандашом.</li><li>«Все кандидаты» расставят допустимые цифры во всех пустых клетках. Они обновляются после ввода чисел. Повторное нажатие пересчитает их с нуля.</li><li>Ручная правка пометок выключает автообновление, чтобы сохранить твою работу.</li><li>Если в клетке осталась одна допустимая пометка, двойной клик или двойной тап впишет её. Этот ход можно отменить.</li></ul><h3>Когда не видишь следующего хода</h3><p>«Подсказка» сначала покажет, куда посмотреть. Затем можно открыть объяснение. Числа она не вводит. Если ход снимает кандидатов, их можно убрать отдельной кнопкой после объяснения.</p><h3>Сложность и уровни</h3><p>Все уровни доступны сразу. Выбери «Базовый», «Средний», «Сложный» или «Эксперт» над полем. В базовой группе пять задач; экспертные требуют пар и исключений кандидатов.</p><h3>На компьютере</h3><p>Стрелки выбирают клетку, 1–9 вводят цифру, N включает пометки, Backspace стирает, Ctrl/Cmd+Z отменяет ход.</p>`:`<p>Числа слева описывают закрашенные группы в строке, числа сверху — в столбце. Порядок групп совпадает с порядком чисел.</p><h3>Что значит «3 1»</h3><p>Сначала группа из трёх закрашенных клеток, потом хотя бы одна пустая, затем одна закрашенная. До и после групп тоже могут быть пустые клетки.</p><h3>Управление</h3><ul><li>Клик закрашивает клетку, правая кнопка мыши ставит крестик. Повторное действие снимает отметку.</li><li>На телефоне выбери «Закрасить» или «Крестик», затем касайся клеток или веди пальцем.</li><li>Пробел или Enter закрашивает выбранную клетку, X ставит крестик.</li><li>«Отмена» возвращает весь последний штрих вместе с автокрестиками.</li><li>На больших полях «Двигать» позволяет перетаскивать поле. Масштаб меняется кнопками +/−, а «Всё поле» показывает обзор.</li></ul><h3>Обратная связь</h3><p>Собранная группа приглушает числа. Красные числа означают, что текущие отметки уже не могут совпасть с этой линией. Когда строка или столбец закрашены верно, оставшиеся пустые клетки автоматически получают крестики. Все размеры и уровни можно выбрать сразу.</p>`;
+ $('#rules-content').innerHTML=game==='sudoku'?`<p>Заполни поле цифрами от 1 до 9. В каждой строке, столбце и блоке 3×3 цифры встречаются по одному разу.</p><h3>Пометки и все кандидаты</h3><ul><li>Выбери клетку и нажми цифру. «Пометки» включают маленькие записи карандашом.</li><li>«Все кандидаты» расставят допустимые цифры во всех пустых клетках. Они обновляются после ввода чисел. Повторное нажатие пересчитает их с нуля.</li><li>Ручная правка пометок выключает автообновление, чтобы сохранить твою работу.</li><li>Если в клетке осталась одна допустимая пометка, двойной клик или двойной тап впишет её. Этот ход можно отменить.</li></ul><h3>Когда не видишь следующего хода</h3><p>«Подсказка» сначала покажет, куда посмотреть. Затем можно открыть объяснение. Числа она не вводит. Если ход снимает кандидатов, их можно убрать отдельной кнопкой после объяснения.</p><h3>Проверка записей</h3><p>Верные введённые числа тёмные, неверные красные. Проверяется соответствие единственному решению, включая случаи без повторов. Лимита ошибок на этом сайте нет. В тупике подсказка объяснит, какие клетки перекрывают нужное число.</p><h3>Сложность и уровни</h3><p>Все уровни доступны сразу. Выбери «Базовый», «Средний», «Сложный» или «Эксперт» над полем. В базовой группе пять задач; экспертные требуют пар и исключений кандидатов.</p><h3>На компьютере</h3><p>Стрелки выбирают клетку, 1–9 вводят цифру, N включает пометки, Backspace стирает, Ctrl/Cmd+Z отменяет ход.</p>`:`<p>Числа слева описывают закрашенные группы в строке, числа сверху — в столбце. Порядок групп совпадает с порядком чисел.</p><h3>Что значит «3 1»</h3><p>Сначала группа из трёх закрашенных клеток, потом хотя бы одна пустая, затем одна закрашенная. До и после групп тоже могут быть пустые клетки.</p><h3>Управление</h3><ul><li>Клик закрашивает клетку, правая кнопка мыши ставит крестик. Повторное действие снимает отметку.</li><li>На телефоне выбери «Закрасить» или «Крестик», затем касайся клеток или веди пальцем.</li><li>Пробел или Enter закрашивает выбранную клетку, X ставит крестик.</li><li>«Отмена» возвращает весь последний штрих вместе с автокрестиками.</li><li>На больших полях «Двигать» позволяет перетаскивать поле. Масштаб меняется кнопками +/−, а «Всё поле» показывает обзор.</li></ul><h3>Обратная связь</h3><p>Собранная группа приглушает числа. Красные числа означают, что текущие отметки уже не могут совпасть с этой линией. Когда строка или столбец закрашены верно, оставшиеся пустые клетки автоматически получают крестики. Все размеры и уровни можно выбрать сразу.</p>`;
  showDialog('#rules-dialog');
 }
-$$('.game-tab').forEach(b=>b.addEventListener('click',()=>{if(game===b.dataset.game)return;game=b.dataset.game;store.activeGame=game;selected=-1;activeHint=null;stroke=null;lastSudokuTap=null;fitNonogram=false;ensureState();save();render();}));
+$$('.game-tab').forEach(b=>b.addEventListener('click',()=>{if(fixedGame||game===b.dataset.game)return;game=b.dataset.game;store.activeGame=game;selected=-1;activeHint=null;stroke=null;tapGesture.reset();fitNonogram=false;ensureState();save();render();}));
 $('#notes-button').addEventListener('click',()=>{pencil=!pencil;renderControls();renderBoard();});
 $('#erase-button').addEventListener('click',erase);$('#undo-button').addEventListener('click',undo);$('#nonogram-undo').addEventListener('click',undo);
 $('#candidates-button').addEventListener('click',fillCandidates);$('#hint-button').addEventListener('click',openHint);$('#guide-button').addEventListener('click',openHint);
@@ -232,13 +291,13 @@ for(const id of ['#levels-button','#progress-button','#journey-levels'])$(id).ad
 $('#rules-button').addEventListener('click',openRules);
 $$('[data-paint]').forEach(b=>b.addEventListener('click',()=>{paint=b.dataset.paint;renderControls();renderBoard();}));
 $('#restart-button').addEventListener('click',()=>showDialog('#confirm-dialog'));
-$('#confirm-restart').addEventListener('click',()=>{pushHistory();delete store[game].saves[store[game].level];activeHint=null;ensureState();save();render();hideDialog('#confirm-dialog');});
-$('#next-level').addEventListener('click',()=>{hideDialog('#complete-dialog');if(store[game].level<30)setLevel(store[game].level+1);else openLevels();});
+$('#confirm-restart').addEventListener('click',()=>{if(isYandex&&game==='sudoku'){benefits.startAttempt(puzzleKey(),crypto.randomUUID());histories.sudoku=[];}else pushHistory();delete store[game].saves[store[game].level];activeHint=null;ensureState();save();render();hideDialog('#confirm-dialog');});
+$('#next-level').addEventListener('click',async()=>{if(platform.blocked())return;if(isYandex&&game==='nonogram'){await platform.interstitial();}hideDialog('#complete-dialog');if(store[game].level<30)setLevel(store[game].level+1);else openLevels();});
 $$('[data-close]').forEach(b=>b.addEventListener('click',()=>b.closest('dialog').close()));
 $$('dialog').forEach(d=>d.addEventListener('click',e=>{if(e.target===d){const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close();}}));
-document.addEventListener('pointerdown',e=>{if(!e.target.closest('.sudoku-cell'))lastSudokuTap=null;});
+document.addEventListener('pointerdown',e=>{if(!e.target.closest('.sudoku-cell'))tapGesture.reset();});
 document.addEventListener('keydown',e=>{
- lastSudokuTap=null;
+ tapGesture.reset();
  if($('dialog[open]'))return;
  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();undo();return;}
  if(e.ctrlKey||e.metaKey||e.altKey||game!=='sudoku')return;
@@ -249,5 +308,19 @@ document.addEventListener('keydown',e=>{
  if(offset){e.preventDefault();selected=((selected<0?0:selected)+offset+81)%81;activeHint=null;renderBoard();$(`[data-cell="${selected}"]`).focus({preventScroll:true});}
 });
 ensureState();render();
+document.body.dataset.platform=isYandex?'yandex':'web';
+if(isYandex){
+ const tutorial=mountOnboarding({game,onOpen:syncGameplay,onClose:()=>{syncGameplay();if(round()&&round().status!=='playing')openAttempt();}});
+ $('#help-button').hidden=false;$('#help-button').addEventListener('click',tutorial.open);
+ new MutationObserver(syncGameplay).observe(document.body,{subtree:true,attributes:true,attributeFilter:['open']});
+ document.addEventListener('visibilitychange',()=>{platform.pause('hidden',document.hidden);syncGameplay();});
+ for(const name of ['click','pointerdown','keydown'])document.addEventListener(name,e=>{if(platform.blocked()){e.preventDefault();e.stopImmediatePropagation();}},{capture:true});
+ const fit=()=>{const mount=$('#board-mount'),tools=$('.nonogram-view-tools'),size=Math.max(80,Math.floor(Math.min(mount.clientWidth,mount.clientHeight-(tools?tools.offsetHeight+5:0))));mount.style.setProperty('--board-fit',size+'px');};
+ new ResizeObserver(fit).observe($('#board-mount'));fit();
+ platform.init();tutorial.firstRun();
+ if(!$('dialog[open]')&&round()&&round().status!=='playing')openAttempt();
+ document.fonts.ready.then(()=>{requestAnimationFrame(()=>{fit();platform.ready();syncGameplay();});});
+ if(benefitsError)toast('Баланс и ошибки сейчас хранятся только до закрытия вкладки. Исходное сохранение не изменено.');
+}
 if(loadError){$('#save-status').textContent='сохранение недоступно';toast('Сохранение не удалось прочитать. Исходная запись сохранена; новое поле работает без записи поверх неё.');}
 else{save();if(migrationNotice)toast('Прогресс перенесён. Любую сложность теперь можно выбрать сразу.');}

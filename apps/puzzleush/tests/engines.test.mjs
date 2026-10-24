@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {DIGITS,UNITS,generateSudoku,generateLegacySudoku,solve,logicalSolve,logicalStep,candidates,emptyNotes,getHint} from '../dist/engine/sudoku.js';
+import {DIGITS,UNITS,generateSudoku,generateLegacySudoku,solve,logicalSolve,logicalStep,candidates,emptyNotes,getHint,conflicts,contradictionHint} from '../dist/engine/sudoku.js';
 import {NONOGRAMS,logicalNonogram,solveNonogram,cluesFor,patterns,runs,lineState,nonogramSolved,autoCrossLines} from '../dist/engine/nonogram.js';
 import {SUDOKU_CHAPTERS,NONOGRAM_CHAPTERS,migrateProgressV1,STORAGE_KEY,LEGACY_STORAGE_KEY} from '../dist/engine/progress.js';
 
@@ -36,6 +36,22 @@ test('duplicates and impossible cells get an explanation',()=>{
  const board=Array(81).fill(0);board[0]=1;board[1]=1;assert.equal(getHint(board).technique,'conflict');
  const other=Array(81).fill(0);for(let i=1;i<9;i++)other[i]=i;other[9]=9;
  assert.equal(getHint(other).technique,'contradiction');
+});
+test('expert screenshot: givens are unique, entries have no duplicates but block every place for 3 in row 7',()=>{
+ const p=generateSudoku(21),board=['010893674','967154382','003726951','009478136','004060090','006039040','000680719','631947528','798010463'].join('').split('').map(Number),before=[...board];
+ assert.equal(solve(p.puzzle).count,1);assert.deepEqual(solve(p.puzzle).solution,p.solution);
+ assert.ok(p.puzzle.every((n,i)=>!n||board[i]===n));assert.deepEqual(conflicts(board),[]);assert.equal(solve(board).count,0);
+ const h=contradictionHint(board);assert.equal(h.lead,'В строке 7 негде поставить 3.');assert.ok(h.detail.includes('р1с6'));assert.ok(h.detail.includes('р8с2'));assert.ok(h.blockers.includes(5));assert.ok(h.blockers.includes(64));assert.equal(getHint(board).technique,'contradiction');assert.ok(!h.placement);assert.deepEqual(board,before);
+});
+test('a wrong locally legal entry never receives a forward placement hint',()=>{
+ let checked=0;
+ for(let level=1;level<=30;level++){
+  const p=generateSudoku(level),cs=candidates(p.puzzle);
+  const cell=cs.findIndex((a,i)=>a.some(n=>n!==p.solution[i]));if(cell<0)continue;
+  const board=[...p.puzzle];board[cell]=cs[cell].find(n=>n!==p.solution[cell]);
+  const h=getHint(board);assert.equal(h.technique,'contradiction',`level ${level}`);assert.ok(!h.placement&&!h.eliminations);checked++;
+ }
+ assert.ok(checked>=20);
 });
 const all=()=>Array.from({length:81},()=>[...DIGITS]);
 test('open pair removes its digits only from the other cells of its unit',()=>{
