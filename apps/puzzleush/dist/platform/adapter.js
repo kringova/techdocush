@@ -1,4 +1,4 @@
-export function createPlatform({enabled=false,host=globalThis,onState=()=>{},onError=()=>{}}={}){
+export function createPlatform({enabled=false,host=globalThis,onState=()=>{},onError=()=>{},onAdEvent=()=>{}}={}){
  let sdk=null,pending=null,uiReady=false,ready=false,wantsPlay=false,playing=false,adBusy=false;
  const pauses=new Set();
  function sync(){
@@ -27,20 +27,21 @@ export function createPlatform({enabled=false,host=globalThis,onState=()=>{},onE
    finally{if(timer)host.clearTimeout(timer);pending=null;}
   })();return pending;
  }
- async function advertise(kind,grant=()=>{}){
+ function adEvent(kind,stage,placement,params={}){try{onAdEvent(`game${kind==='rewarded'?'Rewarded':'Fullscreen'}${stage}`,{placement,...params});}catch{}}
+ async function advertise(kind,grant=()=>{},placement='between_levels'){
   if(!enabled)return {rewarded:false,shown:false,reason:'web'};
   if(adBusy)return {rewarded:false,shown:false,reason:'busy'};
-  adBusy=true;pause('ad',true);
+  adEvent(kind,'Request',placement);adBusy=true;pause('ad',true);
   const api=await init();
-  if(!api?.adv){adBusy=false;pause('ad',false);return {rewarded:false,shown:false,reason:'unavailable'};}
+  if(!api?.adv){adEvent(kind,'Error',placement,{reason:'unavailable'});adBusy=false;pause('ad',false);return {rewarded:false,shown:false,reason:'unavailable'};}
   return new Promise(resolve=>{
    let closed=false,rewarded=false,shown=false,grantError=false;
-   function finish(reason){if(closed)return;closed=true;adBusy=false;pause('ad',false);resolve({rewarded,shown,reason:grantError?'storage':reason});}
-   function reward(){if(closed||rewarded)return;try{grant();rewarded=true;}catch(error){grantError=true;onError(error);}}
-   const callbacks={onOpen(){shown=true;},onClose(wasShown){shown=shown||wasShown===true;finish('closed');},onError(){finish('error');}};
+   function finish(reason){if(closed)return;adEvent(kind,reason==='error'?'Error':'Close',placement,{shown,rewarded});closed=true;adBusy=false;pause('ad',false);resolve({rewarded,shown,reason:grantError?'storage':reason});}
+   function reward(){if(closed||rewarded)return;try{grant();rewarded=true;adEvent(kind,'Earned',placement,{granted:true});}catch(error){grantError=true;onError(error);}}
+   const callbacks={onOpen(){shown=true;adEvent(kind,'Open',placement);},onClose(wasShown){shown=shown||wasShown===true;finish('closed');},onError(){finish('error');}};
    if(kind==='rewarded'){callbacks.onRewarded=reward;callbacks.onReward=reward;}
    try{api.adv[kind==='rewarded'?'showRewardedVideo':'showFullscreenAdv']({callbacks});}catch{finish('error');}
   });
  }
- return {enabled,init,pause,ready(){uiReady=true;sync();},play(value){wantsPlay=value;sync();},blocked:()=>enabled&&(adBusy||pauses.has('platform')),rewarded:grant=>advertise('rewarded',grant),interstitial:()=>advertise('fullscreen')};
+ return {enabled,init,pause,ready(){uiReady=true;sync();},play(value){wantsPlay=value;sync();},blocked:()=>enabled&&(adBusy||pauses.has('platform')),rewarded:(grant,placement)=>advertise('rewarded',grant,placement),interstitial:()=>advertise('fullscreen')};
 }

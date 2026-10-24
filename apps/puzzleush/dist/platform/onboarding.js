@@ -1,6 +1,6 @@
 import {createDoubleTap} from '../engine/double-tap.js';
 
-export function mountOnboarding({game,onOpen=()=>{},onClose=()=>{}}){
+export function mountOnboarding({game,onOpen=()=>{},onClose=()=>{},track=()=>{}}){
  const key=`kletochki-yandex-${game}-onboarding-v1`,sudoku=game==='sudoku';
  const steps=sudoku?[
   ['Твоя сложность — с первого хода','Заполни строки, столбцы и блоки 3 × 3 цифрами 1–9 без повторов. Над полем можно сразу выбрать любую сложность, включая «Эксперт». Кнопка с номером уровня открывает все 30 задач. Проходить базовые по порядку не нужно.'],
@@ -17,17 +17,17 @@ export function mountOnboarding({game,onOpen=()=>{},onClose=()=>{}}){
  const dialog=document.createElement('dialog');dialog.id='onboarding-dialog';dialog.className='onboarding-dialog';
  dialog.innerHTML='<div class="dialog-heading"><span class="eyebrow" id="tutorial-progress"></span><button class="text-button" id="tutorial-skip">Пропустить</button></div><h2 id="tutorial-title"></h2><p id="tutorial-copy"></p><div id="tutorial-practice" hidden><button id="tutorial-cell" aria-label="Тренировка: единственная пометка 7"><small>7</small></button><span id="tutorial-feedback" role="status">Дважды коснись клетки</span><button id="tutorial-reset" class="text-button" hidden>Попробовать ещё</button></div><div class="tutorial-actions"><button id="tutorial-back" class="secondary-button">Назад</button><button id="tutorial-next" class="primary-button">Дальше</button></div>';
  dialog.setAttribute('aria-labelledby','tutorial-title');document.body.append(dialog);
- const $=s=>dialog.querySelector(s),gesture=createDoubleTap();let step=0;
+ const $=s=>dialog.querySelector(s),gesture=createDoubleTap();let step=0,outcome='skip';
  function render(){
   gesture.reset();$('#tutorial-progress').textContent=`ЗНАКОМСТВО · ${step+1} / ${steps.length}`;$('#tutorial-title').textContent=steps[step][0];$('#tutorial-copy').textContent=steps[step][1];$('#tutorial-practice').hidden=!(sudoku&&step===1);$('#tutorial-back').disabled=step===0;$('#tutorial-next').textContent=step===steps.length-1?'Начать играть':'Дальше';resetDemo();
  }
  function resetDemo(){gesture.reset();$('#tutorial-cell').innerHTML='<small>7</small>';$('#tutorial-cell').dataset.filled='false';$('#tutorial-feedback').textContent='Дважды коснись клетки';$('#tutorial-reset').hidden=true;}
- function open(){if(dialog.open)return;step=0;render();onOpen();dialog.showModal();}
+ function open(){if(dialog.open)return;outcome='skip';step=0;track('gameTutorialStart',{game});render();onOpen();dialog.showModal();}
  function close(){dialog.close();}
- $('#tutorial-next').onclick=()=>{if(step===steps.length-1)close();else{step++;render();}};
+ $('#tutorial-next').onclick=()=>{if(step===steps.length-1){outcome='complete';close();}else{step++;track('gameTutorialStep',{game,step:step+1});render();}};
  $('#tutorial-back').onclick=()=>{if(step){step--;render();}};$('#tutorial-skip').onclick=close;$('#tutorial-reset').onclick=resetDemo;
- $('#tutorial-cell').onclick=e=>{if(gesture.tap(0,performance.now(),e.detail)&&$('#tutorial-cell').dataset.filled!=='true'){$('#tutorial-cell').textContent='7';$('#tutorial-cell').dataset.filled='true';$('#tutorial-feedback').textContent='Получилось! Так же работает настоящее поле.';$('#tutorial-reset').hidden=false;}};
- dialog.addEventListener('close',()=>{try{localStorage.setItem(key,'seen');}catch{}onClose();});
+ $('#tutorial-cell').onclick=e=>{if(gesture.tap(0,performance.now(),e.detail)&&$('#tutorial-cell').dataset.filled!=='true'){track('gameTutorialDoubleTap',{game});$('#tutorial-cell').textContent='7';$('#tutorial-cell').dataset.filled='true';$('#tutorial-feedback').textContent='Получилось! Так же работает настоящее поле.';$('#tutorial-reset').hidden=false;}};
+ dialog.addEventListener('close',()=>{track(outcome==='complete'?'gameTutorialComplete':'gameTutorialSkip',{game,step:step+1});try{localStorage.setItem(key,'seen');}catch{}onClose();});
  dialog.addEventListener('click',e=>{if(e.target!==dialog)return;const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)close();});
  let seen=false;try{seen=localStorage.getItem(key)==='seen';}catch{}
  return {open,firstRun:()=>{if(!seen)open();}};

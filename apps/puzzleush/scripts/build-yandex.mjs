@@ -6,6 +6,9 @@ import {execFileSync} from 'node:child_process';
 
 const root=fileURLToPath(new URL('../',import.meta.url)),source=path.join(root,'dist'),output=path.join(root,'build/yandex');
 const {version}=JSON.parse(await readFile(path.join(root,'package.json'),'utf8'));
+const config=JSON.parse(await readFile(path.join(root,'yandex.config.json'),'utf8'));
+const counterId=Number(process.env.YANDEX_METRICA_COUNTER??config.metricaCounterId);
+if(!Number.isSafeInteger(counterId)||counterId<0)throw Error('Invalid Yandex Metrica counter id');
 const sha=data=>createHash('sha256').update(data).digest('hex');
 async function files(dir,prefix=''){const out=[];for(const entry of await readdir(dir,{withFileTypes:true})){const rel=path.join(prefix,entry.name);if(entry.isDirectory())out.push(...await files(path.join(dir,entry.name),rel));else out.push(rel);}return out.sort();}
 const sourceFiles=await files(source),sourceHashes=Object.fromEntries(await Promise.all(sourceFiles.map(async name=>[name,sha(await readFile(path.join(source,name)))])));
@@ -14,7 +17,7 @@ await mkdir(output,{recursive:true});
 for(const game of ['sudoku','nonogram']){
  const dir=path.join(output,game);await rm(dir,{recursive:true,force:true});await cp(source,dir,{recursive:true});
  let html=await readFile(path.join(dir,'index.html'),'utf8');
- html=html.replace('<html lang="ru">',`<html lang="ru" data-platform="yandex" data-game="${game}">`)
+ html=html.replace('<html lang="ru">',`<html lang="ru" data-platform="yandex" data-game="${game}" data-metrica="${counterId}">`)
   .replace('<body>','<body data-platform="yandex">')
   .replace(/<title>.*?<\/title>/,`<title>Клеточки: ${game==='sudoku'?'Судоку с объяснениями':'Японские кроссворды'}</title>`)
   .replace('</head>','<link rel="stylesheet" href="./platform/yandex.css"><script src="/sdk.js"></script></head>')
@@ -29,7 +32,7 @@ for(const game of ['sudoku','nonogram']){
  if(size>100*1024*1024)throw Error('Yandex unpacked size exceeds 100 MB');
  if(/https?:\/\//.test(html.replace('http://www.w3.org/2000/svg','')))throw Error('External URL in game HTML');
  if(/fonts\.google|@import/.test(css))throw Error('Remote font dependency');
- const manifest={version,profile:`yandex-${game}`,sharedHash,sourceHashes,hashes,unpackedBytes:size};
+ const manifest={version,profile:`yandex-${game}`,sharedHash,sourceHashes,hashes,unpackedBytes:size,analytics:{counterId,enabled:counterId>0}};
  await writeFile(path.join(dir,'release.json'),JSON.stringify(manifest,null,2)+'\n');
  const archive=path.join(output,`kletochki-${game}-${version}.zip`);
  execFileSync('python3',['-c','import pathlib,sys,zipfile; root=pathlib.Path(sys.argv[1]); z=zipfile.ZipFile(sys.argv[2],"w",zipfile.ZIP_DEFLATED); [z.write(p,p.relative_to(root).as_posix()) for p in sorted(root.rglob("*")) if p.is_file()]; z.close()',dir,archive]);

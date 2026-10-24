@@ -3,6 +3,7 @@ import {NONOGRAMS,lineState,nonogramSolved,autoCrossLines,correctBlackLine} from
 import {createDoubleTap} from './engine/double-tap.js';
 import {createBenefits} from './engine/benefits.js';
 import {createPlatform} from './platform/adapter.js';
+import {createAnalytics,metricaSender} from './platform/analytics.js';
 import {mountOnboarding} from './platform/onboarding.js';
 import {STORAGE_KEY,LEGACY_STORAGE_KEY,SUDOKU_CHAPTERS,NONOGRAM_CHAPTERS,chapterFor,migrateProgressV1} from './engine/progress.js';
 
@@ -13,7 +14,10 @@ const fixedGame=isYandex?document.documentElement.dataset.game:null;
 const STORAGE=isYandex?`kletochki-yandex-${fixedGame}-progress-v2`:STORAGE_KEY;
 let benefits=null,benefitsError=false;
 if(isYandex)try{benefits=createBenefits(localStorage,`kletochki-yandex-${fixedGame}-benefits-v1`);}catch{benefitsError=true;const memory=new Map();benefits=createBenefits({getItem:k=>memory.get(k)||null,setItem:(k,v)=>memory.set(k,v)},'session');}
-const platform=createPlatform({enabled:isYandex,onState(){document.body.dataset.platformPaused=String(platform.blocked());},onError(){toast('Связь с Яндексом недоступна. Рекламу можно попробовать позже.');}});
+const analyticsCounter=Number(document.documentElement.dataset.metrica||0);
+const analyticsEnabled=isYandex&&analyticsCounter>0;
+const analytics=createAnalytics({enabled:analyticsEnabled,send:metricaSender({enabled:isYandex,counterId:analyticsCounter}),context:()=>({game,level:store[game].level,group:chapterFor(game,store[game].level).label,size:game==='nonogram'?NONOGRAMS[store.nonogram.level-1].grid.length:9,version:'1.2.1'})});
+const platform=createPlatform({enabled:isYandex,onAdEvent:(name,params)=>analytics.event(name,params),onState(){document.body.dataset.platformPaused=String(platform.blocked());},onError(){toast('Связь с Яндексом недоступна. Рекламу можно попробовать позже.');}});
 const tapGesture=createDoubleTap();
 const clone=x=>structuredClone(x),range=n=>Array.from({length:n},(_,i)=>i);
 const fresh=()=>({version:2,activeGame:'sudoku',sudoku:{level:1,completed:{},saves:{}},nonogram:{level:1,completed:{},saves:{}},legacyCompleted:{sudoku:0,nonogram:0}});
@@ -49,7 +53,7 @@ let histories={sudoku:[],nonogram:[]},stroke=null,toastTimer,zoomCell=32,fitNono
 const puzzleKey=()=>generateSudoku(store.sudoku.level).puzzle.join('');
 const round=()=>isYandex&&game==='sudoku'?benefits.attempt(puzzleKey()):null;
 function canMove(){if(platform.blocked())return false;if(round()&&round().status!=='playing'){openAttempt();return false;}return true;}
-function syncGameplay(){platform.play(!document.hidden&&!$('dialog[open]')&&!current()?.won&&(!round()||round().status==='playing'));}
+function syncGameplay(){const playing=!document.hidden&&!$('dialog[open]')&&!current()?.won&&(!round()||round().status==='playing');platform.play(playing);analytics.play(playing);}
 function current(){return store[game].saves[store[game].level];}
 function ensureState(){
  const d=store[game],level=d.level;
@@ -150,7 +154,8 @@ function enterNumber(n,{asValue=false}={}){
   if(s.auto)s.notes=candidates(s.board,s.exclusions);
   else for(const i of PEERS[selected])s.notes[i]=s.notes[i].filter(v=>!PEERS[i].some(j=>s.board[j]===v));
  }
- afterMove();if(round()?.status==='paused')openAttempt();
+ analytics.activity(pencil&&!asValue?'note_edit':'digit_input');if(isYandex&&!(pencil&&!asValue)&&s.board[selected]&&s.board[selected]!==p.solution[selected])analytics.activity('wrong_digit');
+ afterMove();if(round()?.status==='paused'){analytics.event('gameRoundPaused',{mistakes:4});openAttempt();}
 }
 function erase(){
  if(game!=='sudoku'||!canMove())return;const s=current();if(s.won||selected<0||generateSudoku(store.sudoku.level).puzzle[selected])return;
@@ -160,13 +165,15 @@ function erase(){
 function fillCandidates(){
  if(game!=='sudoku'||current().won||!canMove())return;
  if(isYandex&&!benefits.hasCandidates(puzzleKey()))return offerReward('candidates');
- pushHistory();const s=current();s.exclusions=emptyNotes();s.notes=candidates(s.board);s.auto=true;activeHint=null;save();render();toast('Все допустимые кандидаты расставлены.');
+ analytics.event('gameCandidatesUsed');pushHistory();const s=current();s.exclusions=emptyNotes();s.notes=candidates(s.board);s.auto=true;activeHint=null;save();render();toast('Все допустимые кандидаты расставлены.');
 }
 function undo(){if(!canMove()||!histories[game].length)return;store[game].saves[store[game].level]=histories[game].pop();activeHint=null;save();render();}
 function afterMove(){
- const s=current();if(game==='nonogram')s.cells=autoCrossLines(s.cells,NONOGRAMS[store.nonogram.level-1].grid);
+ const s=current();if(game==='nonogram')analytics.activity('paint_stroke');
+ const before=histories[game].at(-1);if(game==='nonogram'&&before)for(const [name,value] of [['fill',1],['cross',0],['clear',-1]])analytics.activity(name,s.cells.filter((v,i)=>v===value&&before.cells[i]!==v).length);if(game==='nonogram')s.cells=autoCrossLines(s.cells,NONOGRAMS[store.nonogram.level-1].grid);
  const won=game==='sudoku'?s.board.every(Boolean)&&!conflicts(s.board).length:nonogramSolved(s.cells,NONOGRAMS[store.nonogram.level-1].grid);
- if(won&&!s.won){s.won=true;store[game].completed[store[game].level]={at:new Date().toISOString(),hints:s.hints||0};save();render();openComplete();}
+ if(analyticsEnabled){const solution=game==='sudoku'?generateSudoku(store.sudoku.level).solution:NONOGRAMS[store.nonogram.level-1].grid.flat();const correct=s.board?s.board.filter((n,i)=>n&&n===solution[i]).length:s.cells.filter((v,i)=>v===1&&solution[i]===1).length;analytics.updateProgress(correct/(game==='sudoku'?81:solution.filter(Boolean).length)*100);}
+ if(won&&!s.won){analytics.complete();s.won=true;store[game].completed[store[game].level]={at:new Date().toISOString(),hints:s.hints||0};save();render();openComplete();}
  else{save();renderBoard();renderControls();}
 }
 function renderNonogram(){
@@ -219,10 +226,10 @@ document.addEventListener('pointercancel',()=>{if(stroke){stroke=null;afterMove(
 function openHint(){
  if(game!=='sudoku')return openRules();
  if(!canMove())return;
- const s=current(),next=getHint(s.board,s.exclusions),fingerprint=JSON.stringify([s.board,s.exclusions]);
+ const s=current(),next=getHint(s.board,s.exclusions),hintsBefore=isYandex?benefits.snapshot().hints:0,fingerprint=JSON.stringify([s.board,s.exclusions]);
  if(isYandex&&(next.placement||next.eliminations?.length)){
   if(!benefits.canRead(fingerprint))return offerReward('hints');
-  try{benefits.readHint(fingerprint);}catch{return toast('Не удалось сохранить баланс подсказок. Попробуй ещё раз.');}
+  try{benefits.readHint(fingerprint);if(benefits.snapshot().hints<hintsBefore){analytics.event('gameHintUsed',{technique:next.technique});analytics.activity('hint_used');}}catch{return toast('Не удалось сохранить баланс подсказок. Попробуй ещё раз.');}
  }
  activeHint=next;s.hints++;if(activeHint.placement)selected=activeHint.placement.cell;save();renderBoard();renderControls();
  $('#hint-title').textContent=activeHint.title;$('#hint-lead').textContent=activeHint.lead;$('#hint-detail').textContent=activeHint.detail;$('#hint-detail').hidden=true;
@@ -241,13 +248,13 @@ $('#reward-watch').addEventListener('click',async()=>{
  const result=await platform.rewarded(()=>{
   const granted=offer.kind==='candidates'?benefits.grantCandidates(offer.puzzle,receipt):offer.kind==='hints'?benefits.grantHints(receipt):benefits.revive(offer.puzzle,offer.attempt,receipt);
   if(!granted)throw Error('Reward no longer applies');
- });
+ },offer.kind);
  $('#reward-watch').disabled=false;
  if(!result.rewarded){$('#reward-status').textContent=result.reason==='storage'?'Не удалось сохранить награду. Попробуй ещё раз.':'Просмотр не подтверждён. Награда не выдана; можно повторить или вернуться к игре.';return;}
  rewardOffer=null;hideDialog('#reward-dialog');render();
  if(offer.kind==='candidates'&&game==='sudoku'&&puzzleKey()===offer.puzzle)fillCandidates();
  else if(offer.kind==='hints')toast('Добавлены три подсказки. Нажми «Подсказки», когда понадобится разбор.');
- else{hideDialog('#attempt-dialog');toast('Партия восстановлена. Поле сохранено, снова доступны три ошибки.');}
+ else{analytics.event('gameRoundRevived');hideDialog('#attempt-dialog');toast('Партия восстановлена. Поле сохранено, снова доступны три ошибки.');}
  syncGameplay();
 });
 function openAttempt(){
@@ -256,7 +263,7 @@ function openAttempt(){
  $('#attempt-restore').textContent=finished?'Начать новую партию':'Продолжить за рекламу';$('#attempt-finish').hidden=finished;showDialog('#attempt-dialog');
 }
 $('#attempt-restore').addEventListener('click',()=>{if(round()?.status==='finished'){hideDialog('#attempt-dialog');showDialog('#confirm-dialog');}else offerReward('revive');});
-$('#attempt-finish').addEventListener('click',()=>{benefits.finish(puzzleKey());hideDialog('#attempt-dialog');render();openLevels();});
+$('#attempt-finish').addEventListener('click',()=>{analytics.event('gameRoundFinished',{mistakes:round()?.errors});analytics.leave('finish');benefits.finish(puzzleKey());hideDialog('#attempt-dialog');render();openLevels();});
 $('#attempt-levels').addEventListener('click',()=>{hideDialog('#attempt-dialog');openLevels();});
 $('#explain-button').addEventListener('click',()=>{$('#hint-detail').hidden=false;$('#explain-button').hidden=true;$('#eliminate-button').hidden=!activeHint?.eliminations?.length;});
 $('#eliminate-button').addEventListener('click',()=>{
@@ -272,7 +279,7 @@ function openLevels(){
  $('#levels-content').innerHTML=chapters.map(ch=>`<section class="level-chapter"><h3>${ch.label}</h3><div class="level-grid">${range(ch.end-ch.start+1).map(k=>{const n=ch.start+k,done=store[game].completed[n];return `<button class="level-item ${done?'done':''} ${n===store[game].level?'current':''}" data-level="${n}" aria-label="Уровень ${n}${done?', пройден':''}">${n}</button>`;}).join('')}</div></section>`).join('');
  $$('[data-level]').forEach(b=>b.addEventListener('click',()=>{hideDialog('#levels-dialog');setLevel(Number(b.dataset.level));}));showDialog('#levels-dialog');
 }
-function setLevel(level){store[game].level=level;histories[game]=[];selected=-1;activeHint=null;pencil=false;tapGesture.reset();fitNonogram=false;ensureState();save();render();window.scrollTo({top:0,behavior:'instant'});if(round()&&round().status!=='playing')openAttempt();}
+function setLevel(level){analytics.leave('level_change');store[game].level=level;analytics.levelStart();histories[game]=[];selected=-1;activeHint=null;pencil=false;tapGesture.reset();fitNonogram=false;ensureState();save();render();window.scrollTo({top:0,behavior:'instant'});if(round()&&round().status!=='playing')openAttempt();}
 function openComplete(){
  const level=store[game].level;$('#complete-title').textContent=game==='sudoku'?'Всё сошлось!':NONOGRAMS[level-1].name;
  const count=Object.keys(store[game].completed).length;
@@ -291,7 +298,7 @@ for(const id of ['#levels-button','#progress-button','#journey-levels'])$(id).ad
 $('#rules-button').addEventListener('click',openRules);
 $$('[data-paint]').forEach(b=>b.addEventListener('click',()=>{paint=b.dataset.paint;renderControls();renderBoard();}));
 $('#restart-button').addEventListener('click',()=>showDialog('#confirm-dialog'));
-$('#confirm-restart').addEventListener('click',()=>{if(isYandex&&game==='sudoku'){benefits.startAttempt(puzzleKey(),crypto.randomUUID());histories.sudoku=[];}else pushHistory();delete store[game].saves[store[game].level];activeHint=null;ensureState();save();render();hideDialog('#confirm-dialog');});
+$('#confirm-restart').addEventListener('click',()=>{analytics.leave('restart');analytics.levelStart();if(isYandex&&game==='sudoku'){benefits.startAttempt(puzzleKey(),crypto.randomUUID());histories.sudoku=[];}else pushHistory();delete store[game].saves[store[game].level];activeHint=null;ensureState();save();render();hideDialog('#confirm-dialog');});
 $('#next-level').addEventListener('click',async()=>{if(platform.blocked())return;if(isYandex&&game==='nonogram'){await platform.interstitial();}hideDialog('#complete-dialog');if(store[game].level<30)setLevel(store[game].level+1);else openLevels();});
 $$('[data-close]').forEach(b=>b.addEventListener('click',()=>b.closest('dialog').close()));
 $$('dialog').forEach(d=>d.addEventListener('click',e=>{if(e.target===d){const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close();}}));
@@ -307,11 +314,13 @@ document.addEventListener('keydown',e=>{
  const offset={ArrowLeft:-1,ArrowRight:1,ArrowUp:-9,ArrowDown:9}[e.key];
  if(offset){e.preventDefault();selected=((selected<0?0:selected)+offset+81)%81;activeHint=null;renderBoard();$(`[data-cell="${selected}"]`).focus({preventScroll:true});}
 });
-ensureState();render();
+ensureState();analytics.levelStart();render();
 document.body.dataset.platform=isYandex?'yandex':'web';
 if(isYandex){
- const tutorial=mountOnboarding({game,onOpen:syncGameplay,onClose:()=>{syncGameplay();if(round()&&round().status!=='playing')openAttempt();}});
+ const tutorial=mountOnboarding({game,track:(name,params)=>analytics.event(name,params),onOpen:syncGameplay,onClose:()=>{syncGameplay();if(round()&&round().status!=='playing')openAttempt();}});
  $('#help-button').hidden=false;$('#help-button').addEventListener('click',tutorial.open);
+ document.addEventListener('click',e=>{const b=e.target.closest('button[id]');if(b&&!b.closest('#onboarding-dialog'))analytics.activity('button_'+b.id);});
+ setInterval(()=>analytics.flush(),10000);window.addEventListener('pagehide',()=>analytics.leave('pagehide'));
  new MutationObserver(syncGameplay).observe(document.body,{subtree:true,attributes:true,attributeFilter:['open']});
  document.addEventListener('visibilitychange',()=>{platform.pause('hidden',document.hidden);syncGameplay();});
  for(const name of ['click','pointerdown','keydown'])document.addEventListener(name,e=>{if(platform.blocked()){e.preventDefault();e.stopImmediatePropagation();}},{capture:true});
