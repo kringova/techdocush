@@ -17,7 +17,7 @@ if(isYandex)try{benefits=createBenefits(localStorage,`kletochki-yandex-${fixedGa
 const analyticsCounter=Number(document.documentElement.dataset.metrica||0);
 const analyticsEnabled=isYandex&&analyticsCounter>0;
 const analytics=createAnalytics({enabled:analyticsEnabled,send:metricaSender({enabled:isYandex,counterId:analyticsCounter}),context:()=>({game,level:store[game].level,group:chapterFor(game,store[game].level).label,size:game==='nonogram'?NONOGRAMS[store.nonogram.level-1].grid.length:9,version:'1.2.1'})});
-const platform=createPlatform({enabled:isYandex,onAdEvent:(name,params)=>analytics.event(name,params),onState(){document.body.dataset.platformPaused=String(platform.blocked());},onError(){toast('Связь с Яндексом недоступна. Рекламу можно попробовать позже.');}});
+const platform=createPlatform({enabled:isYandex,onAdEvent:(name,params)=>analytics.event(name,params),onState(){document.body.dataset.platformPaused=String(platform.blocked());syncGameplay();},onError(){toast('Связь с Яндексом недоступна. Рекламу можно попробовать позже.');}});
 const tapGesture=createDoubleTap();
 const clone=x=>structuredClone(x),range=n=>Array.from({length:n},(_,i)=>i);
 const fresh=()=>({version:2,activeGame:'sudoku',sudoku:{level:1,completed:{},saves:{}},nonogram:{level:1,completed:{},saves:{}},legacyCompleted:{sudoku:0,nonogram:0}});
@@ -53,7 +53,7 @@ let histories={sudoku:[],nonogram:[]},stroke=null,toastTimer,zoomCell=32,fitNono
 const puzzleKey=()=>generateSudoku(store.sudoku.level).puzzle.join('');
 const round=()=>isYandex&&game==='sudoku'?benefits.attempt(puzzleKey()):null;
 function canMove(){if(platform.blocked())return false;if(round()&&round().status!=='playing'){openAttempt();return false;}return true;}
-function syncGameplay(){const playing=!document.hidden&&!$('dialog[open]')&&!current()?.won&&(!round()||round().status==='playing');platform.play(playing);analytics.play(playing);}
+function syncGameplay(){const playing=!platform.blocked()&&!document.hidden&&!$('dialog[open]')&&!current()?.won&&(!round()||round().status==='playing');platform.play(playing);analytics.play(playing);}
 function current(){return store[game].saves[store[game].level];}
 function ensureState(){
  const d=store[game],level=d.level;
