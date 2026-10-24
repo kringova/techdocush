@@ -3,18 +3,19 @@ import {mkdir,writeFile} from 'node:fs/promises';
 import assert from 'node:assert/strict';
 import {generateSudoku,candidates} from '../dist/engine/sudoku.js';
 import {NONOGRAMS} from '../dist/engine/nonogram.js';
+import {STORAGE_KEY} from '../dist/engine/progress.js';
 const require=createRequire(import.meta.url);
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
 const browser=await chromium.launch({headless:true,...(process.env.BROWSER_EXECUTABLE?{executablePath:process.env.BROWSER_EXECUTABLE}:{})});
 const url=process.env.BASE_URL||'http://127.0.0.1:4338',errors=[],checks=[];
-const key='kletochki-progress-v1';
+const key=STORAGE_KEY;
 await mkdir('test-results',{recursive:true});
 const context=await browser.newContext({viewport:{width:1440,height:1100}});
 const page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));
 try{
  await page.goto(url,{waitUntil:'domcontentloaded'});await page.locator('.sudoku-cell').last().waitFor();
  assert.equal(await page.locator('.sudoku-cell').count(),81);checks.push('desktop renders 81 sudoku cells');
- await page.locator('#levels-button').click();assert.ok(await page.locator('[data-level="2"]').isDisabled());await page.locator('#levels-dialog [data-close]').click();
+ await page.locator('#levels-button').click();assert.ok(!(await page.locator('[data-level="30"]').isDisabled()));await page.locator('#levels-dialog [data-close]').click();
  await page.locator('#candidates-button').click();assert.equal(await page.locator('.notes span').filter({hasText:/[1-9]/}).count(),candidates(generateSudoku(1).puzzle).flat().length);
  const before=await page.evaluate(k=>JSON.parse(localStorage.getItem(k)).sudoku.saves[1].board,key);
  await page.locator('#hint-button').click();assert.ok(await page.locator('#hint-detail').isHidden());await page.locator('#explain-button').click();assert.ok((await page.locator('#hint-detail').textContent()).length>40);
@@ -47,11 +48,10 @@ try{
   await mp.locator('[data-paint="fill"]').tap();await mp.locator(`[data-pixel="${black}"]`).tap();assert.ok(await mp.locator(`[data-pixel="${black}"]`).evaluate(e=>e.classList.contains('filled')));
   await mp.reload({waitUntil:'domcontentloaded'});assert.ok(await mp.locator(`[data-pixel="${black}"]`).evaluate(e=>e.classList.contains('filled')));assert.ok(await mp.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
   await mp.screenshot({path:`test-results/nonogram-${width}.png`,fullPage:true});
-  // Test the largest chapter using a QA-only browser-storage fixture.
-  await mp.evaluate(k=>{const d=JSON.parse(localStorage.getItem(k));d.nonogram.level=30;d.nonogram.completed=Object.fromEntries(Array.from({length:29},(_,i)=>[i+1,{at:'qa'}]));localStorage.setItem(k,JSON.stringify(d));},key);
-  await mp.reload({waitUntil:'domcontentloaded'});assert.equal(await mp.locator('.nonogram-cell').count(),100);assert.ok(await mp.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
-  const cell=await mp.locator('[data-pixel="0"]').boundingBox();assert.ok(cell.width>=24,`10x10 touch target ${width}: ${cell.width}`);
-  await mp.screenshot({path:`test-results/nonogram-10x10-${width}.png`,fullPage:true});
+  await mp.locator('#levels-button').tap();await mp.locator('[data-level="30"]').tap();
+  assert.equal(await mp.locator('.nonogram-cell').count(),400);assert.ok(await mp.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+  const cell=await mp.locator('[data-pixel="0"]').boundingBox();assert.ok(cell.width>=30,`20x20 touch target ${width}: ${cell.width}`);
+  await mp.screenshot({path:`test-results/nonogram-20x20-${width}.png`,fullPage:true});
   checks.push(`mobile ${width}: touch fill/cross, undo, saved state, both grid sizes fit`);await mobile.close();
  }
  assert.deepEqual(errors,[]);checks.push('no browser JavaScript errors');

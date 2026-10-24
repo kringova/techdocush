@@ -15,5 +15,6 @@ const files={};
 async function scan(dir,prefix=''){for(const f of await readdir(dir,{withFileTypes:true})){const rel=prefix+f.name;if(f.isSymbolicLink())throw Error('Symlinks are not release files');if(f.isDirectory())await scan(path.join(dir,f.name),rel+'/');else files[rel]=createHash('sha256').update(await readFile(path.join(dir,f.name))).digest('hex');}}
 await scan(source);let commit='working-tree';
 try{if(!execFileSync('git',['status','--porcelain','--untracked-files=normal','--',path.dirname(source)],{cwd:site,encoding:'utf8'}).trim())commit=execFileSync('git',['rev-parse','HEAD'],{cwd:site,encoding:'utf8'}).trim();}catch{}
-await writeFile(path.join(target,'release.json'),JSON.stringify({app:'puzzleush',version:'1.0.0',source_commit:commit,files},null,2)+'\n');
+const version=JSON.parse(await readFile(new URL('../package.json',import.meta.url),'utf8')).version;
+await writeFile(path.join(target,'release.json'),JSON.stringify({app:'puzzleush',version,source_commit:commit,files},null,2)+'\n');
 console.log(`Клеточки: ${Object.keys(files).length} файлов подготовлены для /play/`);

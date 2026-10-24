@@ -4,7 +4,7 @@
  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
  <meta name="theme-color" content="#f5f3ed"><meta name="description" content="Судоку с объясняющими подсказками и японские кроссворды. Проходи уровни в своём темпе.">
  <title>Клеточки — судоку и японские кроссворды</title>
- <link rel="icon" type="image/svg+xml" href="./icon.svg"><link rel="stylesheet" href="./style.css?v=20261024-2">
+ <link rel="icon" type="image/svg+xml" href="./icon.svg"><link rel="stylesheet" href="./style.css?v=1.1.0">
 </head>
 <body>
 <svg class="icon-sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
@@ -20,6 +20,7 @@
  <symbol id="i-restart" viewBox="0 0 24 24"><path d="M4 10a8 8 0 1 1 0 6M4 3v7h7"/></symbol>
  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></symbol>
  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 6v2"/></symbol>
+ <symbol id="i-pan" viewBox="0 0 24 24"><path d="M12 3v18M3 12h18m-12-6 3-3 3 3m-6 12 3 3 3-3M6 9l-3 3 3 3m12-6 3 3-3 3"/></symbol>
 </defs></svg>
 <div class="page-shell">
  <header class="site-header">
@@ -36,6 +37,7 @@
    <div><div class="eyebrow" id="chapter-label">ГЛАВА 01 · ПЕРВЫЕ ШАГИ</div><h1 id="game-title">Судоку</h1><p id="game-subtitle">Девять цифр. По одной на каждое место.</p></div>
    <button id="levels-button" class="level-counter" aria-label="Выбрать уровень"><span class="level-current" id="current-level">01</span><span class="level-total">/ 30<small>уровни ↗</small></span></button>
   </div>
+  <div id="difficulty-controls" class="difficulty-controls" role="group" aria-label="Выбрать сложность"></div>
   <div class="workspace">
    <section class="game-area" aria-label="Игровое поле и управление">
     <div class="board-meta"><div id="level-dots" class="level-dots" aria-label="Прогресс главы"></div><span id="board-caption">Уровень 1 · 45 открытых клеток</span></div>
@@ -55,6 +57,7 @@
      <div class="paint-toolbar" role="group" aria-label="Режим японского кроссворда">
       <button data-paint="fill" class="paint-button active" aria-pressed="true"><span class="fill-swatch"></span>Закрасить</button>
       <button data-paint="cross" class="paint-button" aria-pressed="false"><svg><use href="#i-close"/></svg>Крестик</button>
+      <button id="pan-button" data-paint="move" class="paint-button" aria-pressed="false" hidden><svg><use href="#i-pan"/></svg>Двигать</button>
       <button id="nonogram-undo" class="paint-undo" aria-label="Отменить ход"><svg><use href="#i-undo"/></svg></button>
      </div>
      <p class="touch-note">Касайся клеток или веди пальцем. На компьютере ПКМ ставит крестик.</p>
@@ -83,5 +86,5 @@
 <dialog id="confirm-dialog" class="confirm-dialog"><div class="eyebrow">НОВЫЙ ЛИСТ</div><h2>Начать заново?</h2><p>Очистится только текущее поле. Пройденные уровни останутся.</p><div class="hint-actions"><button id="confirm-restart" class="primary-button">Начать заново</button><button class="secondary-button" data-close>Продолжить решать</button></div></dialog>
 <dialog id="complete-dialog" class="complete-dialog"><div class="completion-art" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="eyebrow">ЕЩЁ ОДНА МАЛЕНЬКАЯ ПОБЕДА</div><h2 id="complete-title">Получилось!</h2><p id="complete-copy"></p><button id="next-level" class="primary-button">Следующий уровень<svg><use href="#i-arrow"/></svg></button><button class="text-button" data-close>Остаться на этом поле</button></dialog>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script type="module" src="./app.js"></script>
+<script type="module" src="./app.js?v=1.1.0"></script>
 </body></html>

@@ -1,3 +1,4 @@
+import {EXPERT_SUDOKU} from './expert-sudoku.js';
 export const DIGITS = [1,2,3,4,5,6,7,8,9];
 export const ROWS = Array.from({length:9},(_,r)=>DIGITS.map((_,c)=>r*9+c));
 export const COLS = Array.from({length:9},(_,c)=>DIGITS.map((_,r)=>r*9+c));
@@ -127,7 +128,7 @@ export function getHint(board, exclusions=emptyNotes()) {
 function random(seed){let x=seed>>>0;return()=>{x+=0x6D2B79F5;let t=x;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296;};}
 function shuffle(a,rng){a=[...a];for(let i=a.length-1;i;i--){const j=Math.floor(rng()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 const cache=new Map();
-export function generateSudoku(level=1) {
+export function generateLegacySudoku(level=1) {
  if(cache.has(level))return structuredClone(cache.get(level));
  const rng=random(10242026+level*731);
  const groups=()=>shuffle([0,1,2],rng).flatMap(g=>shuffle([0,1,2],rng).map(n=>g*3+n));
@@ -144,4 +145,11 @@ export function generateSudoku(level=1) {
  // Restore clues until every shipped level has a complete explanatory path.
  while(!logicalSolve(board).solved&&removed.length){const i=removed.pop();board[i]=solution[i];}
  const result={level,puzzle:board,solution,clues:board.filter(Boolean).length};cache.set(level,result);return structuredClone(result);
+}
+
+export function generateSudoku(level=1){
+ if(!Number.isInteger(level)||level<1||level>30)throw Error('Unknown sudoku level');
+ if(level>=21){const p=EXPERT_SUDOKU[level-21];return {level,puzzle:[...p.puzzle].map(Number),solution:[...p.solution].map(Number),clues:p.clues,advanced:p.advanced};}
+ const seed=level<=5?level:level<=10?level+5:level+10;
+ return {...generateLegacySudoku(seed),level};
 }
