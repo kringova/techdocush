@@ -15,7 +15,7 @@ function fixture(g,level){
  if(g==='sudoku'){
   const p=generateSudoku(level),board=[...p.puzzle];let n=0;for(let i=0;i<81;i++)if(!board[i]&&n++<9)board[i]=p.solution[i];
   state.sudoku.saves[level]={board,notes:candidates(board),exclusions:emptyNotes(),auto:true,won:false,hints:0};
- }else if(g==='wordsearch'){const p=generateWordsearch(level);state.wordsearch={level,completed:{},saves:{[level]:{found:p.words.slice(0,2),revealed:p.words.slice(2,3),won:false,hints:1}}};
+ }else if(g==='wordsearch'){const p=generateWordsearch(level);state.wordsearch={level,completed:{},saves:{[level]:{found:p.words.slice(0,2),revealed:[p.words.find(w=>w[0]==='У')||p.words[2]],won:false,hints:1}}};
  }else{const p=NONOGRAMS[level-1];let n=0;state.nonogram.saves[level]={cells:p.grid.flat().map(v=>v===1&&n++<Math.floor(p.grid.flat().filter(Boolean).length*.45)?1:-1),won:false};}
  return state;
 }
@@ -45,7 +45,7 @@ try{
   for(const [kind,width,height,scale] of [['mobile',360,640,2],['desktop',1280,720,1]])for(let i=1;i<=2;i++){
    const {page,context}=await pageFor(g,width,height,{scale,level:g==='sudoku'?(i===1?1:21):g==='wordsearch'?(i===1?1:21):(i===1?6:26)});
    if(g==='nonogram'&&i===2)await page.locator('[data-zoom="fit"]').click();
-   if(g==='wordsearch'&&i===2)await page.locator('[data-initial-word]').first().click();
+   if(g==='wordsearch'&&i===2){await page.locator('[data-initial-word]').first().click();await page.waitForFunction(()=>!document.querySelector('#toast').classList.contains('visible'));}
    await page.screenshot({path:path.join(dir,`${kind}-${i}.png`)});await context.close();
   }
   const {page:demo,context:dc}=await pageFor(g,390,844);await demo.locator('#help-button').click();if(g==='sudoku')await demo.locator('#tutorial-next').click();await demo.screenshot({path:path.join(dir,'onboarding-preview.png')});await dc.close();
