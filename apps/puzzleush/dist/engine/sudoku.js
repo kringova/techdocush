@@ -1,4 +1,6 @@
 import {EXPERT_SUDOKU} from './expert-sudoku.js';
+import {ADDITIONAL_SUDOKU} from './additional-sudoku.js';
+export const SUDOKU_LEVEL_COUNT=30+ADDITIONAL_SUDOKU.length;
 export const DIGITS = [1,2,3,4,5,6,7,8,9];
 export const ROWS = Array.from({length:9},(_,r)=>DIGITS.map((_,c)=>r*9+c));
 export const COLS = Array.from({length:9},(_,c)=>DIGITS.map((_,r)=>r*9+c));
@@ -163,7 +165,8 @@ export function generateLegacySudoku(level=1) {
 }
 
 export function generateSudoku(level=1){
- if(!Number.isInteger(level)||level<1||level>30)throw Error('Unknown sudoku level');
+ if(!Number.isInteger(level)||level<1||level>SUDOKU_LEVEL_COUNT)throw Error('Unknown sudoku level');
+ if(level>30){const p=ADDITIONAL_SUDOKU[level-31];return {level,puzzle:[...p.puzzle].map(Number),solution:[...p.solution].map(Number),clues:p.clues,advanced:p.advanced,difficulty:p.difficulty};}
  if(level>=21){const p=EXPERT_SUDOKU[level-21];return {level,puzzle:[...p.puzzle].map(Number),solution:[...p.solution].map(Number),clues:p.clues,advanced:p.advanced};}
  const seed=level<=5?level:level<=10?level+5:level+10;
  return {...generateLegacySudoku(seed),level};

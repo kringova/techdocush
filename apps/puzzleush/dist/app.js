@@ -1,4 +1,4 @@
-import {DIGITS,PEERS,candidates,conflicts,contradictionHint,emptyNotes,generateSudoku,getHint,shortCell} from './engine/sudoku.js?v=3';
+import {DIGITS,PEERS,candidates,conflicts,contradictionHint,emptyNotes,generateSudoku,getHint,shortCell} from './engine/sudoku.js?v=4';
 import {NONOGRAMS,lineState,nonogramSolved,autoCrossLines,correctBlackLine} from './engine/nonogram.js?v=2';
 import {generateWordsearch,selectedWord,revealWord,wordsearchSolved,initialLetterCells} from './engine/wordsearch.js?v=2';
 import {mountWordsearch} from './wordsearch-ui.js?v=2';
@@ -6,37 +6,37 @@ import {createDoubleTap} from './engine/double-tap.js';
 import {createBenefits} from './engine/benefits.js';
 import {createPlatform} from './platform/adapter.js';
 import {createAnalytics,metricaSender} from './platform/analytics.js?v=3';
-import {mountOnboarding} from './platform/onboarding.js?v=4';
-import {STORAGE_KEY,V2_STORAGE_KEY,LEGACY_STORAGE_KEY,SUDOKU_CHAPTERS,NONOGRAM_CHAPTERS,WORDSEARCH_CHAPTERS,chapterFor,migrateProgressV1,migrateProgressV2} from './engine/progress.js?v=3';
+import {mountOnboarding} from './platform/onboarding.js?v=5';
+import {STORAGE_KEY,V3_STORAGE_KEY,V2_STORAGE_KEY,LEGACY_STORAGE_KEY,chapterFor,chaptersFor,chapterLevels,levelCount,nextLevelFor,migrateProgressV1,migrateProgressV2,migrateProgressV3} from './engine/progress.js?v=4';
 
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const icon=name=>`<svg aria-hidden="true"><use href="#i-${name}"/></svg>`;
 const isYandex=document.documentElement.dataset.platform==='yandex';
 const fixedGame=isYandex?document.documentElement.dataset.game:null;
-const STORAGE=isYandex?`kletochki-yandex-${fixedGame}-progress-v3`:STORAGE_KEY;
+const STORAGE=isYandex?`kletochki-yandex-${fixedGame}-progress-v4`:STORAGE_KEY;
 let benefits=null,benefitsError=false;
 if(isYandex)try{benefits=createBenefits(localStorage,`kletochki-yandex-${fixedGame}-benefits-v1`);}catch{benefitsError=true;const memory=new Map();benefits=createBenefits({getItem:k=>memory.get(k)||null,setItem:(k,v)=>memory.set(k,v)},'session');}
 const analyticsCounter=Number(document.documentElement.dataset.metrica||0);
 const analyticsEnabled=isYandex&&analyticsCounter>0;
-const analytics=createAnalytics({enabled:analyticsEnabled,send:metricaSender({enabled:isYandex,counterId:analyticsCounter}),context:()=>({game,level:store[game].level,group:chapterFor(game,store[game].level).label,size:game==='nonogram'?NONOGRAMS[store.nonogram.level-1].grid.length:game==='wordsearch'?generateWordsearch(store.wordsearch.level).size:9,version:'1.3.1'})});
+const analytics=createAnalytics({enabled:analyticsEnabled,send:metricaSender({enabled:isYandex,counterId:analyticsCounter}),context:()=>({game,level:store[game].level,group:chapterFor(game,store[game].level).label,size:game==='nonogram'?NONOGRAMS[store.nonogram.level-1].grid.length:game==='wordsearch'?generateWordsearch(store.wordsearch.level).size:9,version:'1.4.0'})});
 const platform=createPlatform({enabled:isYandex,onAdEvent:(name,params)=>analytics.event(name,params),onState(){document.body.dataset.platformPaused=String(platform.blocked());syncGameplay();},onError(){toast('Связь с Яндексом недоступна. Рекламу можно попробовать позже.');}});
 const tapGesture=createDoubleTap();
 const clone=x=>structuredClone(x),range=n=>Array.from({length:n},(_,i)=>i);
-const fresh=()=>({version:3,activeGame:'sudoku',sudoku:{level:1,completed:{},saves:{}},nonogram:{level:1,completed:{},saves:{}},wordsearch:{level:1,completed:{},saves:{}},legacyCompleted:{sudoku:0,nonogram:0,wordsearch:0}});
+const fresh=()=>({version:4,activeGame:'sudoku',sudoku:{level:1,completed:{},saves:{}},nonogram:{level:1,completed:{},saves:{}},wordsearch:{level:1,completed:{},saves:{}},legacyCompleted:{sudoku:0,nonogram:0,wordsearch:0}});
 let storageAvailable=true,loadError=false,migrationNotice=false;
 function readStore(){
  try{
-  const raw=localStorage.getItem(STORAGE),v2=raw?null:localStorage.getItem(isYandex?`kletochki-yandex-${fixedGame}-progress-v2`:V2_STORAGE_KEY),legacy=raw||v2||isYandex?null:localStorage.getItem(LEGACY_STORAGE_KEY);if(!raw&&!v2&&!legacy)return fresh();
-  let data=JSON.parse(raw||v2||legacy);if(data.version===1){data=migrateProgressV1(data);migrationNotice=true;}if(data.version===2){data=migrateProgressV2(data);migrationNotice=true;}if(data.version!==3)throw Error('version');
+  const raw=localStorage.getItem(STORAGE),v3=raw?null:localStorage.getItem(isYandex?`kletochki-yandex-${fixedGame}-progress-v3`:V3_STORAGE_KEY),v2=raw||v3?null:localStorage.getItem(isYandex?`kletochki-yandex-${fixedGame}-progress-v2`:V2_STORAGE_KEY),legacy=raw||v3||v2||isYandex?null:localStorage.getItem(LEGACY_STORAGE_KEY);if(!raw&&!v3&&!v2&&!legacy)return fresh();
+  let data=JSON.parse(raw||v3||v2||legacy);if(data.version===1){data=migrateProgressV1(data);migrationNotice=true;}if(data.version===2){data=migrateProgressV2(data);migrationNotice=true;}if(data.version===3){data=migrateProgressV3(data);migrationNotice=true;}if(data.version!==4)throw Error('version');
   const out=fresh();out.activeGame=['sudoku','nonogram','wordsearch'].includes(data.activeGame)?data.activeGame:'sudoku';
   for(const g of ['sudoku','nonogram'])if(Number.isInteger(data.legacyCompleted?.[g])&&data.legacyCompleted[g]>=0)out.legacyCompleted[g]=data.legacyCompleted[g];
   for(const game of ['sudoku','nonogram','wordsearch']){
    if(game==='wordsearch'&&!data.wordsearch)continue;
-   const d=data[game];if(!d||!Number.isInteger(d.level)||d.level<1||d.level>30)throw Error('level');
+   const d=data[game];if(!d||!Number.isInteger(d.level)||d.level<1||d.level>levelCount(game))throw Error('level');
    out[game].level=d.level;
-   for(const [k,v] of Object.entries(d.completed||{}))if(/^([1-9]|[12][0-9]|30)$/.test(k)&&v&&typeof v==='object')out[game].completed[k]=v;
+   for(const [k,v] of Object.entries(d.completed||{}))if(/^[1-9][0-9]*$/.test(k)&&Number(k)<=levelCount(game)&&v&&typeof v==='object')out[game].completed[k]=v;
    for(const [k,v] of Object.entries(d.saves||{})){
-    const level=Number(k);if(!Number.isInteger(level)||level<1||level>30||!v)continue;
+    const level=Number(k);if(!Number.isInteger(level)||level<1||level>levelCount(game)||!v)continue;
     if(game==='sudoku'){
      const p=generateSudoku(level);
      if(!Array.isArray(v.board)||v.board.length!==81||!v.board.every((n,i)=>Number.isInteger(n)&&n>=0&&n<=9&&(!p.puzzle[i]||p.puzzle[i]===n)))continue;
@@ -79,22 +79,22 @@ function render(){ensureState();renderChrome();renderBoard();renderControls();sy
 function renderChrome(){
  document.body.dataset.game=game;const level=store[game].level,chapter=chapterFor(game,level),total=['sudoku','nonogram','wordsearch'].reduce((sum,g)=>sum+Object.keys(store[g].completed).length,0);
  $$('.game-tab').forEach(b=>{const yes=b.dataset.game===game;b.classList.toggle('active',yes);b.setAttribute('aria-pressed',yes);});
- $('#sudoku-count').textContent=`${Object.keys(store.sudoku.completed).length}/30`;$('#nonogram-count').textContent=`${Object.keys(store.nonogram.completed).length}/30`;$('#wordsearch-count').textContent=`${Object.keys(store.wordsearch.completed).length}/30`;
- const shownTotal=isYandex?Object.keys(store[game].completed).length:total,maxTotal=isYandex?30:90;
+ $('#sudoku-count').textContent=`${Object.keys(store.sudoku.completed).length}/${levelCount('sudoku')}`;$('#nonogram-count').textContent=`${Object.keys(store.nonogram.completed).length}/30`;$('#wordsearch-count').textContent=`${Object.keys(store.wordsearch.completed).length}/30`;
+ const shownTotal=isYandex?Object.keys(store[game].completed).length:total,maxTotal=isYandex?levelCount(game):['sudoku','nonogram','wordsearch'].reduce((sum,g)=>sum+levelCount(g),0);
  $('#total-progress').textContent=`${shownTotal} / ${maxTotal}`;$('.progress-mini').style.setProperty('--progress',`${shownTotal/maxTotal*100}%`);
  $('#game-title').textContent=game==='sudoku'?'Судоку':game==='wordsearch'?'Поиск слов':'Японские';
  $('#game-subtitle').textContent=game==='sudoku'?'Девять цифр. По одной на каждое место.':game==='wordsearch'?'Слова спрятаны. Отыщи их одно за другим.':'Собери рисунок, следуя числам.';
  $('#chapter-label').textContent=`${game==='sudoku'?'СЛОЖНОСТЬ':'ФОРМАТ'} · ${chapter.label.toUpperCase()}`;
- $('#current-level').textContent=String(level).padStart(2,'0');
- const group=range(chapter.end-chapter.start+1).map(i=>chapter.start+i);
- $('#level-dots').innerHTML=group.map(n=>`<i class="${store[game].completed[n]?'done ':''}${n===level?'current':''}" title="Уровень ${n}"></i>`).join('');
+ $('#current-level').textContent=String(level).padStart(2,'0');$('#level-limit').textContent=`/ ${levelCount(game)}`;
+ const group=chapterLevels(chapter),dotStart=Math.max(0,Math.min(group.length-15,group.indexOf(level)-7)),dots=group.slice(dotStart,dotStart+15);
+ $('#level-dots').setAttribute('aria-label',`${chapter.label}: уровень ${group.indexOf(level)+1} из ${group.length}`);$('#level-dots').innerHTML=dots.map(n=>`<i class="${store[game].completed[n]?'done ':''}${n===level?'current':''}" title="Уровень ${n}"></i>`).join('');
  const progress=group.filter(n=>store[game].completed[n]).length;
  $('#chapter-progress-fill').style.width=`${progress/group.length*100}%`;$('#chapter-progress-label').textContent=`${progress} из ${group.length} · ${chapter.label}`;
- $('#journey-copy').textContent=game==='sudoku'?'Пять базовых задач. Или сразу «Эксперт» — выбирать тебе.':'От 5 × 5 до 20 × 20. Любой рисунок можно выбрать сразу.';
- const chapters=game==='sudoku'?SUDOKU_CHAPTERS:game==='wordsearch'?WORDSEARCH_CHAPTERS:NONOGRAM_CHAPTERS;
+ $('#journey-copy').textContent=game==='sudoku'?'130 задач, включая 60 экспертных. Пять базовых — или сразу твоя сложность.':'От 5 × 5 до 20 × 20. Любой рисунок можно выбрать сразу.';
+ const chapters=chaptersFor(game);
  $('#difficulty-controls').setAttribute('aria-label',game==='sudoku'?'Выбрать сложность':'Выбрать размер поля');
  $('#difficulty-controls').innerHTML=chapters.map((c,i)=>`<button data-chapter="${i}" class="${i===chapter.index?'active':''}" aria-pressed="${i===chapter.index}">${c.label}</button>`).join('');
- $$('[data-chapter]').forEach(b=>b.addEventListener('click',()=>{const c=chapters[Number(b.dataset.chapter)];setLevel(range(c.end-c.start+1).map(i=>c.start+i).find(n=>!store[game].completed[n])||c.start);}));
+ $$('[data-chapter]').forEach(b=>b.addEventListener('click',()=>{const c=chapters[Number(b.dataset.chapter)];setLevel(chapterLevels(c).find(n=>!store[game].completed[n])||chapterLevels(c)[0]);}));
  const sudoku=game==='sudoku';
  $('#sudoku-controls').hidden=!sudoku;$('#nonogram-controls').hidden=game!=='nonogram';$('#wordsearch-controls').hidden=game!=='wordsearch';
  $('#guide-kicker').textContent=sudoku?'ЕСЛИ ЗАСТРЯЛА':'ЗА ЦИФРАМИ — КАРТИНКА';
@@ -316,17 +316,17 @@ $('#eliminate-button').addEventListener('click',()=>{
 });
 function openLevels(){
  const legacy=store.legacyCompleted[game];
- $('#levels-intro').textContent=`${game==='sudoku'?'Судоку':game==='wordsearch'?'Поиск слов':'Японские кроссворды'} · ${Object.keys(store[game].completed).length} из 30 пройдено. Все уровни доступны сразу.${legacy?' Результаты прежней подборки сохранены: '+legacy+' уровней.':''}`;
- const chapters=game==='sudoku'?SUDOKU_CHAPTERS:game==='wordsearch'?WORDSEARCH_CHAPTERS:NONOGRAM_CHAPTERS;
- $('#levels-content').innerHTML=chapters.map(ch=>`<section class="level-chapter"><h3>${ch.label}</h3><div class="level-grid">${range(ch.end-ch.start+1).map(k=>{const n=ch.start+k,done=store[game].completed[n];return `<button class="level-item ${done?'done':''} ${n===store[game].level?'current':''}" data-level="${n}" aria-label="Уровень ${n}${done?', пройден':''}">${n}</button>`;}).join('')}</div></section>`).join('');
+ $('#levels-intro').textContent=`${game==='sudoku'?'Судоку':game==='wordsearch'?'Поиск слов':'Японские кроссворды'} · ${Object.keys(store[game].completed).length} из ${levelCount(game)} пройдено. Все уровни доступны сразу.${legacy?' Результаты прежней подборки сохранены: '+legacy+' уровней.':''}`;
+ const chapters=chaptersFor(game);
+ $('#levels-content').innerHTML=chapters.map(ch=>`<section class="level-chapter"><h3>${ch.label}</h3><div class="level-grid">${chapterLevels(ch).map(n=>{const done=store[game].completed[n];return `<button class="level-item ${done?'done':''} ${n===store[game].level?'current':''}" data-level="${n}" aria-label="Уровень ${n}${done?', пройден':''}">${n}</button>`;}).join('')}</div></section>`).join('');
  $$('[data-level]').forEach(b=>b.addEventListener('click',()=>{hideDialog('#levels-dialog');setLevel(Number(b.dataset.level));}));showDialog('#levels-dialog');
 }
 function setLevel(level){analytics.leave('level_change');store[game].level=level;analytics.levelStart();histories[game]=[];selected=-1;activeHint=null;pencil=false;tapGesture.reset();fitNonogram=false;ensureState();save();render();window.scrollTo({top:0,behavior:'instant'});if(round()&&round().status!=='playing')openAttempt();}
 function openComplete(){
  const level=store[game].level;$('#complete-title').textContent=game==='sudoku'?'Всё сошлось!':game==='wordsearch'?'Все слова нашлись!':NONOGRAMS[level-1].name;
  const count=Object.keys(store[game].completed).length;
- $('#complete-copy').textContent=count===30?'Все 30 уровней этой игры собраны. Можно вернуться к любимым или попробовать другую игру.':`Уровень ${level} в твоей коллекции. Пройдено ${count} из 30. Можно перейти к следующему или выбрать любой другой.`;
- $('#next-level').innerHTML=level<30?`Следующий уровень${icon('arrow')}`:'К коллекции уровней';showDialog('#complete-dialog');
+ $('#complete-copy').textContent=count===levelCount(game)?`Все ${levelCount(game)} уровней этой игры собраны. Можно вернуться к любимым или попробовать другую игру.`:`Уровень ${level} в твоей коллекции. Пройдено ${count} из ${levelCount(game)}. Можно перейти к следующему или выбрать любой другой.`;
+ $('#next-level').innerHTML=nextLevelFor(game,level,store[game].completed)?`Следующий уровень${icon('arrow')}`:'К коллекции уровней';showDialog('#complete-dialog');
 }
 function openRules(){
  if(game==='wordsearch'){$('#rules-content').innerHTML='<p>На поле спрятаны слова одной темы. Изначально видно их количество. Выделяй слово от первой буквы до последней: в маленьких полях по горизонтали и вертикали, дальше появляются диагонали и обратное направление.</p><h3>На телефоне и компьютере</h3><p>Проведи пальцем или мышью по прямой линии. В режиме «Два касания» выбери начальную и конечную букву. Клавиатура: стрелки двигают выбор, Enter или пробел отмечает начало и конец, Escape снимает выделение.</p><h3>Если не находится</h3><p>Подсказка раскрывает одно из оставшихся слов. Оно появится рядом с найденными. Кнопка «Буква» у раскрытого слова подсвечивает все такие буквы на поле, включая отвлекающие. Подсветку можно убрать и включить снова. Раскрытое слово нужно отыскать на поле. Отмена находки сохраняет уже раскрытые подсказки.</p><h3>Прогресс</h3><p>Все 30 уровней и размеры доступны сразу. Найденные и раскрытые слова сохраняются в этом браузере.</p>';showDialog('#rules-dialog');return;}
@@ -344,7 +344,7 @@ $('#wordsearch-hint').addEventListener('click',openWordHint);$('#wordsearch-undo
 $$('[data-paint]').forEach(b=>b.addEventListener('click',()=>{paint=b.dataset.paint;renderControls();renderBoard();}));
 $('#restart-button').addEventListener('click',()=>showDialog('#confirm-dialog'));
 $('#confirm-restart').addEventListener('click',()=>{analytics.leave('restart');analytics.levelStart();if(isYandex&&game==='sudoku'){benefits.startAttempt(puzzleKey(),crypto.randomUUID());histories.sudoku=[];}else pushHistory();delete store[game].saves[store[game].level];activeHint=null;ensureState();save();render();hideDialog('#confirm-dialog');});
-$('#next-level').addEventListener('click',async()=>{if(platform.blocked())return;if(isYandex&&game!=='sudoku'){await platform.interstitial();}hideDialog('#complete-dialog');if(store[game].level<30)setLevel(store[game].level+1);else openLevels();});
+$('#next-level').addEventListener('click',async()=>{if(platform.blocked())return;if(isYandex&&game!=='sudoku'){await platform.interstitial();}hideDialog('#complete-dialog');const next=nextLevelFor(game,store[game].level,store[game].completed);if(next)setLevel(next);else openLevels();});
 $$('[data-close]').forEach(b=>b.addEventListener('click',()=>b.closest('dialog').close()));
 $$('dialog').forEach(d=>d.addEventListener('click',e=>{if(e.target===d){const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close();}}));
 document.addEventListener('pointerdown',e=>{if(!e.target.closest('.sudoku-cell'))tapGesture.reset();});

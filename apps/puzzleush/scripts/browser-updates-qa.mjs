@@ -19,7 +19,7 @@ const saved=page=>page.evaluate(key=>JSON.parse(localStorage.getItem(key)),STORA
 try{
  const {context,page}=await pageFor();
  await page.getByRole('button',{name:'Эксперт',exact:true}).click();assert.equal(await page.locator('#current-level').textContent(),'21');assert.ok(await page.locator('.sudoku-cell.given').count()<=28);
- await page.locator('#levels-button').click();assert.equal(await page.locator('[data-level]:enabled').count(),30);await page.locator('[data-level="30"]').click();assert.equal(await page.locator('#current-level').textContent(),'30');
+ await page.locator('#levels-button').click();assert.equal(await page.locator('[data-level]:enabled').count(),130);await page.locator('[data-level="30"]').click();assert.equal(await page.locator('#current-level').textContent(),'30');
  await page.getByRole('button',{name:'Базовый',exact:true}).click();await page.locator('#candidates-button').click();
  const p=generateSudoku(1),cs=candidates(p.puzzle),single=cs.findIndex(a=>a.length===1),multi=cs.findIndex(a=>a.length>1),value=cs[single][0];
  await page.locator(`[data-cell="${single}"]`).dblclick();assert.equal(await page.locator(`[data-cell="${single}"]`).textContent(),String(value));

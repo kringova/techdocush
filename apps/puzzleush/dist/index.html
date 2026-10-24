@@ -4,7 +4,7 @@
  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
  <meta name="theme-color" content="#f5f3ed"><meta name="description" content="Судоку с объяснениями, японские кроссворды и поиск спрятанных слов. Проходи уровни в своём темпе.">
  <title>Клеточки — судоку, японские и поиск слов</title>
- <link rel="icon" type="image/svg+xml" href="./icon.svg"><link rel="stylesheet" href="./style.css?v=1.3.1">
+ <link rel="icon" type="image/svg+xml" href="./icon.svg"><link rel="stylesheet" href="./style.css?v=1.4.0">
 </head>
 <body>
 <svg class="icon-sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
@@ -27,18 +27,18 @@
  <header class="site-header">
   <a class="wordmark" href="./" aria-label="Клеточки, главная"><span class="brand-tile"><i></i><i></i><i></i><i></i></span>клеточки<span class="brand-dot">.</span></a>
   <span class="header-note">маленькая пауза для себя</span>
-  <button id="progress-button" class="progress-button" aria-label="Открыть пройденные уровни"><span class="progress-mini" aria-hidden="true"></span><span id="total-progress">0 / 90</span><span class="desktop-label">пройдено</span></button>
+  <button id="progress-button" class="progress-button" aria-label="Открыть пройденные уровни"><span class="progress-mini" aria-hidden="true"></span><span id="total-progress">0 / 190</span><span class="desktop-label">пройдено</span></button>
   <button id="help-button" class="text-button" hidden>Как играть</button>
  </header>
  <nav class="game-tabs" aria-label="Выбор игры">
-  <button class="game-tab active" data-game="sudoku" aria-pressed="true"><svg><use href="#i-grid"/></svg>Судоку<span class="tab-count" id="sudoku-count">0/30</span></button>
+  <button class="game-tab active" data-game="sudoku" aria-pressed="true"><svg><use href="#i-grid"/></svg>Судоку<span class="tab-count" id="sudoku-count">0/130</span></button>
   <button class="game-tab" data-game="nonogram" aria-pressed="false"><svg><use href="#i-pixel"/></svg>Японские<span class="tab-count" id="nonogram-count">0/30</span></button>
   <button class="game-tab" data-game="wordsearch" aria-pressed="false"><svg><use href="#i-search"/></svg>Поиск слов<span class="tab-count" id="wordsearch-count">0/30</span></button>
  </nav>
  <main>
   <div class="workspace-header">
    <div><div class="eyebrow" id="chapter-label">ГЛАВА 01 · ПЕРВЫЕ ШАГИ</div><h1 id="game-title">Судоку</h1><p id="game-subtitle">Девять цифр. По одной на каждое место.</p></div>
-   <button id="levels-button" class="level-counter" aria-label="Выбрать уровень"><span class="level-current" id="current-level">01</span><span class="level-total">/ 30<small>уровни ↗</small></span></button>
+   <button id="levels-button" class="level-counter" aria-label="Выбрать уровень"><span class="level-current" id="current-level">01</span><span class="level-total"><span id="level-limit">/ 130</span><small>уровни ↗</small></span></button>
   </div>
   <div id="difficulty-controls" class="difficulty-controls" role="group" aria-label="Выбрать сложность"></div>
   <div class="workspace">
@@ -83,7 +83,7 @@
      <div class="guide-footnote" id="guide-footnote">Цифру ты впишешь сама.</div>
      <div class="mini-grid" aria-hidden="true"><span></span><span>2</span><span></span><span class="mini-focus">?</span><span></span><span>8</span><span></span><span>5</span><span></span></div>
     </section>
-    <section class="journey-card"><div class="card-kicker">ТВОЯ МАЛЕНЬКАЯ КОЛЛЕКЦИЯ</div><h3>Одна клеточка<br>за другой.</h3><p id="journey-copy">30 уровней: от первых шагов до задач с характером.</p><div class="chapter-progress"><div id="chapter-progress-fill"></div></div><div class="chapter-progress-label"><span id="chapter-progress-label">0 из 10 в этой главе</span><button id="journey-levels" class="text-button">К уровням ↗</button></div></section>
+    <section class="journey-card"><div class="card-kicker">ТВОЯ МАЛЕНЬКАЯ КОЛЛЕКЦИЯ</div><h3>Одна клеточка<br>за другой.</h3><p id="journey-copy">130 судоку: от первых шагов до экспертных задач.</p><div class="chapter-progress"><div id="chapter-progress-fill"></div></div><div class="chapter-progress-label"><span id="chapter-progress-label">0 из 10 в этой главе</span><button id="journey-levels" class="text-button">К уровням ↗</button></div></section>
     <button id="rules-button" class="rules-link"><svg><use href="#i-info"/></svg>Как играть и пользоваться пометками</button>
    </aside>
   </div>
@@ -98,5 +98,5 @@
 <dialog id="reward-dialog" class="reward-dialog" aria-labelledby="reward-title"><div class="dialog-heading"><span class="eyebrow">НАГРАДА ЗА ПРОСМОТР РЕКЛАМЫ</span><button class="icon-button" data-close aria-label="Закрыть"><svg><use href="#i-close"/></svg></button></div><h2 id="reward-title"></h2><p id="reward-benefit" class="reward-benefit"></p><p id="reward-copy"></p><p id="reward-status" class="reward-note" role="status"></p><div class="hint-actions"><button id="reward-watch" class="primary-button">Смотреть рекламу</button><button class="secondary-button" data-close>Вернуться без просмотра</button></div></dialog>
 <dialog id="attempt-dialog" aria-labelledby="attempt-title"><div class="eyebrow">СУДОКУ · ТВОЯ ПАРТИЯ</div><h2 id="attempt-title"></h2><p id="attempt-copy"></p><div class="hint-actions"><button id="attempt-restore" class="primary-button">Продолжить за рекламу</button><button id="attempt-finish" class="secondary-button">Завершить партию</button><button id="attempt-levels" class="text-button">Выбрать другой уровень</button></div></dialog>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script type="module" src="./app.js?v=1.3.1"></script>
+<script type="module" src="./app.js?v=1.4.0"></script>
 </body></html>

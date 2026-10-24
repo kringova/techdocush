@@ -2,7 +2,7 @@ import {createRequire} from 'node:module';import assert from 'node:assert/strict
 import {generateWordsearch} from '../dist/engine/wordsearch.js';import {generateSudoku,emptyNotes} from '../dist/engine/sudoku.js';import {sdkFixture} from './fixtures/yandex-sdk.mjs';
 const {chromium}=createRequire(import.meta.url)(process.env.PLAYWRIGHT_MODULE||'playwright'),browser=await chromium.launch({headless:true,...(process.env.BROWSER_EXECUTABLE?{executablePath:process.env.BROWSER_EXECUTABLE}:{})});
 const origin=process.env.QA_ORIGIN||'http://127.0.0.1:4337',checks=[],errors=[];await mkdir('test-results/wordsearch',{recursive:true});
-const key=yandex=>yandex?'kletochki-yandex-wordsearch-progress-v3':'kletochki-progress-v3';
+const key=yandex=>yandex?'kletochki-yandex-wordsearch-progress-v4':'kletochki-progress-v4';
 const read=(page,y=false)=>page.evaluate(k=>JSON.parse(localStorage.getItem(k)),key(y));
 const benefit=page=>page.evaluate(()=>JSON.parse(localStorage.getItem('kletochki-yandex-wordsearch-benefits-v1'))||{hints:0});
 async function open({yandex=false,width=1280,height=820,old=false}={}){

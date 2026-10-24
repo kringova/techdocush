@@ -4,9 +4,9 @@ import {DIGITS,UNITS,generateSudoku,generateLegacySudoku,solve,logicalSolve,logi
 import {NONOGRAMS,logicalNonogram,solveNonogram,cluesFor,patterns,runs,lineState,nonogramSolved,autoCrossLines} from '../dist/engine/nonogram.js';
 import {SUDOKU_CHAPTERS,NONOGRAM_CHAPTERS,migrateProgressV1,STORAGE_KEY,LEGACY_STORAGE_KEY} from '../dist/engine/progress.js';
 
-test('all 30 sudoku levels are unique, deterministic and completely explained',()=>{
+test('all 130 sudoku levels are unique, deterministic and completely explained',()=>{
  const seen=new Set();
- for(let level=1;level<=30;level++){
+ for(let level=1;level<=130;level++){
   const p=generateSudoku(level);assert.equal(solve(p.puzzle,2).count,1,`unique level ${level}`);
   assert.deepEqual(p,generateSudoku(level));seen.add(p.puzzle.join(''));
   const logical=logicalSolve(p.puzzle);assert.ok(logical.solved,`logical level ${level}`);assert.deepEqual(logical.board,p.solution);
@@ -17,7 +17,7 @@ test('all 30 sudoku levels are unique, deterministic and completely explained',(
    for(const {cell,value} of step.eliminations||[])assert.notEqual(value,p.solution[cell],`sound ${step.technique} on level ${level}`);
   }
  }
- assert.equal(seen.size,30);
+ assert.equal(seen.size,130);
 });
 test('candidates respect every row, column and box, and do not mutate the input',()=>{
  const p=generateSudoku(15),before=structuredClone(p.puzzle),cs=candidates(p.puzzle);

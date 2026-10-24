@@ -1,13 +1,15 @@
-export const STORAGE_KEY='kletochki-progress-v3';
+export const STORAGE_KEY='kletochki-progress-v4';
+export const V3_STORAGE_KEY='kletochki-progress-v3';
 export const V2_STORAGE_KEY='kletochki-progress-v2';
 export const LEGACY_STORAGE_KEY='kletochki-progress-v1';
 export {WORDSEARCH_CHAPTERS} from './wordsearch.js';
 import {WORDSEARCH_CHAPTERS} from './wordsearch.js';
+const span=(start,end)=>Array.from({length:end-start+1},(_,i)=>start+i);
 export const SUDOKU_CHAPTERS=[
  {start:1,end:5,label:'Базовый'},
- {start:6,end:10,label:'Средний'},
- {start:11,end:20,label:'Сложный'},
- {start:21,end:30,label:'Эксперт'}
+ {start:6,end:10,label:'Средний',levels:[...span(6,10),...span(31,50)]},
+ {start:11,end:20,label:'Сложный',levels:[...span(11,20),...span(51,80)]},
+ {start:21,end:30,label:'Эксперт',levels:[...span(21,30),...span(81,130)]}
 ];
 export const NONOGRAM_CHAPTERS=[
  {start:1,end:5,label:'5 × 5'},
@@ -15,9 +17,14 @@ export const NONOGRAM_CHAPTERS=[
  {start:16,end:25,label:'15 × 15'},
  {start:26,end:30,label:'20 × 20'}
 ];
+export const chaptersFor=game=>game==='sudoku'?SUDOKU_CHAPTERS:game==='wordsearch'?WORDSEARCH_CHAPTERS:NONOGRAM_CHAPTERS;
+export const chapterLevels=chapter=>chapter.levels?[...chapter.levels]:span(chapter.start,chapter.end);
+export const levelOrder=game=>chaptersFor(game).flatMap(chapterLevels);
+export const levelCount=game=>levelOrder(game).length;
+export function nextLevelFor(game,level,completed={}){const order=levelOrder(game);return order.slice(order.indexOf(level)+1).find(n=>!completed[n])??null;}
 export function chapterFor(game,level){
- const chapters=game==='sudoku'?SUDOKU_CHAPTERS:game==='wordsearch'?WORDSEARCH_CHAPTERS:NONOGRAM_CHAPTERS;
- const index=chapters.findIndex(c=>level>=c.start&&level<=c.end);
+ const chapters=chaptersFor(game);
+ const index=chapters.findIndex(c=>chapterLevels(c).includes(level));
  return {...chapters[index<0?0:index],index:index<0?0:index};
 }
 const SUDOKU_MAP=new Map([...Array.from({length:5},(_,i)=>[i+1,i+1]),...Array.from({length:5},(_,i)=>[i+11,i+6]),...Array.from({length:10},(_,i)=>[i+21,i+11])]);
@@ -43,4 +50,10 @@ export function migrateProgressV1(old){
 export function migrateProgressV2(old){
  if(!old||old.version!==2)throw Error('Unsupported progress version');
  const next=structuredClone(old);next.version=3;next.wordsearch??={level:1,completed:{},saves:{}};next.legacyCompleted??={sudoku:0,nonogram:0};next.legacyCompleted.wordsearch??=0;return next;
+}
+// A separate v4 key isolates the larger catalogue from already-open v3 tabs.
+// Existing puzzle ids, states, found words and paid benefits stay unchanged.
+export function migrateProgressV3(old){
+ if(!old||old.version!==3)throw Error('Unsupported progress version');
+ const next=structuredClone(old);next.version=4;return next;
 }
