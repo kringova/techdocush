@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {generateWordsearch,occurrences,wordPath,selectedWord,revealWord,wordsearchSolved,WORDSEARCH_CHAPTERS} from '../dist/engine/wordsearch.js';
+import {generateWordsearch,occurrences,wordPath,selectedWord,revealWord,wordsearchSolved,initialLetterCells,WORDSEARCH_CHAPTERS} from '../dist/engine/wordsearch.js';
 import {chapterFor,migrateProgressV2,STORAGE_KEY,V2_STORAGE_KEY} from '../dist/engine/progress.js';
 
 test('30 deterministic themed word fields have a unique straight placement for every target',()=>{
@@ -20,6 +20,10 @@ test('word paths reject bending, wrapping and invalid coordinates',()=>{
 test('a reveal only tells what to search for; it never counts as a found word',()=>{
  const p=generateWordsearch(21),s={found:[],revealed:[]},before=structuredClone(s),word=revealWord(p,s);assert.ok(p.words.includes(word));assert.deepEqual(s,before);assert.ok(!wordsearchSolved(p,s));s.revealed.push(word);assert.notEqual(revealWord(p,s),word);s.found.push(revealWord(p,s));assert.ok(!s.found.includes(revealWord(p,s)));
  s.revealed=[...p.words];assert.equal(revealWord(p,s),null);assert.ok(!wordsearchSolved(p,s));s.found=[...p.words];assert.ok(wordsearchSolved(p,s));
+});
+test('initial-letter help includes every matching letter, not just the hidden word start',()=>{
+ const p={size:4,grid:[...'УТКАУБВГДУЕЖЗИЙУ'],words:['УТКА'],placements:{УТКА:[0,1,2,3]}},before=structuredClone(p);
+ assert.deepEqual(initialLetterCells(p,'У'),[0,4,9,15]);assert.deepEqual(initialLetterCells(p,'Ф'),[]);assert.deepEqual(initialLetterCells(p,null),[]);assert.deepEqual(p,before);
 });
 test('a caller cannot mutate the cached field or shipped target data',()=>{
  const p=generateWordsearch(10),before=structuredClone(p);p.words.pop();p.grid.fill('А');p.placements[before.words[0]][0]=-1;assert.deepEqual(generateWordsearch(10),before);assert.throws(()=>generateWordsearch(0));assert.throws(()=>generateWordsearch(31));

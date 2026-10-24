@@ -86,3 +86,4 @@ export function selectedWord(puzzle,path){
 }
 export const revealWord=(puzzle,state)=>puzzle.words.find(word=>!state.found.includes(word)&&!state.revealed.includes(word))||null;
 export const wordsearchSolved=(puzzle,state)=>puzzle.words.every(word=>state.found.includes(word));
+export const initialLetterCells=(puzzle,letter)=>typeof letter==='string'&&letter.length===1?puzzle.grid.flatMap((value,index)=>value===letter?[index]:[]):[];

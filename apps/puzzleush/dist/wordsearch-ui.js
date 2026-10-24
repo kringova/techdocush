@@ -1,9 +1,9 @@
-import {wordPath} from './engine/wordsearch.js';
+import {wordPath,initialLetterCells} from './engine/wordsearch.js?v=2';
 
 export function mountWordsearch({mount,puzzle,state,mode='drag',onSelect,onStatus,blocked=()=>false}){
- const controller=new AbortController(),signal=controller.signal,found=new Set(state.found.flatMap(w=>puzzle.placements[w]||[]));
+ const controller=new AbortController(),signal=controller.signal,found=new Set(state.found.flatMap(w=>puzzle.placements[w]||[])),initials=new Set(initialLetterCells(puzzle,state.activeInitial));
  let gesture=null,anchor=null,focused=0;
- mount.innerHTML=`<div class="wordsearch-board" style="--word-size:${puzzle.size}" role="group" aria-label="Поиск слов: поле ${puzzle.size} на ${puzzle.size}">${puzzle.grid.map((letter,i)=>`<button class="word-cell ${found.has(i)?'word-found':''}" data-letter="${i}" aria-label="Строка ${Math.floor(i/puzzle.size)+1}, столбец ${i%puzzle.size+1}: ${letter}${found.has(i)?', найденное слово':''}" tabindex="${i===0?0:-1}">${letter}</button>`).join('')}</div>`;
+ mount.innerHTML=`<div class="wordsearch-board" style="--word-size:${puzzle.size}" role="group" aria-label="Поиск слов: поле ${puzzle.size} на ${puzzle.size}">${puzzle.grid.map((letter,i)=>`<button class="word-cell ${found.has(i)?'word-found':''} ${initials.has(i)?'word-initial':''}" data-letter="${i}" aria-label="Строка ${Math.floor(i/puzzle.size)+1}, столбец ${i%puzzle.size+1}: ${letter}${found.has(i)?', найденное слово':''}${initials.has(i)?', подсветка начальной буквы':''}" tabindex="${i===0?0:-1}">${letter}</button>`).join('')}</div>`;
  const board=mount.querySelector('.wordsearch-board');
  const point=e=>{const target=document.elementFromPoint(e.clientX,e.clientY)?.closest('[data-letter]');return target&&board.contains(target)?Number(target.dataset.letter):null;};
  function highlight(start,end){const path=wordPath(puzzle.size,start,end),set=new Set(path);board.querySelectorAll('[data-letter]').forEach(e=>{e.classList.toggle('word-selecting',set.has(Number(e.dataset.letter)));e.classList.toggle('word-anchor',Number(e.dataset.letter)===start);});return path;}

@@ -4,7 +4,7 @@
  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
  <meta name="theme-color" content="#f5f3ed"><meta name="description" content="Судоку с объяснениями, японские кроссворды и поиск спрятанных слов. Проходи уровни в своём темпе.">
  <title>Клеточки — судоку, японские и поиск слов</title>
- <link rel="icon" type="image/svg+xml" href="./icon.svg"><link rel="stylesheet" href="./style.css?v=1.3.0">
+ <link rel="icon" type="image/svg+xml" href="./icon.svg"><link rel="stylesheet" href="./style.css?v=1.3.1">
 </head>
 <body>
 <svg class="icon-sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
@@ -68,6 +68,7 @@
     <div id="wordsearch-controls" hidden>
      <div class="word-summary"><strong id="word-progress">Найдено 0 из 4</strong><button id="wordsearch-undo" class="text-button">Отменить находку</button></div>
      <div id="word-list" class="word-list" aria-live="polite"></div>
+     <div id="word-initial-status" class="word-initial-status" hidden><span id="word-initial-label"></span><button id="word-initial-clear" class="text-button">Убрать подсветку</button></div>
      <div class="word-modes" role="group" aria-label="Как выделять слово"><button data-word-mode="drag" aria-pressed="true">Провести</button><button data-word-mode="taps" aria-pressed="false">Два касания</button></div>
      <button id="wordsearch-hint" class="primary-button">Какое слово искать?</button>
     </div>
@@ -90,12 +91,12 @@
  <footer class="site-footer"><span>Никуда не торопимся.</span><a href="https://ringova.com/projects/">Ещё проекты Кати ↗</a></footer>
 </div>
 <dialog id="levels-dialog" class="levels-dialog"><div class="dialog-heading"><div><div class="eyebrow">МАЛЕНЬКИЕ ПОБЕДЫ</div><h2>Твои уровни</h2></div><button class="icon-button" data-close aria-label="Закрыть"><svg><use href="#i-close"/></svg></button></div><p class="dialog-intro" id="levels-intro"></p><div id="levels-content"></div></dialog>
-<dialog id="hint-dialog" class="hint-dialog"><div class="dialog-heading"><div class="card-kicker"><svg><use href="#i-bulb"/></svg>РАЗБИРАЕМ ВМЕСТЕ</div><button class="icon-button" data-close aria-label="Закрыть"><svg><use href="#i-close"/></svg></button></div><h2 id="hint-title"></h2><p class="hint-lead" id="hint-lead"></p><div id="hint-detail" class="hint-detail" hidden></div><div class="hint-actions"><button id="explain-button" class="primary-button">Показать объяснение</button><button id="eliminate-button" class="primary-button" hidden>Снять эти кандидаты</button><button class="secondary-button" data-close>Вернуться к полю</button></div></dialog>
+<dialog id="hint-dialog" class="hint-dialog"><div class="dialog-heading"><div class="card-kicker"><svg><use href="#i-bulb"/></svg>РАЗБИРАЕМ ВМЕСТЕ</div><button class="icon-button" data-close aria-label="Закрыть"><svg><use href="#i-close"/></svg></button></div><h2 id="hint-title"></h2><p class="hint-lead" id="hint-lead"></p><div id="hint-detail" class="hint-detail" hidden></div><div class="hint-actions"><button id="explain-button" class="primary-button">Показать объяснение</button><button id="eliminate-button" class="primary-button" hidden>Снять эти кандидаты</button><button id="word-initial-dialog-button" class="primary-button" hidden>Подсветить первую букву</button><button class="secondary-button" data-close>Вернуться к полю</button></div></dialog>
 <dialog id="rules-dialog" class="rules-dialog"><div class="dialog-heading"><h2>Как играть</h2><button class="icon-button" data-close aria-label="Закрыть"><svg><use href="#i-close"/></svg></button></div><div id="rules-content"></div></dialog>
 <dialog id="confirm-dialog" class="confirm-dialog"><div class="eyebrow">НОВЫЙ ЛИСТ</div><h2>Начать заново?</h2><p>Очистится только текущее поле. Пройденные уровни останутся.</p><div class="hint-actions"><button id="confirm-restart" class="primary-button">Начать заново</button><button class="secondary-button" data-close>Продолжить решать</button></div></dialog>
 <dialog id="complete-dialog" class="complete-dialog"><div class="completion-art" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="eyebrow">ЕЩЁ ОДНА МАЛЕНЬКАЯ ПОБЕДА</div><h2 id="complete-title">Получилось!</h2><p id="complete-copy"></p><button id="next-level" class="primary-button">Следующий уровень<svg><use href="#i-arrow"/></svg></button><button class="text-button" data-close>Остаться на этом поле</button></dialog>
 <dialog id="reward-dialog" class="reward-dialog" aria-labelledby="reward-title"><div class="dialog-heading"><span class="eyebrow">НАГРАДА ЗА ПРОСМОТР РЕКЛАМЫ</span><button class="icon-button" data-close aria-label="Закрыть"><svg><use href="#i-close"/></svg></button></div><h2 id="reward-title"></h2><p id="reward-benefit" class="reward-benefit"></p><p id="reward-copy"></p><p id="reward-status" class="reward-note" role="status"></p><div class="hint-actions"><button id="reward-watch" class="primary-button">Смотреть рекламу</button><button class="secondary-button" data-close>Вернуться без просмотра</button></div></dialog>
 <dialog id="attempt-dialog" aria-labelledby="attempt-title"><div class="eyebrow">СУДОКУ · ТВОЯ ПАРТИЯ</div><h2 id="attempt-title"></h2><p id="attempt-copy"></p><div class="hint-actions"><button id="attempt-restore" class="primary-button">Продолжить за рекламу</button><button id="attempt-finish" class="secondary-button">Завершить партию</button><button id="attempt-levels" class="text-button">Выбрать другой уровень</button></div></dialog>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script type="module" src="./app.js?v=1.3.0"></script>
+<script type="module" src="./app.js?v=1.3.1"></script>
 </body></html>

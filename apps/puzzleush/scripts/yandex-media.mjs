@@ -45,6 +45,7 @@ try{
   for(const [kind,width,height,scale] of [['mobile',360,640,2],['desktop',1280,720,1]])for(let i=1;i<=2;i++){
    const {page,context}=await pageFor(g,width,height,{scale,level:g==='sudoku'?(i===1?1:21):g==='wordsearch'?(i===1?1:21):(i===1?6:26)});
    if(g==='nonogram'&&i===2)await page.locator('[data-zoom="fit"]').click();
+   if(g==='wordsearch'&&i===2)await page.locator('[data-initial-word]').first().click();
    await page.screenshot({path:path.join(dir,`${kind}-${i}.png`)});await context.close();
   }
   const {page:demo,context:dc}=await pageFor(g,390,844);await demo.locator('#help-button').click();if(g==='sudoku')await demo.locator('#tutorial-next').click();await demo.screenshot({path:path.join(dir,'onboarding-preview.png')});await dc.close();
@@ -54,7 +55,7 @@ try{
    for(const i of blanks){await video.locator(`[data-cell="${i}"]`).click();await video.locator(`[data-number="${p.solution[i]}"]`).click();await video.waitForTimeout(330);}
    await video.locator('#hint-button').click();await video.locator('#explain-button').click();await video.waitForTimeout(2000);
   }else if(g==='wordsearch'){
-   const p=generateWordsearch(6);for(const word of p.words.slice(2,5)){const path=p.placements[word],a=await video.locator(`[data-letter="${path[0]}"]`).boundingBox(),b=await video.locator(`[data-letter="${path.at(-1)}"]`).boundingBox();await video.mouse.move(a.x+a.width/2,a.y+a.height/2);await video.mouse.down();await video.mouse.move(b.x+b.width/2,b.y+b.height/2,{steps:10});await video.mouse.up();await video.waitForTimeout(650);}await video.locator('#wordsearch-hint').click();await video.waitForTimeout(1800);
+   const p=generateWordsearch(6);for(const word of p.words.slice(2,5)){const path=p.placements[word],a=await video.locator(`[data-letter="${path[0]}"]`).boundingBox(),b=await video.locator(`[data-letter="${path.at(-1)}"]`).boundingBox();await video.mouse.move(a.x+a.width/2,a.y+a.height/2);await video.mouse.down();await video.mouse.move(b.x+b.width/2,b.y+b.height/2,{steps:10});await video.mouse.up();await video.waitForTimeout(650);}await video.locator('#wordsearch-hint').click();await video.waitForTimeout(800);await video.locator('#word-initial-dialog-button').click();await video.waitForTimeout(1400);
   }else{
    const cells=fixture(g,6).nonogram.saves[6].cells,blanks=NONOGRAMS[5].grid.flat().flatMap((n,i)=>n&&cells[i]!==1?[i]:[]).slice(0,14);
    for(const i of blanks){await video.locator(`[data-pixel="${i}"]`).click();await video.waitForTimeout(230);}await video.waitForTimeout(1700);
@@ -63,5 +64,5 @@ try{
   execFileSync(process.env.FFMPEG||'ffmpeg',['-y','-i',raw,'-t','27','-vf','scale=1280:720,setsar=1','-c:v','libx264','-pix_fmt','yuv420p','-movflags','+faststart','-an',path.join(dir,'gameplay-16x9.mp4')],{stdio:'ignore'});
   await rm(path.join(dir,'raw-video'),{recursive:true,force:true});console.log(`${g}: icon, cover, 4 screenshots, onboarding preview, MP4`);
  }
- await writeFile(path.join(out,'README.txt'),'Материалы Клеточек 1.3.0. Скриншоты и видео сняты с реального интерфейса общих сборок. Ответы SDK при локальной съёмке тестовые, настоящая реклама не записана и не проверена. mobile-*.png 720×1280; desktop-*.png 1280×720; icon 512×512; cover 800×470. onboarding-preview — дополнительный предпросмотр, не скриншот геймплея для каталога.\n');
+ await writeFile(path.join(out,'README.txt'),'Материалы Клеточек 1.3.1. Скриншоты и видео сняты с реального интерфейса общих сборок. Ответы SDK при локальной съёмке тестовые, настоящая реклама не записана и не проверена. mobile-*.png 720×1280; desktop-*.png 1280×720; icon 512×512; cover 800×470. onboarding-preview — дополнительный предпросмотр, не скриншот геймплея для каталога.\n');
 }finally{await browser.close();}

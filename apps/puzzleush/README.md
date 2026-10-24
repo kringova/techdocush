@@ -16,6 +16,6 @@ npm run build:yandex
 
 Сохранение v3: kletochki-progress-v3. Прежние v1/v2 сохраняются без перезаписи, данные последовательно переносятся. У каждой Яндекс-игры отдельный progress-v3; баланс и попытки вне истории отмены. Другие устройства и приватные окна имеют собственное сохранение.
 
-Архивы build/yandex/kletochki-{sudoku|nonogram|wordsearch}-1.3.0.zip: по одному на отдельную игру.
+Архивы build/yandex/kletochki-{sudoku|nonogram|wordsearch}-1.3.1.zip: по одному на отдельную игру.
 
 Документация: [правила для агента](AGENTS.md), [архитектура](docs/architecture.md), [руководство](docs/guide.md), [выпуск сайта](docs/runbook.md), [выпуск Яндекса](docs/yandex-release.md), [аналитика](docs/analytics.md), [загрузка целей через API](docs/metrica-api.md), [изменения](CHANGELOG.md).
