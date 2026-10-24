@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="ru">
+<head>
+ <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+ <meta name="theme-color" content="#f5f3ed"><meta name="description" content="Судоку с объясняющими подсказками и японские кроссворды. Проходи уровни в своём темпе.">
+ <title>Клеточки — судоку и японские кроссворды</title>
+ <link rel="icon" type="image/svg+xml" href="./icon.svg"><link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<svg class="icon-sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
+ <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></symbol>
+ <symbol id="i-pixel" viewBox="0 0 24 24"><path d="M3 6h6V3h6v3h6v9h-3v3h-3v3H9v-3H6v-3H3z"/><path d="M9 9h6v6H9z"/></symbol>
+ <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h16m-6-6 6 6-6 6"/></symbol>
+ <symbol id="i-undo" viewBox="0 0 24 24"><path d="m8 4-5 5 5 5M3 9h10a7 7 0 0 1 0 14"/></symbol>
+ <symbol id="i-pencil" viewBox="0 0 24 24"><path d="m16 3 5 5L8 21H3v-5zM13 6l5 5"/></symbol>
+ <symbol id="i-erase" viewBox="0 0 24 24"><path d="m13 3 8 8-10 10H7l-5-5zM7 11l8 8M11 21h10"/></symbol>
+ <symbol id="i-bulb" viewBox="0 0 24 24"><path d="M9 18v-2a7 7 0 1 1 6 0v2M9 18h6M10 22h4M12 1V0"/></symbol>
+ <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+ <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+ <symbol id="i-restart" viewBox="0 0 24 24"><path d="M4 10a8 8 0 1 1 0 6M4 3v7h7"/></symbol>
+ <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></symbol>
+ <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 6v2"/></symbol>
+</defs></svg>
+<div class="page-shell">
+ <header class="site-header">
+  <a class="wordmark" href="./" aria-label="Клеточки, главная"><span class="brand-tile"><i></i><i></i><i></i><i></i></span>клеточки<span class="brand-dot">.</span></a>
+  <span class="header-note">маленькая пауза для себя</span>
+  <button id="progress-button" class="progress-button" aria-label="Открыть пройденные уровни"><span class="progress-mini" aria-hidden="true"></span><span id="total-progress">0 / 60</span><span class="desktop-label">пройдено</span></button>
+ </header>
+ <nav class="game-tabs" aria-label="Выбор игры">
+  <button class="game-tab active" data-game="sudoku" aria-pressed="true"><svg><use href="#i-grid"/></svg>Судоку<span class="tab-count" id="sudoku-count">0/30</span></button>
+  <button class="game-tab" data-game="nonogram" aria-pressed="false"><svg><use href="#i-pixel"/></svg>Японские<span class="tab-count" id="nonogram-count">0/30</span></button>
+ </nav>
+ <main>
+  <div class="workspace-header">
+   <div><div class="eyebrow" id="chapter-label">ГЛАВА 01 · ПЕРВЫЕ ШАГИ</div><h1 id="game-title">Судоку</h1><p id="game-subtitle">Девять цифр. По одной на каждое место.</p></div>
+   <button id="levels-button" class="level-counter" aria-label="Выбрать уровень"><span class="level-current" id="current-level">01</span><span class="level-total">/ 30<small>уровни ↗</small></span></button>
+  </div>
+  <div class="workspace">
+   <section class="game-area" aria-label="Игровое поле и управление">
+    <div class="board-meta"><div id="level-dots" class="level-dots" aria-label="Прогресс главы"></div><span id="board-caption">Уровень 1 · 45 открытых клеток</span></div>
+    <div id="board-mount" class="board-mount"></div>
+    <div class="board-status" id="board-status" aria-live="polite"></div>
+    <div id="sudoku-controls">
+     <div class="number-pad" aria-label="Ввод цифры"></div>
+     <div class="tool-row">
+      <button id="undo-button" class="tool-button"><svg><use href="#i-undo"/></svg><span>Отмена</span></button>
+      <button id="erase-button" class="tool-button"><svg><use href="#i-erase"/></svg><span>Стереть</span></button>
+      <button id="notes-button" class="tool-button" aria-pressed="false"><svg><use href="#i-pencil"/></svg><span>Пометки</span></button>
+      <button id="hint-button" class="tool-button hint-tool"><svg><use href="#i-bulb"/></svg><span>Подсказка</span></button>
+     </div>
+     <button id="candidates-button" class="candidates-button"><span class="candidate-icon">₁₂₃</span><span><strong>Все кандидаты</strong><small>Расставить возможные цифры в пустых клетках</small></span><svg><use href="#i-arrow"/></svg></button>
+    </div>
+    <div id="nonogram-controls" hidden>
+     <div class="paint-toolbar" role="group" aria-label="Режим японского кроссворда">
+      <button data-paint="fill" class="paint-button active" aria-pressed="true"><span class="fill-swatch"></span>Закрасить</button>
+      <button data-paint="cross" class="paint-button" aria-pressed="false"><svg><use href="#i-close"/></svg>Крестик</button>
+      <button id="nonogram-undo" class="paint-undo" aria-label="Отменить ход"><svg><use href="#i-undo"/></svg></button>
+     </div>
+     <p class="touch-note">Касайся клеток или веди пальцем. На компьютере ПКМ ставит крестик.</p>
+    </div>
+    <div class="game-bottom"><button id="restart-button" class="text-button"><svg><use href="#i-restart"/></svg>Начать уровень заново</button><span class="saved-indicator" id="save-status"><i></i>сохранено</span></div>
+   </section>
+   <aside class="sidebar">
+    <section class="guide-card">
+     <div class="card-kicker"><span class="tiny-spark">✳</span><span id="guide-kicker">ЕСЛИ ЗАСТРЯЛА</span></div>
+     <h2 id="guide-title">Следующий ход<br>можно понять.</h2>
+     <p id="guide-copy">Подсказка найдёт закономерность в твоём поле и объяснит её шаг за шагом.</p>
+     <button id="guide-button" class="primary-button">Разобрать ход<svg><use href="#i-arrow"/></svg></button>
+     <div class="guide-footnote" id="guide-footnote">Цифру ты впишешь сама.</div>
+     <div class="mini-grid" aria-hidden="true"><span></span><span>2</span><span></span><span class="mini-focus">?</span><span></span><span>8</span><span></span><span>5</span><span></span></div>
+    </section>
+    <section class="journey-card"><div class="card-kicker">ТВОЯ МАЛЕНЬКАЯ КОЛЛЕКЦИЯ</div><h3>Одна клеточка<br>за другой.</h3><p id="journey-copy">30 уровней: от первых шагов до задач с характером.</p><div class="chapter-progress"><div id="chapter-progress-fill"></div></div><div class="chapter-progress-label"><span id="chapter-progress-label">0 из 10 в этой главе</span><button id="journey-levels" class="text-button">К уровням ↗</button></div></section>
+    <button id="rules-button" class="rules-link"><svg><use href="#i-info"/></svg>Как играть и пользоваться пометками</button>
+   </aside>
+  </div>
+ </main>
+ <footer class="site-footer"><span>Никуда не торопимся.</span><a href="https://ringova.com/projects/">Ещё проекты Кати ↗</a></footer>
+</div>
+<dialog id="levels-dialog" class="levels-dialog"><div class="dialog-heading"><div><div class="eyebrow">МАЛЕНЬКИЕ ПОБЕДЫ</div><h2>Твои уровни</h2></div><button class="icon-button" data-close aria-label="Закрыть"><svg><use href="#i-close"/></svg></button></div><p class="dialog-intro" id="levels-intro"></p><div id="levels-content"></div></dialog>
+<dialog id="hint-dialog" class="hint-dialog"><div class="dialog-heading"><div class="card-kicker"><svg><use href="#i-bulb"/></svg>РАЗБИРАЕМ ВМЕСТЕ</div><button class="icon-button" data-close aria-label="Закрыть"><svg><use href="#i-close"/></svg></button></div><h2 id="hint-title"></h2><p class="hint-lead" id="hint-lead"></p><div id="hint-detail" class="hint-detail" hidden></div><div class="hint-actions"><button id="explain-button" class="primary-button">Показать объяснение</button><button id="eliminate-button" class="primary-button" hidden>Снять эти кандидаты</button><button class="secondary-button" data-close>Вернуться к полю</button></div></dialog>
+<dialog id="rules-dialog" class="rules-dialog"><div class="dialog-heading"><h2>Как играть</h2><button class="icon-button" data-close aria-label="Закрыть"><svg><use href="#i-close"/></svg></button></div><div id="rules-content"></div></dialog>
+<dialog id="confirm-dialog" class="confirm-dialog"><div class="eyebrow">НОВЫЙ ЛИСТ</div><h2>Начать заново?</h2><p>Очистится только текущее поле. Пройденные уровни останутся.</p><div class="hint-actions"><button id="confirm-restart" class="primary-button">Начать заново</button><button class="secondary-button" data-close>Продолжить решать</button></div></dialog>
+<dialog id="complete-dialog" class="complete-dialog"><div class="completion-art" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="eyebrow">ЕЩЁ ОДНА МАЛЕНЬКАЯ ПОБЕДА</div><h2 id="complete-title">Получилось!</h2><p id="complete-copy"></p><button id="next-level" class="primary-button">Следующий уровень<svg><use href="#i-arrow"/></svg></button><button class="text-button" data-close>Остаться на этом поле</button></dialog>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<script type="module" src="./app.js"></script>
+</body></html>

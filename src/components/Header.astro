@@ -3,6 +3,7 @@ const currentPath = Astro.url.pathname;
 const isServices = currentPath.startsWith('/services');
 const isActivities = currentPath.startsWith('/activities');
 const isBook = currentPath.startsWith('/book');
+const isProjects = currentPath.startsWith('/projects');
 ---
 
 <header class="site-header">
@@ -28,6 +29,9 @@ const isBook = currentPath.startsWith('/book');
         <a href="/book" class={isBook ? 'site-header__link site-header__link--active' : 'site-header__link'}>
           Книга
         </a>
+      </li>
+      <li>
+        <a href="/projects/" class={isProjects ? 'site-header__link site-header__link--active' : 'site-header__link'}>Проекты</a>
       </li>
       <li>
         <a href="https://t.me/+4s0vAcmepQZmYjdi" class="site-header__cta" target="_blank" rel="noopener">

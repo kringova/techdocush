@@ -4,6 +4,9 @@
 
 set -e
 
+node --test apps/puzzleush/tests/*.test.mjs
+node apps/puzzleush/scripts/sync-to-site.mjs --site-directory .
+
 echo "🚀 Начинаем гибридный билд..."
 
 # 1. Билдим Hugo (документация) - сначала, чтобы Astro мог перезаписать нужные страницы
