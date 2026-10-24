@@ -1,6 +1,6 @@
 const host=document.querySelector('[data-music]');
 if(host){
-  const TRACKS=[{id:'kalimba',name:'Калимба',file:'kalimba-v1.mp3',gain:1},{id:'keys',name:'Клавиши',file:'cozy-room-v1.mp3',gain:.4},{id:'rain',name:'Дождь',file:'rain-v1.mp3',gain:.28},{id:'wind',name:'Ветер',file:'wind-v1.mp3',gain:.25},{id:'purr',name:'Мурчание',file:'purr-v3.mp3',gain:.8}];
+  const TRACKS=[{id:'kalimba',name:'Калимба',file:'kalimba-v1.mp3',gain:1},{id:'bells',name:'Колокольчики',file:'bells-v1.mp3',gain:.55},{id:'keys',name:'Клавиши',file:'cozy-room-v1.mp3',gain:.4},{id:'rain',name:'Дождь',file:'rain-v1.mp3',gain:.28},{id:'wind',name:'Ветер',file:'wind-v1.mp3',gain:.25},{id:'purr',name:'Мурчание',file:'purr-v3.mp3',gain:.8}];
   const key='corio-ambient-mix-v1';let volume=.38,wanted=false,started=false,context=null,master=null,origin=null,token=0,gamePaused=false,focused=true,loading=false,error=false;
   const enabled=Object.fromEntries(TRACKS.map(t=>[t.id,false])),gains=Object.fromEntries(TRACKS.map(t=>[t.id,t.gain])),nodes=new Map(),buffers=new Map(),pending=new Map();
   try{const stored=JSON.parse(localStorage.getItem(key));if(stored){if(Number.isFinite(stored.volume)&&stored.volume>=0&&stored.volume<=.6)volume=stored.volume;wanted=stored.enabled===true;for(const t of TRACKS){enabled[t.id]=stored.layers?.[t.id]===true;if(Number.isFinite(stored.gains?.[t.id]))gains[t.id]=Math.max(0,Math.min(1,stored.gains[t.id]));}}}catch{}

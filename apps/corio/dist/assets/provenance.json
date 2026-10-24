@@ -77,7 +77,7 @@
       "alignedWith": "cozy-room-v1.mp3",
       "instruction": "Start or resume all decoded buffers at the same logical offset modulo 60 seconds."
     },
-    "provenance": "Kalimba, keys, rain and wind are original procedural synthesis. Purr v3 uses Joseph SARDIN’s real-cat recording under CC0; details are attached to the purr layer.",
+    "provenance": "Kalimba, keys, bells, rain and wind are original procedural synthesis. Purr v3 uses Joseph SARDIN’s real-cat recording under CC0; details are attached to the purr layer.",
     "layers": [
       {
         "id": "kalimba",
@@ -205,6 +205,37 @@
           "channels": 2
         },
         "generator": "tools/prepare-recorded-purr.mjs"
+      },
+      {
+        "id": "bells",
+        "file": "bells-v1.mp3",
+        "sha256": "46c6172ebdf691acfb5360c8acde40e2d4c6e785880dd84dbfe6285a06adc4a6",
+        "bytes": 1201228,
+        "method": "Original sparse modal bell synthesis: sixteen soft single or paired notes, slow attacks, long lightly beating tails and restrained metallic overtones. Aligned to the existing 64 BPM harmony; no samples or acoustic recording.",
+        "pcm": {
+          "peak": 0.15378454327583313,
+          "rms": 0.027999999999748146,
+          "meanLeft": -2.687759308675563e-10,
+          "meanRight": -3.128934857349687e-10,
+          "seamStep": 0.0017354581505060196,
+          "largestAdjacentStep": 0.015210006851702929
+        },
+        "decoded": {
+          "frames": 2646000,
+          "durationSeconds": 60,
+          "peak": 0.14609839022159576,
+          "rms": 0.026598892697982907,
+          "meanLeft": -6.0580552120033335e-09,
+          "meanRight": -7.980981788000172e-09,
+          "seamStep": 0.0013466309756040573,
+          "largestAdjacentStep": 0.014432622585445642
+        },
+        "encoding": {
+          "format": "MP3",
+          "bitrateKbps": 160,
+          "sampleRate": 44100,
+          "channels": 2
+        }
       }
     ],
     "validation": {
@@ -218,6 +249,7 @@
       ],
       "listening": "No human listening study or claim of a medically calming effect.",
       "limitation": "Synthetic kalimba is not an acoustic instrument recording. Purr v3 is a real library cat, not the user’s cat. Technical checks do not establish user listening acceptance."
-    }
+    },
+    "updatedAt": "2026-10-24T21:11:53.399Z"
   }
 }
