@@ -1,5 +1,5 @@
-import {createModeController} from '../modes.mjs';
-import {ITEMS,SHELF_LEVELS,createShelfGame,transfer,solveShelf} from './engine.mjs';
+import {createModeController} from '../modes.mjs?v=0.5.0';
+import {ITEMS,SHELF_LEVELS,createShelfGame,transfer,solveShelf} from './engine.mjs?v=0.5.0';
 const $=s=>document.querySelector(s),board=$('#shelves'),win=$('#win');
 let modes=null,platformPaused=false;
 let state=createShelfGame(),selected=-1,history=[],drag=null,ghost=null,ignoreClickUntil=0;

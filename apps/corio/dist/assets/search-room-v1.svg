@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 520" width="800" height="520">
+  <metadata>{"asset":"search-room-v1","status":"draft","date":"2026-10-25","method":"original code-native SVG; no generated bitmap or third-party art","role":"hidden-object prototype background","references":["visual/selection.json","visual/style-c.json","games/corio/assets/evening-room-v1.png: palette and evening mood only"],"brief":"Original front-facing domestic room with a left window and bookcase, right sofa, central table and foreground rug. Warm local floor lamp. No character, text or search objects; keep specified placement zones open.","review":"800 by 520 editable vector; one camera, grounded furniture, navy outlines, restrained pattern; target object overlays supplied separately."}</metadata>
+  <defs>
+    <pattern id="paper" width="43" height="37" patternUnits="userSpaceOnUse"><path d="M5 8h2m22 17h2m-13 7h1" stroke="#F4EAD4" stroke-width="1" opacity=".11"/></pattern>
+    <radialGradient id="lamplight" cx="51%" cy="39%" r="53%"><stop stop-color="#EABF78" stop-opacity=".34"/><stop offset="1" stop-color="#EABF78" stop-opacity="0"/></radialGradient>
+    <pattern id="rug" width="30" height="20" patternUnits="userSpaceOnUse"><path d="m0 10 15-7 15 7-15 7Z" fill="none" stroke="#D3BC8C" stroke-width="1" opacity=".28"/></pattern>
+  </defs>
+  <path fill="#6E8889" d="M0 0h800v406H0z"/>
+  <path fill="#B89970" d="M0 401h800v119H0z"/>
+  <path fill="#244650" d="M0 388h800v20H0z"/>
+  <path fill="#9CAFA0" opacity=".3" d="M0 32h800v7H0z"/>
+  <g stroke="#173744" stroke-width="2" opacity=".19"><path d="M34 39v348M302 39v348M568 39v348M775 39v348"/><path d="M0 455h800M0 502h800m-610-94-20 47m327-47 22 47m205-47 39 47m-357 0 10 47m-277-47-30 47m561 0 31 47"/></g>
+  <path fill="url(#paper)" d="M0 0h800v520H0z"/>
+  <ellipse cx="411" cy="239" rx="290" ry="272" fill="url(#lamplight)"/>
+  <!-- Window: blue evening outside, a deep sill, curtains attached to a rod. -->
+  <g stroke="#173744" stroke-width="4" stroke-linejoin="round">
+    <path d="M83 59h202v185H83z" fill="#B18D5F"/>
+    <path d="M96 72h176v155H96z" fill="#315E70"/>
+    <path d="M98 183 122 161l26 18 18-13 31 24 28-36 45 31v41H98Z" fill="#234958" stroke="none"/>
+    <path d="M112 190h34v36h-34m93-29h29v29h-29" fill="#173744" stroke="none"/>
+    <path d="M124 203h6v10h-6m90-6h6v9h-6" fill="#D8AB63" stroke="none"/>
+    <circle cx="236" cy="104" r="15" fill="#E8D9B1" stroke="none"/>
+    <path d="M185 72v155M96 153h176" fill="none"/>
+    <path d="M77 232h215v15H77z" fill="#D0A873"/>
+    <path d="M71 55h225" fill="none" stroke-linecap="round"/>
+    <path d="M79 59h37l-10 83-13 85H69l12-90Z" fill="#9CAFA0"/>
+    <path d="M253 59h36l5 170h-25l-8-82Z" fill="#9CAFA0"/>
+    <path d="m90 68-2 102m185-102 6 103" fill="none" stroke-width="2" opacity=".6"/>
+  </g>
+  <!-- A small framed geometric landscape uses the room's own palette. -->
+  <g stroke="#173744" stroke-width="4" stroke-linejoin="round">
+    <path d="M330 65h108v90H330z" fill="#D5B17B"/>
+    <path d="M340 75h88v70H340z" fill="#C5CEC0" stroke-width="2"/>
+    <path d="m341 128 23-27 23 25 18-12 22 23v7h-86Z" fill="#819D91" stroke="none"/>
+    <circle cx="405" cy="94" r="9" fill="#D99852" stroke="none"/>
+  </g>
+  <!-- Bookcase is a single grounded carcass; the middle shelf stays open. -->
+  <path d="m31 425 156-1 19 17H43Z" fill="#173744" opacity=".17"/>
+  <g stroke="#173744" stroke-width="4" stroke-linejoin="round">
+    <path d="M26 253h168v174H26z" fill="#B98955"/>
+    <path d="M37 265h146v135H37z" fill="#466162"/>
+    <path d="M37 305h146v10H37zm0 49h146v11H37z" fill="#CB9B61"/>
+    <path d="M31 401h158v21H31z" fill="#C39762"/>
+    <path d="M36 423h13v12H36m127-12h13v12h-13" fill="#775C44"/>
+    <g stroke-width="2.5">
+      <path d="M45 270h13v33H45z" fill="#D3C8A5"/><path d="M59 277h14v26H59z" fill="#9CAFA0"/><path d="m76 272 12-3 8 33-12 3Z" fill="#C48B56"/>
+      <path d="M126 271h16v32h-16z" fill="#8CA29A"/><path d="M145 267h13v36h-13z" fill="#D8B474"/><path d="m161 279 10-2 6 26-11 2Z" fill="#D4CDB6"/>
+      <path d="M45 324h13v28H45z" fill="#9CAFA0"/><path d="M61 319h13v33H61z" fill="#D2AF76"/>
+      <path d="M142 319h14v33h-14z" fill="#BFAF88"/><path d="M160 328h13v24h-13z" fill="#96AAA3"/>
+      <path d="M47 379h42v10H47zm4-12h35v11H51z" fill="#D9C69E"/>
+      <path d="M114 371h51v23h-51z" fill="#9CAFA0"/><path d="M133 381h13" fill="none"/>
+    </g>
+    <g stroke-width="1.5" opacity=".65"><path d="M49 277h5m-5 18h5m10-10h5m63-7h6m18-3h5m-5 20h5m-106 34h6m12-2h6"/></g>
+  </g>
+  <!-- Sofa: back, seat and arms share the same frontal camera. -->
+  <path d="M483 404q129-9 269 5l19 20H499Z" fill="#173744" opacity=".16"/>
+  <g stroke="#173744" stroke-width="4" stroke-linejoin="round">
+    <path d="M501 379h19v37h-19zm206 0h19v37h-19z" fill="#775C44"/>
+    <path d="M484 237q0-28 27-28h196q27 0 27 28v123H484Z" fill="#9CAFA0"/>
+    <path d="M502 231q45-10 100 0v87H502Zm102 0q52-10 112 0v87H604Z" fill="#AAB7A4" stroke-width="2.5"/>
+    <path d="M484 321h250v69H484Z" fill="#6B8B84"/>
+    <path d="M493 313q54-9 111 0v33H493Zm113 0q57-9 117 0v33H606Z" fill="#B8BEA7" stroke-width="2.5"/>
+    <path d="M470 293q0-12 13-12h11q13 0 13 12v82q-1 14-14 14h-10q-13 0-13-14Zm245 0q0-12 13-12h10q13 0 13 12v82q0 14-13 14h-10q-13 0-13-14Z" fill="#90A79B"/>
+    <path d="M662 241q23-8 39 1l11 65-43 7Z" fill="#C7AC7B" stroke-width="2.5"/>
+    <path d="m671 249 27 51m-32-33 21 41m-9-65 29 49" stroke-width="1.5" opacity=".35"/>
+    <path d="M492 367h221" fill="none" stroke-width="2" opacity=".5"/>
+  </g>
+  <!-- The floor lamp provides the only warm pool of interior light. -->
+  <g stroke="#173744" stroke-width="4" stroke-linejoin="round">
+    <path d="M416 212v207m-24 5q24-14 48 0v5h-48Z" fill="#B18D5F"/>
+    <path d="m380 159-21 69q50 17 112 0l-22-69Z" fill="#D8AC65"/>
+    <path d="M359 228q56-15 112 0-56 15-112 0Z" fill="#F0D49A" stroke-width="3"/>
+    <path d="m391 166-12 48m57-48 15 48" fill="none" stroke-width="2" opacity=".24"/>
+  </g>
+  <!-- Low table: clear top and four visible feet, with a lower cross brace. -->
+  <path d="m306 416 218-1 32 16-230 1Z" fill="#173744" opacity=".15"/>
+  <g stroke="#173744" stroke-width="4" stroke-linejoin="round">
+    <path d="m315 343-6 72h13l7-72m175 0 8 72h13l-7-72m-25-4 3 56h11l-1-56m-166 0-2 56h11l4-56" fill="#A47B50"/>
+    <path d="M322 391h188v8H322z" fill="#B68B56"/>
+    <path d="m307 316 212-1 22 19-2 15H298v-13Z" fill="#D0A36A"/>
+    <path d="m307 316 212-1 22 19H298Z" fill="#DFBD87"/>
+    <path d="M306 340h226" stroke-width="2" opacity=".45"/>
+  </g>
+  <!-- A low-contrast woven rug leaves a broad open foreground for the cat. -->
+  <g stroke="#173744" stroke-linejoin="round">
+    <path d="m289 437 344 1 38 55-408 1Z" fill="#8D9E8B" stroke-width="3"/>
+    <path d="m299 445 325 1 25 38-369 1Z" fill="#B49D73" stroke-width="2"/>
+    <path d="m299 445 325 1 25 38-369 1Z" fill="url(#rug)" stroke="none"/>
+    <path d="m278 496-5 7m18-7-5 7m18-7-5 7m18-7-5 7m18-7-5 7m18-7-5 7m18-7-5 7m18-7-5 7m18-7-5 7m18-7-5 7m18-7-5 7m18-7-5 7m18-7-5 7m18-7-5 7m18-7-5 7m18-7-5 7m18-7-5 7m18-7-5 7m18-7-5 7m18-7-5 7m18-7-5 7m18-7-5 7m18-7-5 7m18-7-5 7m18-7-5 7m18-7-5 7m18-7-5 7m18-7-5 7m18-7-5 7m18-7-5 7" stroke="#A89974" stroke-width="2"/>
+  </g>
+</svg>

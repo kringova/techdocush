@@ -42,6 +42,33 @@
         "visual/assets/a-window-house-v1.png"
       ],
       "review": "White coat, blue eyes and short grey curled tail visible. Warm lamp at left and navy evening window. Texture and room detail denser than the C anchor; keep as storefront draft, not a sprite reference."
+    },
+    {
+      "file": "search-room-v1.svg",
+      "sha256": "df70c8ff3c18f184c5b555740048d0c5607e9305dd7e08063cb0665e74520b49",
+      "tool": "Original code-native SVG authored for this project",
+      "role": "Hidden-object room background",
+      "status": "prototype-draft",
+      "prompt": "Brief and geometry stored in SVG metadata; C primary, domestic evening atmosphere",
+      "review": "Rendered in browser with props and original saved cat; no external resources, logos, font dependencies or franchise assets"
+    },
+    {
+      "file": "search-kitchen-v1.svg",
+      "sha256": "5ef06008d1f1895455bdcab70408ba06fd04e9f08b60beaf960bd61fe29988aa",
+      "tool": "Original code-native SVG authored for this project",
+      "role": "Hidden-object kitchen background",
+      "status": "prototype-draft",
+      "prompt": "Brief and geometry stored in SVG metadata; C primary, domestic evening atmosphere",
+      "review": "Rendered in browser with props and original saved cat; no external resources, logos, font dependencies or franchise assets"
+    },
+    {
+      "file": "search-yard-v1.svg",
+      "sha256": "0ed34048ab2004384f151e71005468088a6d064ad3d9c285ba2c05e31c377384",
+      "tool": "Original code-native SVG authored for this project",
+      "role": "Hidden-object yard background",
+      "status": "prototype-draft",
+      "prompt": "Brief and geometry stored in SVG metadata; C primary, domestic evening atmosphere",
+      "review": "Rendered in browser with props and original saved cat; no external resources, logos, font dependencies or franchise assets"
     }
   ],
   "furniture": "Original code-drawn plan-view furniture; collision geometry matches footprints",
@@ -98,8 +125,8 @@
           "durationSeconds": 60,
           "peak": 0.21552924811840057,
           "rms": 0.04939852899237797,
-          "meanLeft": 1.6406272508760968e-08,
-          "meanRight": -2.915411167065063e-08,
+          "meanLeft": 1.6406272508760968e-8,
+          "meanRight": -2.915411167065063e-8,
           "seamStep": 0.0017393268644809723,
           "largestAdjacentStep": 0.020158632192760706
         },
@@ -129,8 +156,8 @@
           "durationSeconds": 60,
           "peak": 0.2724195122718811,
           "rms": 0.05231171203820593,
-          "meanLeft": 3.3602144898761615e-06,
-          "meanRight": -7.988812686721601e-06,
+          "meanLeft": 0.0000033602144898761615,
+          "meanRight": -0.000007988812686721601,
           "seamStep": 0.02878592163324356,
           "largestAdjacentStep": 0.06695017963647842
         },
@@ -160,8 +187,8 @@
           "durationSeconds": 60,
           "peak": 0.2097516804933548,
           "rms": 0.03990045353189665,
-          "meanLeft": -4.58489117583078e-06,
-          "meanRight": 4.31319597441791e-06,
+          "meanLeft": -0.00000458489117583078,
+          "meanRight": 0.00000431319597441791,
           "seamStep": 0.001985898707062006,
           "largestAdjacentStep": 0.00872015580534935
         },
@@ -225,8 +252,8 @@
           "durationSeconds": 60,
           "peak": 0.5585731267929077,
           "rms": 0.08074473626027463,
-          "meanLeft": -7.527537444937122e-09,
-          "meanRight": 4.7935780107927485e-08,
+          "meanLeft": -7.527537444937122e-9,
+          "meanRight": 4.7935780107927485e-8,
           "seamStep": 0.0028071203269064426,
           "largestAdjacentStep": 0.1529121808707714
         },
@@ -251,5 +278,14 @@
       "limitation": "Synthetic kalimba is not an acoustic instrument recording. Purr v3 is a real library cat, not the user’s cat. Technical checks do not establish user listening acceptance."
     },
     "updatedAt": "2026-10-24T21:27:41.320Z"
+  },
+  "miniGames": {
+    "files": "mini/engine.mjs, mini/views.mjs, mini/search-art.mjs, mini/search-data.mjs",
+    "levels": 5,
+    "sceneAndPropMethod": "Original code-native SVG/CSS; existing saved cat, yarn, bowl and brush reused",
+    "foodSources": "visual/care-prototype-sources.json",
+    "hiddenObjectReference": "visual/hidden-object-reference.json",
+    "litterSound": "Original short filtered procedural noise triggered by scoop/rake gestures; separately muted; no samples",
+    "scope": "Mechanic prototypes. Character sprite is fixed-view; scene detail and animation remain provisional."
   }
 }

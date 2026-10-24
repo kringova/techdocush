@@ -14,3 +14,9 @@
 - Every game includes direct links to the other available games. Yandex release needs platform app links and configured SDK initialization/events; current ringova build is not that release.
 
 - Bells v1 was inaudible to the user. Use bells-v2.mp3; verify actual audio-graph gain and decoded level, not only loading. v2 is about 9.64 dB stronger at the same gain and has a clearer higher register. Preserve user volume settings and approved purr-v3.
+
+- Current release 0.5: nine routes in dist/series.mjs. Seven new five-level prototypes: tunnels, food, pet, grooming, litter, yarn, search; shelves now five, boxes still50. Preserve each distinct mechanic and the shared modes/music/series links.
+- New pure rules live in mini/engine.mjs, UI in mini/app.mjs/views.mjs; hidden-object scenes in assets/search-*-v1.svg, objects in mini/search-data.mjs/search-art.mjs. Do not substitute rasterized tiny scene images. Keep yarn board compact enough for real dragging and search scenes zoomable/pannable on mobile.
+- Food wording matters: ordinary candy is unsuitable, not universally toxic; raw meat may contain harmful bacteria; plain chicken must be explicitly cooked, without salt/spices/bones, occasional small amount. Whiskers/head are excluded from grooming and no practical nail clipping is taught. No offline neglect/death in virtual pet.
+- New original SVG/CSS props and backgrounds are draft art; the saved cat, yarn, bowl and brush remain the same assets. Hidden-object genre inspiration does not authorize copying Mystery Manor imagery, rooms, characters, story or UI. Courtyard creatures remain future work.
+- Source QA: qa-corio-mini.mjs completes35 new levels via UI and real input; qa-corio-site.mjs checks nine-card hub/five shelves/mixer. Consistently version module imports and HTML resource URLs for cache updates. Browser QA evidence lives in the source project.

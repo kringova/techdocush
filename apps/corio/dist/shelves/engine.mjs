@@ -2,7 +2,9 @@ export const ITEMS={yarn:{name:'Клубок',plural:'Клубки',file:'yarn-v
 export const SHELF_LEVELS=[
   {name:'Первый порядок',capacity:3,shelves:[['yarn','yarn','bowl'],['bowl','bowl','yarn'],['brush','brush','brush'],[]]},
   {name:'Всё вперемешку',capacity:3,shelves:[['yarn','brush','yarn'],['bowl','yarn','bowl'],['brush','bowl','brush'],[]]},
-  {name:'Полка подлиннее',capacity:4,shelves:[['yarn','brush','bowl','yarn'],['bowl','yarn','brush','bowl'],['brush','bowl','yarn','brush'],[]]}
+  {name:'Полка подлиннее',capacity:4,shelves:[['yarn','brush','bowl','yarn'],['bowl','yarn','brush','bowl'],['brush','bowl','yarn','brush'],[]]},
+  {name:'Спрятанная миска',capacity:4,shelves:[['yarn','brush','bowl','yarn'],['bowl','yarn','brush','brush'],['brush','bowl','yarn','bowl'],[]]},
+  {name:'Последний клубок',capacity:4,shelves:[['yarn','brush','bowl','brush'],['brush','yarn','bowl','yarn'],['bowl','brush','yarn','bowl'],[]]}
 ];
 export function solved(shelves,capacity){return shelves.every(s=>s.length===0||(s.length===capacity&&s.every(item=>item===s[0])));}
 export function createShelfGame(index=0){if(!SHELF_LEVELS[index])throw new RangeError('Unknown shelf layout');const level=SHELF_LEVELS[index];return{index,shelves:level.shelves.map(s=>[...s]),moves:0,won:false};}

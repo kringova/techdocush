@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 520" width="800" height="520">
+  <metadata>{"asset":"search-kitchen-v1","status":"draft","date":"2026-10-25","method":"original code-native SVG; no generated bitmap or third-party art","role":"hidden-object prototype background","references":["visual/selection.json","visual/style-c.json","games/corio/assets/evening-room-v1.png: palette and evening mood only"],"brief":"Original frontal kitchen with left wall cupboards and stove, right window, continuous counter and foreground table. One warm pendant; no character, text or search objects. Reserved placement zones remain uncluttered.","review":"800 by 520 editable vector; coherent cupboard joins, grounded furniture, matte navy/ochre/sage treatment; target overlays supplied separately."}</metadata>
+  <defs>
+    <pattern id="paper" width="43" height="37" patternUnits="userSpaceOnUse"><path d="M5 8h2m22 17h2m-13 7h1" stroke="#F4EAD4" stroke-width="1" opacity=".1"/></pattern>
+    <pattern id="tile" width="55" height="45" patternUnits="userSpaceOnUse"><path d="M0 0h55v45H0z" fill="none" stroke="#86958B" stroke-width="1.3" opacity=".6"/></pattern>
+    <radialGradient id="lamplight" cx="50%" cy="24%" r="68%"><stop stop-color="#F2C779" stop-opacity=".28"/><stop offset="1" stop-color="#F2C779" stop-opacity="0"/></radialGradient>
+  </defs>
+  <path fill="#C1C6AE" d="M0 0h800v441H0z"/>
+  <path fill="#A18F70" d="M0 441h800v79H0z"/>
+  <path fill="#D7D4B7" d="M29 185h731v70H29z"/>
+  <path fill="url(#tile)" d="M29 185h731v70H29z"/>
+  <path d="M0 433h800v12H0z" fill="#3E5A5C"/>
+  <g stroke="#173744" stroke-width="2" opacity=".2"><path d="M0 485h800m-665-40-20 40m200-40-5 40m196-40 13 40m175-40 29 40m-465 0-14 35m193-35 6 35m190-35 20 35"/></g>
+  <path fill="url(#paper)" d="M0 0h800v520H0z"/>
+  <ellipse cx="407" cy="174" rx="305" ry="256" fill="url(#lamplight)"/>
+  <!-- Wall cupboards have three clear doors and a single consistent depth. -->
+  <g stroke="#173744" stroke-width="4" stroke-linejoin="round">
+    <path d="M40 38h303v143H40z" fill="#7E9A90"/>
+    <path d="M51 49h85v118H51zm94 0h85v118h-85zm94 0h92v118h-92z" fill="#A2B2A1" stroke-width="3"/>
+    <path d="M60 58h67v98H60zm94 0h67v98h-67zm94 0h74v98h-74z" fill="none" stroke-width="1.8" opacity=".35"/>
+    <path d="M121 103v23m94-23v23m37-23v23" stroke-linecap="round"/>
+    <path d="M36 171h311v13H36z" fill="#B99C6E"/>
+  </g>
+  <!-- Open crockery rack: a few broad silhouettes, no tiny scatter. -->
+  <g stroke="#173744" stroke-width="3" stroke-linejoin="round">
+    <path d="M365 115h92v12h-92zm6 12v25m80-25v25" fill="#C39A63"/>
+    <path d="M378 112V77h26v35m8 0V84h24v28" fill="#DDE0CA"/>
+    <path d="M384 87h14m20 7h12" stroke-width="2" opacity=".4"/>
+    <path d="M371 153h80v10h-80z" fill="#C39A63"/>
+  </g>
+  <!-- The window has a sill and attached half-curtains; the kitchen stays lit. -->
+  <g stroke="#173744" stroke-width="4" stroke-linejoin="round">
+    <path d="M505 40h215v164H505z" fill="#B59162"/>
+    <path d="M518 53h189v137H518z" fill="#315E70"/>
+    <path d="m520 163 24-18 36 12 38-23 39 24 24-11 24 14v28H520Z" fill="#244B59" stroke="none"/>
+    <circle cx="669" cy="86" r="13" fill="#E7DAB9" stroke="none"/>
+    <path d="M612 53v137m-94-68h189"/>
+    <path d="M498 196h230v13H498z" fill="#D2AF76"/>
+    <path d="M496 34h235" stroke-linecap="round"/>
+    <path d="M504 39h34l-7 84-17 39h-12l6-66Zm183 0h32l7 123h-15l-17-40Z" fill="#A8B6A4"/>
+    <path d="m519 46-3 70m188-70 6 70" fill="none" stroke-width="2" opacity=".6"/>
+  </g>
+  <!-- Pendant casts a single warm pool; there are no neon edge effects. -->
+  <g stroke="#173744" stroke-width="4" stroke-linejoin="round">
+    <path d="M410 0v47"/>
+    <path d="m388 46-24 32q45 18 92 0l-23-32Z" fill="#D4A365"/>
+    <path d="M364 78q47-11 92 0-44 15-92 0Z" fill="#F2DBA9" stroke-width="2.5"/>
+  </g>
+  <!-- Long counter and its base. Target items sit on the broad clear surface. -->
+  <g stroke="#173744" stroke-width="4" stroke-linejoin="round">
+    <path d="M63 265h682v172H63z" fill="#6D8C82"/>
+    <path d="M72 279h171v149H72z" fill="#C4B690"/>
+    <path d="M82 292h151v24H82z" fill="#9BA99B" stroke-width="3"/>
+    <circle cx="101" cy="303" r="4" fill="#173744" stroke="none"/><circle cx="127" cy="303" r="4" fill="#173744" stroke="none"/><circle cx="187" cy="303" r="4" fill="#173744" stroke="none"/><circle cx="213" cy="303" r="4" fill="#173744" stroke="none"/>
+    <path d="M86 328h143v84H86z" fill="#4B6669" stroke-width="3"/>
+    <path d="M96 345h122v57H96z" fill="#244650" stroke-width="2"/>
+    <path d="M111 336h93" stroke-linecap="round"/>
+    <path d="M105 385h103m-103 7h103" fill="none" stroke="#6C8580" stroke-width="2"/>
+    <path d="M253 279h113v149H253zm121 0h115v149H374zm123 0h113v149H497zm122 0h115v149H619z" fill="#9BAF9D" stroke-width="3"/>
+    <path d="M352 298v24m35-24v24m210-24v24m36-24v24" fill="none" stroke-linecap="round"/>
+    <path d="M253 333h113m8 0h115m8 0h113m9 0h115" stroke-width="2" opacity=".4"/>
+    <path d="M60 432h686v13H60z" fill="#3E5A5C"/>
+    <path d="m65 239 675 1 14 15v16H57v-16Z" fill="#DCC49A"/>
+    <path d="m65 239 675 1 14 15H57Z" fill="#E6D4AD"/>
+    <path d="M64 261h681" stroke-width="2" opacity=".45"/>
+  </g>
+  <!-- Hob and sink are fixtures. The faucet is attached to the rear sink edge. -->
+  <g stroke="#173744" stroke-width="2.5" stroke-linejoin="round">
+    <path d="m92 241 130 1 9 11H84Z" fill="#82928A"/>
+    <ellipse cx="117" cy="248" rx="17" ry="3.5" fill="none"/><ellipse cx="190" cy="248" rx="17" ry="3.5" fill="none"/>
+    <path d="m569 242 93 1 10 9H559Z" fill="#466569"/>
+    <path d="m578 245 74 1 6 4h-84Z" fill="#71928F" stroke="none"/>
+    <path d="M617 239v-20q0-17 14-17 13 0 13 13v8h-7v-8q0-6-6-6t-6 10v20" fill="#A5B5AB"/>
+    <path d="M602 236h14m-9-4v6" fill="none"/>
+  </g>
+  <!-- Visible wall hook anticipates the separate towel object. -->
+  <path d="M265 326v5q0 7 6 4" fill="none" stroke="#173744" stroke-width="3" stroke-linecap="round"/>
+  <!-- Foreground work table has a shallow top and four feet on the floor. -->
+  <path d="m491 470 241 1 27 17-250-2Z" fill="#173744" opacity=".16"/>
+  <g stroke="#173744" stroke-width="4" stroke-linejoin="round">
+    <path d="m496 379-3 94h15l6-94m201 0 10 94h15l-8-94m-221-6 2 75h12l2-75m181 0 2 75h12l-1-75" fill="#A47B50"/>
+    <path d="M507 439h219v10H507z" fill="#B68B56"/>
+    <path d="m490 350 238 1 19 22v14H479v-14Z" fill="#C99C63"/>
+    <path d="m490 350 238 1 19 22H479Z" fill="#DFC08B"/>
+    <path d="M489 380h249" stroke-width="2" opacity=".4"/>
+    <path d="M535 374h102v28H535z" fill="#B6915F" stroke-width="2.5"/>
+    <path d="M578 388h17" stroke-width="3" stroke-linecap="round"/>
+  </g>
+  <!-- A short runner beside the stove keeps the open floor visually grounded. -->
+  <path d="m116 454 196 1 25 38-241-1Z" fill="#718D84" stroke="#173744" stroke-width="2.5"/>
+  <path d="m121 462 184 1m-195 20h215" fill="none" stroke="#C0B48D" stroke-width="2" opacity=".7"/>
+</svg>

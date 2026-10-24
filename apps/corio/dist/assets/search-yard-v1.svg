@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 520" width="800" height="520">
+  <metadata>{"asset":"search-yard-v1","status":"draft","date":"2026-10-25","method":"original code-native SVG; no generated bitmap or third-party art","role":"hidden-object prototype background","references":["visual/selection.json","visual/style-c.json","games/corio/assets/evening-room-v1.png: palette and evening mood only"],"brief":"Original domestic courtyard: house and doorway at left, far fence and right bench, front path, quiet edge planting. Blue evening sky and warm light from house window. No characters, text or search objects; reserved placement zones stay open.","review":"800 by 520 editable vector; bench supports and house threshold are grounded; restrained leaf shapes, no franchise composition or source art."}</metadata>
+  <defs>
+    <pattern id="paper" width="43" height="37" patternUnits="userSpaceOnUse"><path d="M5 8h2m22 17h2m-13 7h1" stroke="#F4EAD4" stroke-width="1" opacity=".1"/></pattern>
+    <pattern id="stone" width="102" height="54" patternUnits="userSpaceOnUse"><path d="M0 0h102M0 54h102M30 0l-8 54m61-54 12 54" fill="none" stroke="#6A7972" stroke-width="1.5" opacity=".28"/></pattern>
+    <radialGradient id="windowlight" cx="18%" cy="41%" r="58%"><stop stop-color="#E7B469" stop-opacity=".3"/><stop offset="1" stop-color="#E7B469" stop-opacity="0"/></radialGradient>
+  </defs>
+  <path d="M0 0h800v320H0z" fill="#31566A"/>
+  <path d="M0 310h800v210H0z" fill="#7E9689"/>
+  <path d="M0 343q154-34 330-9t470-9v195H0Z" fill="#8D9D87"/>
+  <!-- A few distant tree masses keep the middle of the sky quiet. -->
+  <path d="M291 193q19-41 45-31 5-40 37-35 12-43 43-21 20-32 45-8 33-11 47 28 30-5 40 29 33-12 52 20 37-5 47 22v65H291Z" fill="#294F5B"/>
+  <path d="M650 187q11-45 44-34-4-47 37-44 13-36 44-19l25-9v184H649Z" fill="#234954"/>
+  <circle cx="603" cy="64" r="19" fill="#E2D7B4"/>
+  <g fill="#DFD6B8" opacity=".65"><circle cx="336" cy="37" r="1.5"/><circle cx="448" cy="68" r="1.5"/><circle cx="533" cy="27" r="1.2"/><circle cx="715" cy="43" r="1.4"/><circle cx="756" cy="83" r="1.1"/></g>
+  <!-- Fence is behind both bench and house, with substantial posts and rails. -->
+  <g stroke="#173744" stroke-width="3" stroke-linejoin="round">
+    <path d="M288 244h512v89H288z" fill="#8B9B85"/>
+    <path d="m300 251 10-13 11 13v83h-21zm28 0 10-13 11 13v83h-21zm28 0 10-13 11 13v83h-21zm28 0 10-13 11 13v83h-21zm28 0 10-13 11 13v83h-21zm28 0 10-13 11 13v83h-21zm28 0 10-13 11 13v83h-21zm28 0 10-13 11 13v83h-21zm28 0 10-13 11 13v83h-21zm28 0 10-13 11 13v83h-21zm28 0 10-13 11 13v83h-21zm28 0 10-13 11 13v83h-21zm28 0 10-13 11 13v83h-21zm28 0 10-13 11 13v83h-21zm28 0 10-13 11 13v83h-21zm28 0 10-13 11 13v83h-21zm28 0 10-13 11 13v83h-21zm28 0 10-13 11 13v83h-21Z" fill="#95A18A" stroke-width="2"/>
+    <path d="M292 276h508v9H292zm0 41h508v10H292z" fill="#A7AF93"/>
+    <path d="M357 231h15v107h-15zm200 0h15v107h-15zm199 0h15v107h-15z" fill="#A8B195"/>
+  </g>
+  <!-- Path widens toward the viewer, joining the left-hand threshold. -->
+  <path d="m78 364 172 1 105 43 179 112H85l40-111Z" fill="#B7AD8E" stroke="#173744" stroke-width="3" stroke-linejoin="round"/>
+  <path d="m78 364 172 1 105 43 179 112H85l40-111Z" fill="url(#stone)"/>
+  <path d="M0 430q166-32 325-19t475 49v60H0Z" fill="#B1AA8D"/>
+  <path d="M0 430q166-32 325-19t475 49v60H0Z" fill="url(#stone)"/>
+  <path d="M0 430q166-32 325-19t475 49" fill="none" stroke="#173744" stroke-width="3" opacity=".45"/>
+  <path d="M0 0h305v367H0z" fill="#B99567"/>
+  <path d="m0 0 269 0 45 41v23H0Z" fill="#234650"/>
+  <path d="m0 42 293 0 21 22H0Z" fill="#54746D"/>
+  <path d="M277 65h28v302h-28z" fill="#8B7658"/>
+  <g stroke="#173744" stroke-width="1.6" opacity=".35"><path d="M0 93h277M0 130h277M0 167h277M0 204h277M0 241h277M0 278h277M0 315h277M0 352h277"/></g>
+  <path d="M0 0h800v520H0z" fill="url(#paper)"/>
+  <ellipse cx="172" cy="235" rx="245" ry="264" fill="url(#windowlight)"/>
+  <!-- Deep doorway, four front-facing panels, a visible threshold and two steps. -->
+  <g stroke="#173744" stroke-width="4" stroke-linejoin="round">
+    <path d="M25 116h113v247H25z" fill="#735E48"/>
+    <path d="M36 127h91v233H36z" fill="#647F77"/>
+    <path d="M46 140h71v77H46zm0 88h71v113H46z" fill="#7E9588" stroke-width="2.5"/>
+    <path d="M107 248h10" stroke-width="5" stroke-linecap="round"/>
+    <path d="M20 357h124v13H20z" fill="#CEB382"/>
+    <path d="m15 370 135 1 11 14H7Z" fill="#B4AD8F"/>
+    <path d="M7 385h154v11H7z" fill="#8C937F"/>
+  </g>
+  <!-- Window is the scene's warm light source, with a muted patch on the path. -->
+  <path d="m163 269 90 0 87 121-130 4Z" fill="#D6AF6F" opacity=".19"/>
+  <g stroke="#173744" stroke-width="4" stroke-linejoin="round">
+    <path d="M164 145h93v125h-93z" fill="#CEAA70"/>
+    <path d="M174 156h73v103h-73z" fill="#E2BE7D"/>
+    <path d="M211 157v102m-37-52h73"/>
+    <path d="M155 263h112v12H155z" fill="#E0BD82"/>
+    <path d="M174 156h17l-5 42-12 20Zm56 0h17v62l-12-20Z" fill="#D9D0A6" stroke-width="2"/>
+  </g>
+  <!-- Bench has two back supports, three slats and grounded splayed legs. -->
+  <path d="m386 392 298-1 28 16-302 3Z" fill="#173744" opacity=".17"/>
+  <g stroke="#173744" stroke-width="4" stroke-linejoin="round">
+    <path d="m405 326-12 74h14l14-72m233-2 13 74h14l-12-76" fill="#46675F"/>
+    <path d="M413 287h11v87h-11zm229 0h11v87h-11z" fill="#46675F"/>
+    <path d="M397 289h274v17H397zm0 24h274v17H397zm0 24h274v15H397z" fill="#B59965" stroke-width="3"/>
+    <path d="m390 352 286 0 13 18H378Z" fill="#C8AA73"/>
+    <path d="M378 370h311v11H378z" fill="#967B53"/>
+    <path d="M383 337v29m292-29v29m-300-30h25m262 0h25" fill="none" stroke-width="6" stroke-linecap="round"/>
+    <path d="M413 390h246" stroke-width="5"/>
+  </g>
+  <!-- Edge planting: each leaf joins a stem; beds leave the path and bench open. -->
+  <g stroke="#173744" stroke-width="3" stroke-linejoin="round">
+    <path d="M718 305q40-25 82-12v124q-47 2-82-24Z" fill="#657F70"/>
+    <path d="M731 390v-75m32 82v-99m25 107v-80" fill="none"/>
+    <path d="M731 353q-25-7-24-28 25 1 24 28m0-17q24-5 29-27-24-3-29 27m32 19q-22-1-28-24 22-5 28 24m0-25q25-1 29-26-24-2-29 26m25 41q-22-6-26-26 22-3 26 26" fill="#97A88C" stroke-width="2.5"/>
+    <path d="M735 394q33-6 65 9v22q-38-12-68-8Z" fill="#AD9B72"/>
+    <path d="M0 390q38-9 61 20l-1 70H0Z" fill="#607D6D"/>
+    <path d="M19 456v-52m23 55v-33" fill="none"/>
+    <path d="M19 435q-18-7-16-22 16 0 16 22m0-12q20-2 24-20-20-2-24 20m23 26q-14-4-17-18 17-2 17 18m0-9q18-2 19-18-15-2-19 18" fill="#9AAE90" stroke-width="2.5"/>
+  </g>
+  <g fill="#687F6D" stroke="#173744" stroke-width="2" stroke-linejoin="round"><path d="m320 371 3-14 6 11 8-14 1 18m350 59 7-15 5 11 10-13-3 20m-73 63 3-15 7 11 7-14 2 20"/></g>
+</svg>
