@@ -1,0 +1,25 @@
+Название	Идентификатор (точное совпадение)	Тип
+Вход на уровень	gameLevelStart	Целевое событие
+Победа на уровне	gameLevelComplete	Целевое событие
+Уход с уровня	gameLevelExit	Целевое событие
+Прогресс заполнения	gameProgress	Целевое событие
+Сводка игровых действий	gameActivity	Целевое событие
+Подсказка из баланса	gameHintUsed	Целевое событие
+Расстановка кандидатов	gameCandidatesUsed	Целевое событие
+Четвёртая ошибка	gameRoundPaused	Целевое событие
+Завершение партии	gameRoundFinished	Целевое событие
+Восстановление партии	gameRoundRevived	Целевое событие
+Начало обучения	gameTutorialStart	Целевое событие
+Шаг обучения	gameTutorialStep	Целевое событие
+Обучение пройдено	gameTutorialComplete	Целевое событие
+Обучение пропущено	gameTutorialSkip	Целевое событие
+Тренировка двойного тапа	gameTutorialDoubleTap	Целевое событие
+Запрос рекламы с наградой	gameRewardedRequest	Целевое событие
+Реклама с наградой открыта	gameRewardedOpen	Целевое событие
+Награда выдана	gameRewardedEarned	Целевое событие
+Реклама с наградой закрыта	gameRewardedClose	Целевое событие
+Ошибка рекламы с наградой	gameRewardedError	Целевое событие
+Запрос межуровневой рекламы	gameFullscreenRequest	Целевое событие
+Межуровневая реклама открыта	gameFullscreenOpen	Целевое событие
+Межуровневая реклама закрыта	gameFullscreenClose	Целевое событие
+Ошибка межуровневой рекламы	gameFullscreenError	Целевое событие

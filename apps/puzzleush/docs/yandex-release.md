@@ -1,7 +1,7 @@
 <!-- Audience: владелец кабинета и агент выпуска; Purpose: загрузить две готовые игры и проверить реальную интеграцию перед модерацией. -->
 # Выпуск в Яндекс Игры
 
-Две отдельные игры собираются из общих исходников с личным сайтом. `npm run build:yandex` из `apps/puzzleush` создаёт `build/yandex/kletochki-sudoku-1.2.1.zip` и `kletochki-nonogram-1.2.1.zip`. У каждого index.html в корне, размер меньше 100 МБ; источник всех движков подтверждается одинаковым `sharedHash` в release.json. Корневой build.sh собирает эти архивы при каждом выпуске сайта; Pages workflow сохраняет их отдельным артефактом `kletochki-yandex`. Автоматической загрузки в кабинет нет.
+Две отдельные игры собираются из общих исходников с личным сайтом. `npm run build:yandex` из `apps/puzzleush` создаёт `build/yandex/kletochki-sudoku-1.2.2.zip` и `kletochki-nonogram-1.2.2.zip`. У каждого index.html в корне, размер меньше 100 МБ; источник всех движков подтверждается одинаковым `sharedHash` в release.json. Корневой build.sh собирает эти архивы при каждом выпуске сайта; Pages workflow сохраняет их отдельным артефактом `kletochki-yandex`. Автоматической загрузки в кабинет нет.
 
 ## Что нужно сделать владелице
 
@@ -46,4 +46,4 @@ QA_ORIGIN, PLAYWRIGHT_MODULE, BROWSER_EXECUTABLE и FFMPEG можно задат
 
 Проверенные требования: [подключение SDK](https://yandex.ru/dev/games/doc/ru/sdk/sdk-about), [готовность и геймплей](https://yandex.ru/dev/games/doc/ru/sdk/sdk-game-events), [реклама](https://yandex.ru/dev/games/doc/ru/sdk/sdk-adv), [поля и размеры материалов](https://yandex.ru/dev/games/doc/ru/console/add-new-game/draft), [загрузка игры](https://yandex.ru/dev/games/doc/ru/console/add-new-game).
 
-Аналитика настраивается отдельно: [схема событий и выбор счётчика](analytics.md). Поле metricaCounterId в yandex.config.json по умолчанию 0; при нём реальных событий Метрики нет. После выбора счётчика сохранить его в конфигурации, пересобрать оба ZIP и проверить `_ym_debug=1` в черновике. Не включать автоматическую запись экрана ради базовых событий.
+Аналитика настраивается отдельно: [схема событий и выбор счётчика](analytics.md). В yandex.config.json выбран счётчик 113771637. Создать цели из docs/metrica-goals.tsv в кабинете Метрики и проверить `_ym_debug=1` в черновике. Для отключения отправки задать номер 0 и пересобрать ZIP. Не включать автоматическую запись экрана ради базовых событий.

@@ -7,7 +7,7 @@ export function metricaSender({enabled=false,counterId=0,host=globalThis}={}){
  let failed=false;
  if(typeof host.ym!=='function'){
   host.ym=function(...args){(host.ym.a??=[]).push(args);};host.ym.l=Date.now();
-  const script=host.document.createElement('script');script.async=true;script.src='https://mc.yandex.ru/metrika/tag.js';script.onerror=()=>{failed=true;};host.document.head.append(script);
+  const script=host.document.createElement('script');script.async=true;script.src=`https://mc.yandex.ru/metrika/tag.js?id=${counterId}`;script.onerror=()=>{failed=true;};host.document.head.append(script);
  }
  try{host.ym(counterId,'init',{clickmap:false,trackLinks:false,accurateTrackBounce:true,webvisor:false});}catch{failed=true;}
  return (name,params)=>{if(failed)return;try{host.ym(counterId,'reachGoal',name,params);}catch{}};

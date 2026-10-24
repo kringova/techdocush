@@ -16,7 +16,10 @@ async function open(game,{width=390,height=844,mobile=true,fixture=null,web=fals
  const context=await browser.newContext({viewport:{width,height},isMobile:mobile,hasTouch:mobile});
  await context.route('**/sdk.js',r=>failSDK?r.abort():r.fulfill({contentType:'application/javascript',body:sdkFixture}));
  if(fixture)await context.addInitScript(({key,value})=>{if(!localStorage.getItem(key))localStorage.setItem(key,JSON.stringify(value));},fixture);
- if(analytics){await context.addInitScript(()=>{window.__metrics=[];window.ym=(...args)=>window.__metrics.push(args);});await context.route(`${origin}/build/yandex/${game}/`,async route=>{const response=await route.fetch();const body=(await response.text()).replace('data-metrica="0"','data-metrica="12345678"');await route.fulfill({response,body});});}
+ // Test visits must never reach the user's production counter.
+ await context.route('https://mc.yandex.ru/**',r=>r.abort());
+ if(analytics)await context.addInitScript(()=>{window.__metrics=[];window.ym=(...args)=>window.__metrics.push(args);});
+ if(!web)await context.route(`${origin}/build/yandex/${game}/`,async route=>{const response=await route.fetch();const body=(await response.text()).replace(/data-metrica="[0-9]+"/,`data-metrica="${analytics?12345678:0}"`);await route.fulfill({response,body});});
  const page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));await page.goto(`${origin}/${web?'dist/':`build/yandex/${game}/`}`,{waitUntil:'networkidle'});await page.waitForSelector('.sudoku-board,.nonogram-board');return {page,context};
 }
 const saved=(p,g='sudoku')=>p.evaluate(k=>JSON.parse(localStorage.getItem(k)),progressKey(g));

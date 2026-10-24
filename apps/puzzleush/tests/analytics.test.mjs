@@ -17,3 +17,8 @@ test('missing id, personal profile and failed reporting never add a tag or inter
 test('only declared goals are sent; tag uses chosen counter with session recording disabled',()=>{
  const calls=[],host={ym:(...v)=>calls.push(v)};const send=metricaSender({enabled:true,counterId:12345,host});const a=createAnalytics({enabled:true,send});a.event('arbitrary');a.event('gameHintUsed',{technique:'single'});assert.equal(calls.length,2);assert.equal(calls[0][2].webvisor,false);assert.equal(calls[1][0],12345);assert.equal(calls[1][1],'reachGoal');assert.equal(calls[1][2],'gameHintUsed');assert.equal(new Set(GAME_EVENTS).size,GAME_EVENTS.length);
 });
+test('new tag loads the selected counter and stops sending when the loader fails',()=>{
+ const scripts=[],host={document:{createElement:()=>({}),head:{append:script=>scripts.push(script)}}};
+ const send=metricaSender({enabled:true,counterId:113771637,host});assert.equal(scripts.length,1);assert.equal(scripts[0].src,'https://mc.yandex.ru/metrika/tag.js?id=113771637');assert.equal(host.ym.a[0][0],113771637);
+ send('gameLevelStart',{});assert.equal(host.ym.a.length,2);scripts[0].onerror();send('gameActivity',{});assert.equal(host.ym.a.length,2);
+});

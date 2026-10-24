@@ -22,6 +22,8 @@ async function pageFor(g,width,height,{scale=1,level=1,video=false}={}){
  const state=fixture(g,level),puzzle=generateSudoku(level).puzzle.join('');
  await context.addInitScript(({g,state,puzzle})=>{localStorage.setItem(`kletochki-yandex-${g}-onboarding-v1`,'seen');if(!localStorage.getItem(`kletochki-yandex-${g}-progress-v2`)){localStorage.setItem(`kletochki-yandex-${g}-progress-v2`,JSON.stringify(state));if(g==='sudoku')localStorage.setItem(`kletochki-yandex-${g}-benefits-v1`,JSON.stringify({version:1,hints:3,candidates:{[puzzle]:true},readHints:{},attempts:{},receipts:[]}));}},{g,state,puzzle});
  await context.route('**/sdk.js',r=>r.fulfill({contentType:'application/javascript',body:sdkFixture}));
+ await context.route('https://mc.yandex.ru/**',r=>r.abort());
+ await context.route(`${origin}/build/yandex/${g}/`,async route=>{const response=await route.fetch();const body=(await response.text()).replace(/data-metrica="[0-9]+"/,'data-metrica="0"');await route.fulfill({response,body});});
  const page=await context.newPage();await page.goto(`${origin}/build/yandex/${g}/`,{waitUntil:'networkidle'});await page.waitForSelector('.sudoku-board,.nonogram-board');await page.evaluate(()=>document.fonts.ready);return {page,context};
 }
 function art(g,size){
@@ -56,5 +58,5 @@ try{
   execFileSync(process.env.FFMPEG||'ffmpeg',['-y','-i',raw,'-t','27','-vf','scale=1280:720,setsar=1','-c:v','libx264','-pix_fmt','yuv420p','-movflags','+faststart','-an',path.join(dir,'gameplay-16x9.mp4')],{stdio:'ignore'});
   await rm(path.join(dir,'raw-video'),{recursive:true,force:true});console.log(`${g}: icon, cover, 4 screenshots, onboarding preview, MP4`);
  }
- await writeFile(path.join(out,'README.txt'),'Материалы Клеточек 1.2.1. Скриншоты и видео сняты с реального интерфейса общих сборок. Ответы SDK при локальной съёмке тестовые, настоящая реклама не записана и не проверена. mobile-*.png 720×1280; desktop-*.png 1280×720; icon 512×512; cover 800×470. onboarding-preview — дополнительный предпросмотр, не скриншот геймплея для каталога.\n');
+ await writeFile(path.join(out,'README.txt'),'Материалы Клеточек 1.2.2. Скриншоты и видео сняты с реального интерфейса общих сборок. Ответы SDK при локальной съёмке тестовые, настоящая реклама не записана и не проверена. mobile-*.png 720×1280; desktop-*.png 1280×720; icon 512×512; cover 800×470. onboarding-preview — дополнительный предпросмотр, не скриншот геймплея для каталога.\n');
 }finally{await browser.close();}
