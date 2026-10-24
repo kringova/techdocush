@@ -30,3 +30,5 @@ public/
 /static/play/
 !/apps/puzzleush/dist/
 !/apps/puzzleush/dist/**
+!/apps/corio/dist/
+!/apps/corio/dist/**

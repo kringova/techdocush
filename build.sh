@@ -7,6 +7,8 @@ set -e
 node --test apps/puzzleush/tests/*.test.mjs
 node apps/puzzleush/scripts/build-yandex.mjs
 node apps/puzzleush/scripts/sync-to-site.mjs --site-directory .
+node --test apps/corio/tests/*.test.mjs
+node apps/corio/scripts/sync-to-site.mjs --site-directory .
 
 echo "🚀 Начинаем гибридный билд..."
 

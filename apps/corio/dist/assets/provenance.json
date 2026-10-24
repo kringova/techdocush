@@ -1,0 +1,53 @@
+{
+  "tool": "built-in image_gen",
+  "direction": "C",
+  "status": "prototype-assets",
+  "assets": [
+    {
+      "file": "player-v1.png",
+      "sha256": "47d335246fd0f6862f650be3be74ae21e9a4ef74494c5f4ac08d619eb5804316",
+      "role": "Single fixed-view cat sprite, transparent background"
+    },
+    {
+      "file": "poses-v3.png",
+      "sha256": "ea8627661ebb780fc922a3fae6e6ced6a5f3616a45b9f3cc34a2655d987b420b",
+      "role": "Back-lying wink and stretching yawn; used in the completion screen"
+    },
+    {
+      "file": "yarn-v1.png",
+      "sha256": "d6a439a1e9caec5610808bc30866b10baa3d256c5d1e4f20f81a5a89ca804edf",
+      "role": "Original shelf-sorting item",
+      "promptSet": "visual/characters/shelf-item-prompts.json"
+    },
+    {
+      "file": "bowl-v1.png",
+      "sha256": "c0fabd8125149335bf0f35b9ed9a9fb3857beee23c989cff7361ea577eb7360d",
+      "role": "Original shelf-sorting item",
+      "promptSet": "visual/characters/shelf-item-prompts.json"
+    },
+    {
+      "file": "brush-v1.png",
+      "sha256": "a91d3e9dbf6025a3d9111344763d630e093d77f1eb9b7db0aa9d0f03c2830d45",
+      "role": "Original shelf-sorting item",
+      "promptSet": "visual/characters/shelf-item-prompts.json"
+    }
+  ],
+  "furniture": "Original code-drawn plan-view furniture; collision geometry matches footprints",
+  "note": "Visual studies and generated assets do not certify exclusive rights or Yandex Games moderation.",
+  "music": {
+    "id": "cozy-room-v1",
+    "file": "cozy-room-v1.mp3",
+    "method": "Original procedural composition and synthesis; no third-party recording or samples",
+    "durationSeconds": 60,
+    "bpm": 64,
+    "sampleRate": 44100,
+    "channels": 2,
+    "peak": 0.4997855919237039,
+    "rms": 0.12,
+    "score": "16 bars, soft synthesized keys and sustained voicings, no drums or vocals",
+    "generator": "tools/make-cozy-music.mjs",
+    "playback": "User-controlled, low default volume, pauses when hidden or blurred",
+    "sha256": "5fb1dfef5b9975df464a3b7e330d1a6061f48c8c5cbe4f4f1fa22161702e67f8"
+  },
+  "recordedAt": "2026-10-24T20:12:34.546Z"
+}
