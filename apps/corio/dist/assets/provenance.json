@@ -208,27 +208,27 @@
       },
       {
         "id": "bells",
-        "file": "bells-v1.mp3",
-        "sha256": "46c6172ebdf691acfb5360c8acde40e2d4c6e785880dd84dbfe6285a06adc4a6",
-        "bytes": 1201228,
-        "method": "Original sparse modal bell synthesis: sixteen soft single or paired notes, slow attacks, long lightly beating tails and restrained metallic overtones. Aligned to the existing 64 BPM harmony; no samples or acoustic recording.",
+        "file": "bells-v2.mp3",
+        "sha256": "a9fdcd59b66cc53da2f278216ed3e40fe22e0c6f6df133092d31252ceb7a4e9f",
+        "bytes": 1201229,
+        "method": "Original sparse modal bell synthesis v2 after user reported v1 inaudible: higher register, clearer 6 ms attack, audible upper metal modes and stronger level. Sixteen sparse notes in the same 64 BPM harmony; no samples or acoustic recording.",
         "pcm": {
-          "peak": 0.15378454327583313,
-          "rms": 0.027999999999748146,
-          "meanLeft": -2.687759308675563e-10,
-          "meanRight": -3.128934857349687e-10,
-          "seamStep": 0.0017354581505060196,
-          "largestAdjacentStep": 0.015210006851702929
+          "peak": 0.5873792767524719,
+          "rms": 0.0850000000041897,
+          "meanLeft": 1.3832416038316849e-11,
+          "meanRight": -4.7858910192734085e-11,
+          "seamStep": 0.003839295357465744,
+          "largestAdjacentStep": 0.16098622977733612
         },
         "decoded": {
           "frames": 2646000,
           "durationSeconds": 60,
-          "peak": 0.14609839022159576,
-          "rms": 0.026598892697982907,
-          "meanLeft": -6.0580552120033335e-09,
-          "meanRight": -7.980981788000172e-09,
-          "seamStep": 0.0013466309756040573,
-          "largestAdjacentStep": 0.014432622585445642
+          "peak": 0.5585731267929077,
+          "rms": 0.08074473626027463,
+          "meanLeft": -7.527537444937122e-09,
+          "meanRight": 4.7935780107927485e-08,
+          "seamStep": 0.0028071203269064426,
+          "largestAdjacentStep": 0.1529121808707714
         },
         "encoding": {
           "format": "MP3",
@@ -250,6 +250,6 @@
       "listening": "No human listening study or claim of a medically calming effect.",
       "limitation": "Synthetic kalimba is not an acoustic instrument recording. Purr v3 is a real library cat, not the user’s cat. Technical checks do not establish user listening acceptance."
     },
-    "updatedAt": "2026-10-24T21:11:53.399Z"
+    "updatedAt": "2026-10-24T21:27:41.320Z"
   }
 }
