@@ -30,6 +30,18 @@
       "sha256": "a91d3e9dbf6025a3d9111344763d630e093d77f1eb9b7db0aa9d0f03c2830d45",
       "role": "Original shelf-sorting item",
       "promptSet": "visual/characters/shelf-item-prompts.json"
+    },
+    {
+      "file": "evening-room-v1.png",
+      "sha256": "ff3bb7ebb33f5f12a5829f149d7caad6b51c6017f5ae0877fa2b6d27b785f402",
+      "role": "Evening storefront scene; draft, not an approved model sheet",
+      "tool": "built-in image_gen",
+      "promptSet": "visual/characters/corio-evening-scene-prompt-v1.txt",
+      "inputs": [
+        "visual/assets/c-night-bureau-v2.png",
+        "visual/assets/a-window-house-v1.png"
+      ],
+      "review": "White coat, blue eyes and short grey curled tail visible. Warm lamp at left and navy evening window. Texture and room detail denser than the C anchor; keep as storefront draft, not a sprite reference."
     }
   ],
   "furniture": "Original code-drawn plan-view furniture; collision geometry matches footprints",
@@ -49,5 +61,163 @@
     "playback": "User-controlled, low default volume, pauses when hidden or blurred",
     "sha256": "5fb1dfef5b9975df464a3b7e330d1a6061f48c8c5cbe4f4f1fa22161702e67f8"
   },
-  "recordedAt": "2026-10-24T20:12:34.546Z"
+  "recordedAt": "2026-10-24T20:51:52.130658+00:00",
+  "audioLayers": {
+    "version": 4,
+    "createdAt": "2026-10-24T20:58:51.091Z",
+    "generator": "tools/make-ambient-layers.mjs",
+    "durationSeconds": 60,
+    "sampleRate": 44100,
+    "channels": 2,
+    "synchronization": {
+      "bpm": 64,
+      "beats": 64,
+      "bars": 16,
+      "chordWindowSeconds": 7.5,
+      "alignedWith": "cozy-room-v1.mp3",
+      "instruction": "Start or resume all decoded buffers at the same logical offset modulo 60 seconds."
+    },
+    "provenance": "Kalimba, keys, rain and wind are original procedural synthesis. Purr v3 uses Joseph SARDIN’s real-cat recording under CC0; details are attached to the purr layer.",
+    "layers": [
+      {
+        "id": "kalimba",
+        "file": "kalimba-v1.mp3",
+        "sha256": "3ebd75bd5e6311224ca7a714de8e826894fc02ed627f550fa4f97c0f49fc3b08",
+        "bytes": 1201222,
+        "method": "Original sparse modal tine synthesis with damped inharmonic modes, a quiet wooden resonator and circular stereo reflections; not a recording of an acoustic instrument.",
+        "pcm": {
+          "peak": 0.22686003148555756,
+          "rms": 0.05199999999896784,
+          "meanLeft": 6.446679253634279e-10,
+          "meanRight": 5.653305433244141e-10,
+          "seamStep": 0.0018291473388671875,
+          "largestAdjacentStep": 0.021282831206917763
+        },
+        "decoded": {
+          "frames": 2646000,
+          "durationSeconds": 60,
+          "peak": 0.21552924811840057,
+          "rms": 0.04939852899237797,
+          "meanLeft": 1.6406272508760968e-08,
+          "meanRight": -2.915411167065063e-08,
+          "seamStep": 0.0017393268644809723,
+          "largestAdjacentStep": 0.020158632192760706
+        },
+        "encoding": {
+          "format": "MP3",
+          "bitrateKbps": 160,
+          "sampleRate": 44100,
+          "channels": 2
+        }
+      },
+      {
+        "id": "rain",
+        "file": "rain-v1.mp3",
+        "sha256": "187b6f19cdb61328d01f5f10a75d31b9470e63c0940c51553037b2f1c15f7710",
+        "bytes": 1201219,
+        "method": "Original seeded, filtered pink noise with a fine diffuse rain character and gentle level variation; no field recording, thunder, or samples.",
+        "pcm": {
+          "peak": 0.2971198558807373,
+          "rms": 0.0549999999998749,
+          "meanLeft": -5.054088299953654e-10,
+          "meanRight": 4.5395536630893937e-10,
+          "seamStep": 0.04309597611427307,
+          "largestAdjacentStep": 0.06102536851540208
+        },
+        "decoded": {
+          "frames": 2646000,
+          "durationSeconds": 60,
+          "peak": 0.2724195122718811,
+          "rms": 0.05231171203820593,
+          "meanLeft": 3.3602144898761615e-06,
+          "meanRight": -7.988812686721601e-06,
+          "seamStep": 0.02878592163324356,
+          "largestAdjacentStep": 0.06695017963647842
+        },
+        "encoding": {
+          "format": "MP3",
+          "bitrateKbps": 160,
+          "sampleRate": 44100,
+          "channels": 2
+        }
+      },
+      {
+        "id": "wind",
+        "file": "wind-v1.mp3",
+        "sha256": "172b2b9e9259bb98164c8504d86277632b3e53f4fa58e7e0e95607d88da828ce",
+        "bytes": 1201219,
+        "method": "Original seeded pink noise with a lower moving cutoff and slow smooth gusts; no field recording or samples.",
+        "pcm": {
+          "peak": 0.22111879289150238,
+          "rms": 0.04200000000105483,
+          "meanLeft": 3.1283257199849676e-10,
+          "meanRight": -1.1563047587033816e-10,
+          "seamStep": 0.0019358550198376179,
+          "largestAdjacentStep": 0.008484698832035065
+        },
+        "decoded": {
+          "frames": 2646000,
+          "durationSeconds": 60,
+          "peak": 0.2097516804933548,
+          "rms": 0.03990045353189665,
+          "meanLeft": -4.58489117583078e-06,
+          "meanRight": 4.31319597441791e-06,
+          "seamStep": 0.001985898707062006,
+          "largestAdjacentStep": 0.00872015580534935
+        },
+        "encoding": {
+          "format": "MP3",
+          "bitrateKbps": 160,
+          "sampleRate": 44100,
+          "channels": 2
+        }
+      },
+      {
+        "id": "purr",
+        "file": "purr-v3.mp3",
+        "sha256": "668dccc078b135ff8a8412e2f49e139723b864cf1525d2aed116296f5d15be8e",
+        "method": "Real cat recording with natural breath and timbre variation; minimally processed loop, replacing synthetic v1/v2 after user feedback.",
+        "title": "Cat Purring #3",
+        "author": "Joseph SARDIN",
+        "provider": "BigSoundBank / LaSonothèque",
+        "sourcePage": "https://bigsoundbank.com/ronronnement-de-chat-3-s1010.html",
+        "download": "https://bigsoundbank.com/UPLOAD/bwf-en/1010.wav",
+        "license": "CC0-1.0",
+        "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "providerLicensePage": "https://bigsoundbank.com/licenses.html",
+        "verifiedAt": "2026-10-24T20:58:51.073Z",
+        "sourceSha256": "3d26be9fa79028ef5649750d09f363412386b802168fe95b4315794901927f0b",
+        "evidence": "The author’s sound page labels file 1010 CC0. Provider license page allows commercial use, editing and redistribution without permission. Credits retained voluntarily.",
+        "edits": "Excerpt at 12 s, 62 s long; 35 Hz high-pass and 4.8 kHz low-pass; two-second equal-power loop overlap; gain adjustment; mono source duplicated to stereo; no speed or pitch change.",
+        "catIdentity": "A library recording of a real cat; not a recording of the user’s cat.",
+        "decoded": {
+          "frames": 2646000,
+          "durationSeconds": 60,
+          "peak": 0.4558441638946533,
+          "rms": 0.03788604168165349,
+          "seamStep": 0.002631744369864464,
+          "largestAdjacentStep": 0.06689991056919098
+        },
+        "encoding": {
+          "format": "MP3",
+          "bitrateKbps": 160,
+          "sampleRate": 44100,
+          "channels": 2
+        },
+        "generator": "tools/prepare-recorded-purr.mjs"
+      }
+    ],
+    "validation": {
+      "checks": [
+        "Finite PCM and encoded samples",
+        "PCM headroom and RMS",
+        "Exactly 2646000 decoded stereo frames per layer",
+        "60-second decoded duration",
+        "Encoded peak below 0.85",
+        "Loop seam is not larger than ordinary adjacent-sample changes"
+      ],
+      "listening": "No human listening study or claim of a medically calming effect.",
+      "limitation": "Synthetic kalimba is not an acoustic instrument recording. Purr v3 is a real library cat, not the user’s cat. Technical checks do not establish user listening acceptance."
+    }
+  }
 }

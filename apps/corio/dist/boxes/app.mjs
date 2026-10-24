@@ -1,4 +1,5 @@
-import {SIZE,LEVELS,createGame,move,covered,unlocked} from './game-engine.mjs';
+import {createModeController} from '../modes.mjs';
+import {SIZE,LEVELS,createGame,move,covered,unlocked,findPath} from './game-engine.mjs';
 
 const $=selector=>document.querySelector(selector);
 const canvas=$('#board'),ctx=canvas.getContext('2d'),overlay=$('#overlay');
@@ -7,6 +8,7 @@ let WORLD=LEVELS[0].size*C;
 canvas.width=WORLD;canvas.height=WORLD;
 const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
 let game=createGame(),phase='loading',facing=1,visual={x:game.x,y:game.y},transition=null,held=null,holdAt=0,pressedButton=null,history=[];
+let modes=null,platformPhase=null;
 let soundEnabled=false,audio=null,blockedAt=-1000,noticeAt=0,lastTime=0,overlayAction=null;
 const progressKey='corio-box-puzzle-50-v1';
 let best=Array(LEVELS.length).fill(null);
@@ -34,7 +36,7 @@ function furniture(p){
   if(p.kind==='sofa'){
     round(bg,x,y,w,h,10,'#9cafa0');
     const horizontal=w>=h,n=Math.max(1,Math.round((horizontal?w:h)/78));
-    round(bg,x+7,y+7,w-14,h-14,6,'#b4c0ab',INK,1.5);
+    round(bg,x+7,y+7,w-14,h-14,6,'#a3b298',INK,1.5);
     for(let i=1;i<n;i++){
       bg.beginPath();if(horizontal){const z=x+10+(w-20)*i/n;bg.moveTo(z,y+9);bg.lineTo(z,y+h-10);}else{const z=y+10+(h-20)*i/n;bg.moveTo(x+9,z);bg.lineTo(x+w-10,z);}bg.strokeStyle='#153c4d80';bg.lineWidth=1.5;bg.stroke();
     }
@@ -51,7 +53,7 @@ function furniture(p){
     }
     bg.strokeStyle=INK;bg.lineWidth=3;bg.strokeRect(x+2,y+2,w-4,h-4);
   }else if(p.kind==='table'){
-    round(bg,x,y,w,h,12,'#d99852');round(bg,x+7,y+7,w-14,h-14,8,'#dca76b',INK,1);
+    round(bg,x,y,w,h,12,'#c18f5b');round(bg,x+7,y+7,w-14,h-14,8,'#dca76b',INK,1);
     bg.strokeStyle='#b98047';bg.lineWidth=1;
     for(let i=0;i<3;i++){bg.beginPath();bg.moveTo(x+15,y+14+i*(h-28)/3);bg.lineTo(x+w-16,y+17+i*(h-28)/3);bg.stroke();}
     const bx=x+w*.58,by=y+h*.45;round(bg,bx-16,by-10,27,21,2,'#153c4d');round(bg,bx-20,by-17,29,21,2,'#f4ead4',INK,1.5);
@@ -62,9 +64,9 @@ function furniture(p){
   }
 }
 function drawBackground(){
-  bg.clearRect(0,0,WORLD,WORLD);bg.fillStyle='#f0e2c8';bg.fillRect(0,0,WORLD,WORLD);
+  bg.clearRect(0,0,WORLD,WORLD);bg.fillStyle='#dbc7a2';bg.fillRect(0,0,WORLD,WORLD);
   for(let row=0;row<WORLD/30;row++){
-    bg.fillStyle=row%3===0?'#e7d6b6':'#efe1c5';bg.fillRect(0,row*30,WORLD,30);
+    bg.fillStyle=row%3===0?'#ceb68e':'#ddcaa5';bg.fillRect(0,row*30,WORLD,30);
     bg.strokeStyle='#c4a67855';bg.lineWidth=1;bg.beginPath();bg.moveTo(0,row*30);bg.lineTo(WORLD,row*30);bg.stroke();
     for(let col=0;col<Math.ceil(WORLD/150)+1;col++){const x=col*150+(row%2)*75;bg.beginPath();bg.moveTo(x,row*30);bg.lineTo(x,row*30+30);bg.stroke();}
   }
@@ -76,6 +78,7 @@ function drawBackground(){
   bg.fillStyle='#b58a53';bg.fillRect(dx,dy,52,55);
   round(bg,dx+6,dy+5,40,45,2,'#d8b379',INK,1.5);
   round(bg,level.exit.x*C+4,level.exit.y*C+3,52,53,4,'#d9985228','#d9985270',1);
+  const light=bg.createRadialGradient(WORLD*.16,WORLD*.05,0,WORLD*.16,WORLD*.05,WORLD*.95);light.addColorStop(0,'#ffdf9d18');light.addColorStop(1,'#1737440b');bg.fillStyle=light;bg.fillRect(55,55,WORLD-110,WORLD-110);
   level.props.forEach(furniture);
   bg.fillStyle='#153c4d10';for(let i=0;i<600;i++){const x=(i*73+19)%(WORLD-110)+55,y=(i*137+47)%(WORLD-110)+55;bg.fillRect(x,y,1,1);}
 }
@@ -127,14 +130,15 @@ function refresh(){
   canvas.setAttribute('aria-label',`${level.name}. Кот: столбец ${game.x}, ряд ${game.y}. Дверь: столбец ${level.exit.x}, ряд ${level.exit.y}. Шагов: ${game.moves}.`);
 }
 function loadLevel(index){
-  window.dispatchEvent(new Event('corio:resume'));clearHold();if(overlay.open)overlay.close();game=createGame(index);WORLD=LEVELS[index].size*C;resizeRendering(true);history=[];phase='playing';visual={x:game.x,y:game.y};transition=null;facing=LEVELS[index].exit.x>game.x?-1:1;noticeAt=0;$('#status').textContent='Поставь коробки на круглые коврики.';drawBackground();refresh();
+  window.dispatchEvent(new Event('corio:resume'));clearHold();if(overlay.open)overlay.close();game=createGame(index);modes?.newAttempt(findPath(LEVELS[index]).length);WORLD=LEVELS[index].size*C;resizeRendering(true);history=[];phase='playing';visual={x:game.x,y:game.y};transition=null;facing=LEVELS[index].exit.x>game.x?-1:1;noticeAt=0;$('#status').textContent='Поставь коробки на круглые коврики.';drawBackground();refresh();
 }
-function undo(){if(!history.length||!['playing','won'].includes(phase))return;clearHold();game=history.pop();transition=null;visual={x:game.x,y:game.y};phase='playing';if(overlay.open)overlay.close();$('#status').textContent='Ход отменён.';noticeAt=performance.now();refresh();}
+function undo(){if(!history.length||!['playing','won'].includes(phase))return;clearHold();game=history.pop();transition=null;visual={x:game.x,y:game.y};phase='playing';if(overlay.open)overlay.close();$('#status').textContent='Ход отменён.';noticeAt=performance.now();refresh();modes?.changed();}
 function step(direction){
   if(phase!=='playing'||$('#level-picker').open||transition)return;
+  if(modes&&!modes.guard())return;
   const next=move(game,direction);if(next===game){blockedAt=performance.now();$('#status').textContent='Тут не пройти. Попробуй другой проход.';noticeAt=performance.now();tone('blocked');return;}
   if(direction==='left')facing=1;if(direction==='right')facing=-1;
-  history.push(game);transition={x:visual.x,y:visual.y,start:performance.now()};game=next;tone('step');refresh();
+  history.push(game);transition={x:visual.x,y:visual.y,start:performance.now()};game=next;tone('step');refresh();modes?.changed();
   if(unlocked(game))$('#status').textContent='Все коврики заняты. Дверь открыта.';
   else if(game.x===LEVELS[game.levelIndex].exit.x&&game.y===LEVELS[game.levelIndex].exit.y)$('#status').textContent='Дверь закрыта: займи коробками все коврики.';
   if(game.won){
@@ -171,7 +175,7 @@ for(const button of document.querySelectorAll('[data-direction]')){
 const keyDirections={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',KeyW:'up',KeyS:'down',KeyA:'left',KeyD:'right'};
 document.addEventListener('keydown',event=>{
   if(event.ctrlKey||event.metaKey||event.altKey)return;
-  if($('#level-picker').open)return;
+  if($('#level-picker').open||modes?.isModalOpen())return;
   if(event.code==='Escape'){if(phase==='playing'){event.preventDefault();pause();}return;}
   if(overlay.open||$('#level-picker').open)return;
   const direction=keyDirections[event.code];
@@ -193,4 +197,8 @@ canvas.addEventListener('pointerup',event=>{
 canvas.addEventListener('pointercancel',()=>{touch=null;clearHold();});
 // Read-only state is available for prototype verification, never for moving the cat.
 Object.defineProperty(window,'__corio',{value:()=>({...game,boxes:game.boxes.map(b=>({...b})),phase,soundEnabled,animating:!!transition,undoDepth:history.length,covered:covered(LEVELS[game.levelIndex],game.boxes),unlocked:unlocked(game),best:[...best],assetsReady:sprite.complete&&sprite.naturalWidth>0}),writable:false});
+modes=createModeController({gameId:'boxes',host:document.querySelector('[data-modes]'),getMoves:()=>game.moves,isWon:()=>game.won,canUndo:()=>history.length>0,onUndo:undo,onRestart:()=>loadLevel(game.levelIndex),onBlock:clearHold,getSDK:async()=>window.__corioSDK||null});
+Object.defineProperty(window,'__corioModes',{value:()=>modes.state()});
+window.addEventListener('corio:platform-pause',()=>{if(platformPhase===null)platformPhase=phase;phase='platform';clearHold();window.dispatchEvent(new Event('corio:pause'));});
+window.addEventListener('corio:platform-resume',()=>{if(platformPhase!==null){phase=platformPhase;platformPhase=null;if(phase!=='paused')window.dispatchEvent(new Event('corio:resume'));}});
 try{await sprite.decode();$('#loading').hidden=true;loadLevel(0);requestAnimationFrame(render);}catch{phase='error';$('#loading').textContent='Не загрузился кот. Обнови страницу.';}

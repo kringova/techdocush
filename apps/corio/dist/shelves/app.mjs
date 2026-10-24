@@ -1,5 +1,7 @@
-import {ITEMS,SHELF_LEVELS,createShelfGame,transfer} from './engine.mjs';
+import {createModeController} from '../modes.mjs';
+import {ITEMS,SHELF_LEVELS,createShelfGame,transfer,solveShelf} from './engine.mjs';
 const $=s=>document.querySelector(s),board=$('#shelves'),win=$('#win');
+let modes=null,platformPaused=false;
 let state=createShelfGame(),selected=-1,history=[],drag=null,ghost=null,ignoreClickUntil=0;
 let best=Array(SHELF_LEVELS.length).fill(null);
 try{const saved=JSON.parse(localStorage.getItem('corio-shelves-v1'));if(Array.isArray(saved))best=best.map((_,i)=>Number.isInteger(saved[i])&&saved[i]>0?saved[i]:null);}catch{}
@@ -16,23 +18,24 @@ function render(){
   for(const button of $('#levels').children)button.setAttribute('aria-current',String(+button.dataset.level===state.index));
 }
 function status(text){$('#status').textContent=text;}
-function load(index){clearDrag();ignoreClickUntil=0;if(win.open)win.close();state=createShelfGame(index);selected=-1;history=[];render();status('Сначала выбери полку с предметом, затем полку для него.');}
+function load(index){clearDrag();ignoreClickUntil=0;if(win.open)win.close();state=createShelfGame(index);modes?.newAttempt(solveShelf(index).length);selected=-1;history=[];render();status('Сначала выбери полку с предметом, затем полку для него.');}
 function finish(){
   best[state.index]=Math.min(best[state.index]??Infinity,state.moves);try{localStorage.setItem('corio-shelves-v1',JSON.stringify(best));}catch{}
   $('#win-copy').textContent=`Всего перестановок: ${state.moves}. Все вещи собраны по видам.`;$('#next').textContent=state.index===SHELF_LEVELS.length-1?'Начать с первой':'Следующая раскладка';win.showModal();
 }
 function put(from,to){
+  if(platformPaused||modes&&!modes.guard())return false;
   const next=transfer(state,from,to);
   if(next===state){status('Поставь рядом с таким же предметом или на свободную полку.');return false;}
-  history.push(state);state=next;selected=-1;render();status('Предмет на новом месте.');if(state.won)finish();return true;
+  history.push(state);state=next;selected=-1;render();status('Предмет на новом месте.');modes?.changed();if(state.won)finish();return true;
 }
 function choose(index){
-  if(state.won)return;
+  if(state.won||platformPaused||modes?.isModalOpen())return;
   if(selected===index){selected=-1;render();status('Выбор снят.');return;}
   if(selected<0){if(!state.shelves[index].length){status('Здесь свободно. Сначала выбери предмет.');return;}selected=index;render();status(`Выбрано: ${ITEMS[state.shelves[index].at(-1)].name.toLowerCase()}. Теперь выбери полку для него.`);}
   else put(selected,index);
 }
-function undo(){if(!history.length)return;if(win.open)win.close();state=history.pop();selected=-1;render();status('Перестановка отменена.');}
+function undo(){if(platformPaused||!history.length)return;if(win.open)win.close();state=history.pop();selected=-1;render();status('Перестановка отменена.');modes?.changed();}
 board.addEventListener('click',event=>{
   if(performance.now()<ignoreClickUntil)return;
   const shelf=event.target.closest('[data-shelf]'),slot=event.target.closest('.slot');
@@ -59,7 +62,11 @@ board.addEventListener('pointerup',event=>{
 board.addEventListener('pointercancel',clearDrag);window.addEventListener('blur',clearDrag);
 $('#undo').addEventListener('click',undo);$('#restart').addEventListener('click',()=>load(state.index));$('#next').addEventListener('click',()=>load((state.index+1)%SHELF_LEVELS.length));
 win.addEventListener('cancel',event=>{event.preventDefault();});
-document.addEventListener('keydown',event=>{if(event.ctrlKey||event.metaKey||event.altKey)return;if(event.code==='KeyZ'){event.preventDefault();undo();}if(event.code==='KeyR'&&!win.open){event.preventDefault();load(state.index);}});
+document.addEventListener('keydown',event=>{if(platformPaused||modes?.isModalOpen()||event.ctrlKey||event.metaKey||event.altKey)return;if(event.code==='KeyZ'){event.preventDefault();undo();}if(event.code==='KeyR'&&!win.open){event.preventDefault();load(state.index);}});
 for(let index=0;index<SHELF_LEVELS.length;index++){const button=document.createElement('button');button.textContent=index+1;button.dataset.level=index;button.setAttribute('aria-label',`Раскладка ${index+1}: ${SHELF_LEVELS[index].name}`);button.addEventListener('click',()=>load(index));$('#levels').append(button);}
 Object.defineProperty(window,'__shelves',{value:()=>({...state,shelves:state.shelves.map(s=>[...s]),selected,undoDepth:history.length,best:[...best],capacity:SHELF_LEVELS[state.index].capacity})});
+modes=createModeController({gameId:'shelves',host:document.querySelector('[data-modes]'),getMoves:()=>state.moves,isWon:()=>state.won,canUndo:()=>history.length>0,onUndo:undo,onRestart:()=>load(state.index),onBlock:clearDrag,getSDK:async()=>window.__corioSDK||null});
+Object.defineProperty(window,'__corioModes',{value:()=>modes.state()});
+window.addEventListener('corio:platform-pause',()=>{platformPaused=true;clearDrag();window.dispatchEvent(new Event('corio:pause'));});
+window.addEventListener('corio:platform-resume',()=>{platformPaused=false;window.dispatchEvent(new Event('corio:resume'));});
 load(0);
