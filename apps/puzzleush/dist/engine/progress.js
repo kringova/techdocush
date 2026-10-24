@@ -1,5 +1,8 @@
-export const STORAGE_KEY='kletochki-progress-v2';
+export const STORAGE_KEY='kletochki-progress-v3';
+export const V2_STORAGE_KEY='kletochki-progress-v2';
 export const LEGACY_STORAGE_KEY='kletochki-progress-v1';
+export {WORDSEARCH_CHAPTERS} from './wordsearch.js';
+import {WORDSEARCH_CHAPTERS} from './wordsearch.js';
 export const SUDOKU_CHAPTERS=[
  {start:1,end:5,label:'Базовый'},
  {start:6,end:10,label:'Средний'},
@@ -13,7 +16,7 @@ export const NONOGRAM_CHAPTERS=[
  {start:26,end:30,label:'20 × 20'}
 ];
 export function chapterFor(game,level){
- const chapters=game==='sudoku'?SUDOKU_CHAPTERS:NONOGRAM_CHAPTERS;
+ const chapters=game==='sudoku'?SUDOKU_CHAPTERS:game==='wordsearch'?WORDSEARCH_CHAPTERS:NONOGRAM_CHAPTERS;
  const index=chapters.findIndex(c=>level>=c.start&&level<=c.end);
  return {...chapters[index<0?0:index],index:index<0?0:index};
 }
@@ -34,4 +37,10 @@ function migrateGame(old,map){
 export function migrateProgressV1(old){
  if(!old||old.version!==1)throw Error('Unsupported legacy progress');
  return {version:2,activeGame:old.activeGame==='nonogram'?'nonogram':'sudoku',sudoku:migrateGame(old.sudoku,SUDOKU_MAP),nonogram:migrateGame(old.nonogram,NONOGRAM_MAP),legacyCompleted:{sudoku:keys(old.sudoku.completed).length,nonogram:keys(old.nonogram.completed).length}};
+}
+// Adding the third game uses a new key, so an older open tab cannot overwrite
+// word-search progress. v1 and v2 remain byte-for-byte recovery copies.
+export function migrateProgressV2(old){
+ if(!old||old.version!==2)throw Error('Unsupported progress version');
+ const next=structuredClone(old);next.version=3;next.wordsearch??={level:1,completed:{},saves:{}};next.legacyCompleted??={sudoku:0,nonogram:0};next.legacyCompleted.wordsearch??=0;return next;
 }

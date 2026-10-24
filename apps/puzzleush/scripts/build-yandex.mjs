@@ -14,13 +14,13 @@ async function files(dir,prefix=''){const out=[];for(const entry of await readdi
 const sourceFiles=await files(source),sourceHashes=Object.fromEntries(await Promise.all(sourceFiles.map(async name=>[name,sha(await readFile(path.join(source,name)))])));
 const sharedHash=sha(JSON.stringify(sourceHashes));
 await mkdir(output,{recursive:true});
-for(const game of ['sudoku','nonogram']){
+for(const game of ['sudoku','nonogram','wordsearch']){
  const dir=path.join(output,game);await rm(dir,{recursive:true,force:true});await cp(source,dir,{recursive:true});
  let html=await readFile(path.join(dir,'index.html'),'utf8');
  html=html.replace('<html lang="ru">',`<html lang="ru" data-platform="yandex" data-game="${game}" data-metrica="${counterId}">`)
   .replace('<body>','<body data-platform="yandex">')
-  .replace(/<title>.*?<\/title>/,`<title>Клеточки: ${game==='sudoku'?'Судоку с объяснениями':'Японские кроссворды'}</title>`)
-  .replace('</head>','<link rel="stylesheet" href="./platform/yandex.css"><script src="/sdk.js"></script></head>')
+  .replace(/<title>.*?<\/title>/,`<title>Клеточки: ${game==='sudoku'?'Судоку с объяснениями':game==='wordsearch'?'Поиск слов':'Японские кроссворды'}</title>`)
+  .replace('</head>',`<link rel="stylesheet" href="./platform/yandex.css?v=${version}"><script src="/sdk.js"></script></head>`)
   .replace(/<footer class="site-footer">[\s\S]*?<\/footer>/,'');
  await writeFile(path.join(dir,'index.html'),html);
  let css=await readFile(path.join(dir,'style.css'),'utf8');

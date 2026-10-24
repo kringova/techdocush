@@ -2,9 +2,9 @@
 <html lang="ru">
 <head>
  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
- <meta name="theme-color" content="#f5f3ed"><meta name="description" content="Судоку с объясняющими подсказками и японские кроссворды. Проходи уровни в своём темпе.">
- <title>Клеточки — судоку и японские кроссворды</title>
- <link rel="icon" type="image/svg+xml" href="./icon.svg"><link rel="stylesheet" href="./style.css?v=1.2.2">
+ <meta name="theme-color" content="#f5f3ed"><meta name="description" content="Судоку с объяснениями, японские кроссворды и поиск спрятанных слов. Проходи уровни в своём темпе.">
+ <title>Клеточки — судоку, японские и поиск слов</title>
+ <link rel="icon" type="image/svg+xml" href="./icon.svg"><link rel="stylesheet" href="./style.css?v=1.3.0">
 </head>
 <body>
 <svg class="icon-sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
@@ -20,18 +20,20 @@
  <symbol id="i-restart" viewBox="0 0 24 24"><path d="M4 10a8 8 0 1 1 0 6M4 3v7h7"/></symbol>
  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></symbol>
  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 6v2"/></symbol>
+ <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10" cy="10" r="7"/><path d="m15 15 6 6"/></symbol>
  <symbol id="i-pan" viewBox="0 0 24 24"><path d="M12 3v18M3 12h18m-12-6 3-3 3 3m-6 12 3 3 3-3M6 9l-3 3 3 3m12-6 3 3-3 3"/></symbol>
 </defs></svg>
 <div class="page-shell">
  <header class="site-header">
   <a class="wordmark" href="./" aria-label="Клеточки, главная"><span class="brand-tile"><i></i><i></i><i></i><i></i></span>клеточки<span class="brand-dot">.</span></a>
   <span class="header-note">маленькая пауза для себя</span>
-  <button id="progress-button" class="progress-button" aria-label="Открыть пройденные уровни"><span class="progress-mini" aria-hidden="true"></span><span id="total-progress">0 / 60</span><span class="desktop-label">пройдено</span></button>
+  <button id="progress-button" class="progress-button" aria-label="Открыть пройденные уровни"><span class="progress-mini" aria-hidden="true"></span><span id="total-progress">0 / 90</span><span class="desktop-label">пройдено</span></button>
   <button id="help-button" class="text-button" hidden>Как играть</button>
  </header>
  <nav class="game-tabs" aria-label="Выбор игры">
   <button class="game-tab active" data-game="sudoku" aria-pressed="true"><svg><use href="#i-grid"/></svg>Судоку<span class="tab-count" id="sudoku-count">0/30</span></button>
   <button class="game-tab" data-game="nonogram" aria-pressed="false"><svg><use href="#i-pixel"/></svg>Японские<span class="tab-count" id="nonogram-count">0/30</span></button>
+  <button class="game-tab" data-game="wordsearch" aria-pressed="false"><svg><use href="#i-search"/></svg>Поиск слов<span class="tab-count" id="wordsearch-count">0/30</span></button>
  </nav>
  <main>
   <div class="workspace-header">
@@ -63,6 +65,12 @@
      </div>
      <p class="touch-note">Касайся клеток или веди пальцем. На компьютере ПКМ ставит крестик.</p>
     </div>
+    <div id="wordsearch-controls" hidden>
+     <div class="word-summary"><strong id="word-progress">Найдено 0 из 4</strong><button id="wordsearch-undo" class="text-button">Отменить находку</button></div>
+     <div id="word-list" class="word-list" aria-live="polite"></div>
+     <div class="word-modes" role="group" aria-label="Как выделять слово"><button data-word-mode="drag" aria-pressed="true">Провести</button><button data-word-mode="taps" aria-pressed="false">Два касания</button></div>
+     <button id="wordsearch-hint" class="primary-button">Какое слово искать?</button>
+    </div>
     <div class="game-bottom"><button id="restart-button" class="text-button"><svg><use href="#i-restart"/></svg>Начать уровень заново</button><span class="saved-indicator" id="save-status"><i></i>сохранено</span></div>
    </section>
    <aside class="sidebar">
@@ -89,5 +97,5 @@
 <dialog id="reward-dialog" class="reward-dialog" aria-labelledby="reward-title"><div class="dialog-heading"><span class="eyebrow">НАГРАДА ЗА ПРОСМОТР РЕКЛАМЫ</span><button class="icon-button" data-close aria-label="Закрыть"><svg><use href="#i-close"/></svg></button></div><h2 id="reward-title"></h2><p id="reward-benefit" class="reward-benefit"></p><p id="reward-copy"></p><p id="reward-status" class="reward-note" role="status"></p><div class="hint-actions"><button id="reward-watch" class="primary-button">Смотреть рекламу</button><button class="secondary-button" data-close>Вернуться без просмотра</button></div></dialog>
 <dialog id="attempt-dialog" aria-labelledby="attempt-title"><div class="eyebrow">СУДОКУ · ТВОЯ ПАРТИЯ</div><h2 id="attempt-title"></h2><p id="attempt-copy"></p><div class="hint-actions"><button id="attempt-restore" class="primary-button">Продолжить за рекламу</button><button id="attempt-finish" class="secondary-button">Завершить партию</button><button id="attempt-levels" class="text-button">Выбрать другой уровень</button></div></dialog>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script type="module" src="./app.js?v=1.2.2"></script>
+<script type="module" src="./app.js?v=1.3.0"></script>
 </body></html>

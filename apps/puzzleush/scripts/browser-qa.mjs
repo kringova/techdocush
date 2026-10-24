@@ -27,14 +27,14 @@ try{
  await page.reload({waitUntil:'domcontentloaded'});assert.equal(await page.locator(`[data-cell="${empty}"]`).textContent(),String(p.solution[empty]));checks.push('manual marks, undo and saved digit survive reload');
  for(let i=0;i<81;i++)if(!p.puzzle[i]&&i!==empty){await page.locator(`[data-cell="${i}"]`).click();await page.locator(`[data-number="${p.solution[i]}"]`).click();}
  await page.locator('#complete-dialog[open]').waitFor();assert.match(await page.locator('#total-progress').textContent(),/^1 /);await page.locator('#next-level').click();assert.equal(await page.locator('#current-level').textContent(),'02');
- await page.reload({waitUntil:'domcontentloaded'});assert.equal(await page.locator('#current-level').textContent(),'02');checks.push('sudoku completion unlocks level 2 and persists progress');
+ await page.reload({waitUntil:'domcontentloaded'});assert.equal(await page.locator('#current-level').textContent(),'02');checks.push('sudoku completion opens level 2 and persists progress');
  await page.locator('[data-game="nonogram"]').click();const ng=NONOGRAMS[0],white=ng.grid.flat().indexOf(0),black=ng.grid.flat().indexOf(1);
  await page.locator(`[data-pixel="${white}"]`).click({button:'right'});assert.ok(await page.locator(`[data-pixel="${white}"]`).evaluate(e=>e.classList.contains('crossed')));
  await page.locator('#nonogram-undo').click();assert.ok(!(await page.locator(`[data-pixel="${white}"]`).evaluate(e=>e.classList.contains('crossed'))));
  await page.locator(`[data-pixel="${black}"]`).click();assert.ok(await page.locator(`[data-pixel="${black}"]`).evaluate(e=>e.classList.contains('filled')));checks.push('left click fills, right click crosses, undo reverts');
  for(let i=0;i<ng.grid.flat().length;i++)if(ng.grid.flat()[i]&&i!==black)await page.locator(`[data-pixel="${i}"]`).click();
  await page.locator('#complete-dialog[open]').waitFor();await page.locator('#next-level').click();assert.equal(await page.locator('#current-level').textContent(),'02');
- await page.reload({waitUntil:'domcontentloaded'});assert.equal(await page.locator('#current-level').textContent(),'02');checks.push('nonogram completion unlocks next level and saves separately');
+ await page.reload({waitUntil:'domcontentloaded'});assert.equal(await page.locator('#current-level').textContent(),'02');checks.push('nonogram completion opens next level and saves separately');
  await page.locator('[data-game="sudoku"]').click();await page.screenshot({path:'test-results/sudoku-desktop.png',fullPage:true});
  for(const width of [360,390,430]){
   const mobile=await browser.newContext({viewport:{width,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true});const mp=await mobile.newPage();mp.on('pageerror',e=>errors.push(e.message));

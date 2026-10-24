@@ -10,8 +10,8 @@ const origin=process.env.QA_ORIGIN||'http://127.0.0.1:4337',checks=[],errors=[];
 await mkdir('test-results/yandex',{recursive:true});
 import {sdkFixture} from './fixtures/yandex-sdk.mjs';
 const record=message=>{checks.push(message);console.log('PASS '+message);};
-const progressKey=g=>`kletochki-yandex-${g}-progress-v2`,benefitKey='kletochki-yandex-sudoku-benefits-v1';
-const fresh=()=>({version:2,activeGame:'sudoku',sudoku:{level:1,completed:{},saves:{}},nonogram:{level:1,completed:{},saves:{}},legacyCompleted:{sudoku:0,nonogram:0}});
+const progressKey=g=>`kletochki-yandex-${g}-progress-v3`,benefitKey='kletochki-yandex-sudoku-benefits-v1';
+const fresh=()=>({version:3,activeGame:'sudoku',sudoku:{level:1,completed:{},saves:{}},nonogram:{level:1,completed:{},saves:{}},legacyCompleted:{sudoku:0,nonogram:0}});
 async function open(game,{width=390,height=844,mobile=true,fixture=null,web=false,failSDK=false,analytics=false}={}){
  const context=await browser.newContext({viewport:{width,height},isMobile:mobile,hasTouch:mobile});
  await context.route('**/sdk.js',r=>failSDK?r.abort():r.fulfill({contentType:'application/javascript',body:sdkFixture}));
