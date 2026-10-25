@@ -1,8 +1,8 @@
-import {catFigure} from '../characters.mjs?v=0.8.0';
-import {createModeController} from '../modes.mjs?v=0.8.0';
-import {ITEMS,SHELF_LEVELS,createShelfGame,transfer,solveShelf} from './engine.mjs?v=0.8.0';
-import {shelfArt} from './art.mjs?v=0.8.0';
-import {setupFocusUI} from '../mini/focus.mjs?v=0.8.0';
+import {catFigure} from '../characters.mjs?v=0.8.1';
+import {createModeController} from '../modes.mjs?v=0.8.1';
+import {ITEMS,SHELF_LEVELS,createShelfGame,transfer,solveShelf} from './engine.mjs?v=0.8.1';
+import {shelfArt} from './art.mjs?v=0.8.1';
+import {setupFocusUI} from '../mini/focus.mjs?v=0.8.1';
 const $=s=>document.querySelector(s),board=$('#shelves'),win=$('#win');
 let modes=null,platformPaused=false,paused=false;
 let state=createShelfGame(),selected=-1,history=[],drag=null,ghost=null,ignoreClickUntil=0;
@@ -17,10 +17,10 @@ function render(){
     const shelf=document.createElement('section');shelf.className='shelf';shelf.dataset.shelf=index;shelf.dataset.label=`Полка ${index+1}`;shelf.tabIndex=0;shelf.setAttribute('role','button');shelf.setAttribute('aria-pressed',String(selected===index));shelf.setAttribute('aria-label',`Полка ${index+1}: ${items.length?items.map(i=>ITEMS[i].name).join(', '):'пусто'}. ${items.length?'Крайний справа: '+ITEMS[items.at(-1)].name:''}`);
     shelf.classList.toggle('selected',selected===index);shelf.classList.toggle('complete',items.length===level.capacity&&items.every(i=>i===items[0]));
     shelf.classList.toggle('can-place',selected>=0&&transfer(state,selected,index)!==state);
-    shelf.innerHTML=shelfArt('shelf','shelf-wood')+`<span class="shelf-label">Полка ${index+1}</span>`;
+    shelf.innerHTML=shelfArt('shelf','shelf-wood');
     const slots=document.createElement('div');slots.className='slots';
     items.forEach((type,slot)=>{const cell=document.createElement('span');cell.className='slot'+(slot===items.length-1?' front':'');cell.setAttribute('aria-label',ITEMS[type].name);cell.innerHTML=shelfArt(type,'shelf-item');slots.append(cell);});shelf.append(slots);
-    if(!items.length){const empty=document.createElement('span');empty.className='empty-mark';empty.textContent=selected>=0?'Можно сюда':'Свободная полка';shelf.append(empty);}
+
     board.append(shelf);
   });
   $('#moves').textContent=state.moves;$('#level-number').textContent=`${state.index+1} / ${SHELF_LEVELS.length}`;$('#level-name').textContent=level.name;$('#undo').disabled=!history.length;

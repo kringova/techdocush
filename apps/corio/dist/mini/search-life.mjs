@@ -2,7 +2,8 @@ const asset=file=>new URL('../assets/'+file,import.meta.url).href;
 export function createSearchLife({scene,isBlocked}){
   const reduced=matchMedia('(prefers-reduced-motion: reduce)');
   let timer=null,nextAt=0,animations=[],focused=document.hasFocus(),voice=true,audio=null,voiceStarts=0,voiceError=false,idleReactions=0,lastReaction=null;
-  let lampTimer=null,lampPending=null,lamp={x:400,y:260},lastLamp=0,lampUpdates=0;
+  let lampTimer=null,lampPending=null,lamp={x:400,y:260},lastLamp=0,lampUpdates=0,keyboardFocus=false;
+  function markFocus(){for(const node of scene.querySelectorAll('.search-cat,.search-object'))node.toggleAttribute('data-keyboard-focus',keyboardFocus);}
   try{voice=localStorage.getItem('corio-cat-voice-v1')!=='off';}catch{}
   const blocked=()=>!focused||document.hidden||isBlocked();
   function stopVoice(){if(audio){audio.pause();audio.currentTime=0;}}
@@ -10,8 +11,8 @@ export function createSearchLife({scene,isBlocked}){
   function unschedule(){clearTimeout(timer);timer=null;nextAt=0;}
   function schedule(){
     if(timer||animations.length||blocked()||reduced.matches)return;
-    const delay=15000+Math.random()*15000;nextAt=performance.now()+delay;
-    timer=setTimeout(()=>{timer=null;nextAt=0;if(!blocked()){idleReactions++;react(Math.random()<.6?'eyes':'ear');}},delay);
+    const delay=8000+Math.random()*4000;nextAt=performance.now()+delay;
+    timer=setTimeout(()=>{timer=null;nextAt=0;if(!blocked()){idleReactions++;react(lastReaction==='eyes'?'ear':'eyes');}},delay);
   }
   function react(part){
     if(blocked())return;unschedule();stopAnimation();lastReaction=part;
@@ -53,6 +54,8 @@ export function createSearchLife({scene,isBlocked}){
     else schedule();
   }
   scene.addEventListener('pointermove',pointer,{passive:true});scene.addEventListener('pointerdown',pointer,{passive:true});
+  document.addEventListener('pointerdown',()=>{keyboardFocus=false;markFocus();},{passive:true});
+  document.addEventListener('keydown',event=>{if(['Tab','Enter',' '].includes(event.key)){keyboardFocus=true;markFocus();}});
   scene.addEventListener('focusin',event=>{const target=event.target.closest('[data-find],[data-cat-react]');if(!target)return;const rect=target.querySelector('rect');setLamp(+rect.getAttribute('x')+Number(rect.getAttribute('width'))/2,+rect.getAttribute('y')+Number(rect.getAttribute('height'))/2,true);});
   document.addEventListener('visibilitychange',reconcile);
   window.addEventListener('blur',()=>{focused=false;reconcile();});window.addEventListener('focus',()=>{focused=true;reconcile();});
@@ -67,7 +70,7 @@ export function createSearchLife({scene,isBlocked}){
   Object.defineProperty(window,'__corioCat',{value:()=>({voice,voicePlaying:!!audio&&!audio.paused,voiceDuration:audio?.duration||0,voiceVolume:audio?.volume??0,voiceStarts,voiceError,idleReactions,lastReaction,animationRunning:animations.some(a=>a.playState==='running'),nextIdleIn:nextAt?Math.max(0,nextAt-performance.now()):null,reducedMotion:reduced.matches,blocked:blocked(),lamp:{...lamp},lampUpdates,lampPending:lampTimer!==null})});
   return{
     callCat,
-    afterRender(){stopAnimation();const glow=scene.querySelector('[data-lamp-glow]');if(glow){glow.setAttribute('cx',lamp.x);glow.setAttribute('cy',lamp.y);scene.querySelector('[data-lamp-cursor]').setAttribute('transform',`translate(${lamp.x} ${lamp.y})`);}schedule();},
+    afterRender(){markFocus();stopAnimation();const glow=scene.querySelector('[data-lamp-glow]');if(glow){glow.setAttribute('cx',lamp.x);glow.setAttribute('cy',lamp.y);scene.querySelector('[data-lamp-cursor]')?.setAttribute('transform',`translate(${lamp.x} ${lamp.y})`);}schedule();},
     newLevel(){unschedule();stopAnimation();stopVoice();clearTimeout(lampTimer);lampTimer=null;lampPending=null;lamp={x:400,y:260};},
     reconcile
   };

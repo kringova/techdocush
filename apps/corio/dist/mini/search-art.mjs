@@ -1,8 +1,8 @@
-import {SEARCH_SCENES} from './search-data.mjs?v=0.8.0';
-import {catFigure} from '../characters.mjs?v=0.8.0';
-import {PAINTED_SCENES} from './search-painted.mjs?v=0.8.0';
-import {searchSilhouette} from './search-silhouettes.mjs?v=0.8.0';
-import {SEARCH_CATS} from './search-cat-art.mjs?v=0.8.0';
+import {SEARCH_SCENES} from './search-data.mjs?v=0.8.1';
+import {catFigure} from '../characters.mjs?v=0.8.1';
+import {PAINTED_SCENES} from './search-painted.mjs?v=0.8.1';
+import {searchSilhouette} from './search-silhouettes.mjs?v=0.8.1';
+import {SEARCH_CATS} from './search-cat-art.mjs?v=0.8.1';
 const asset=file=>new URL('../assets/'+file,import.meta.url).href;
 let serial=0;
 function catLayers(scene){
