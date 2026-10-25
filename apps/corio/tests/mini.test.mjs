@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {GAMES,FOODS,GROOM_STEPS,createMini,miniAction,solutionFor,connectedRoute,yarnConflicts} from '../dist/mini/engine.mjs';
-import {SEARCH_SCENES} from '../games/corio/mini/search-data.mjs';
+import {SEARCH_SCENES} from '../dist/mini/search-data.mjs';
 for(const[id,game]of Object.entries(GAMES))test(`${id}: all scenarios finish through valid actions without mutating old states`,()=>{
   const count=id==='search'?50:5;assert.equal(game.levels.length,count);const definitions=new Set();
   for(let index=0;index<count;index++){
