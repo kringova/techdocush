@@ -1,8 +1,7 @@
 .game-shell[data-game=food] .scene{position:relative;overflow:hidden;background:#7c8b74;touch-action:none}
+.game-shell[data-game=food] #status{display:none}
 .pile-game{position:relative;box-sizing:border-box;height:100%;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px;background:radial-gradient(ellipse at 12% 6%,#d3ae6850,transparent 70%),repeating-linear-gradient(2deg,transparent 0 76px,#203c4422 77px 79px,transparent 80px 151px),#7a8c79}
-.pile-game .food-observer{position:absolute;left:12px;top:5px;z-index:100;display:flex;align-items:flex-start;padding:0;gap:0;pointer-events:none}
-.pile-game .food-cat{width:clamp(75px,12vw,140px);height:clamp(52px,9vw,100px)}
-.pile-game .food-observer>span{font-size:12px;max-width:110px;line-height:1.4;padding-top:9px}
+.food-play-area{display:flex;align-items:center;justify-content:center;gap:14px;width:100%;min-height:0;flex:1}
 .food-pile-stage{position:relative;flex:none;max-width:100%;isolation:isolate}
 .pile-bowl{display:block;position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:hidden}
 .food-pile{position:absolute;touch-action:none}
@@ -12,15 +11,22 @@
 .pile-piece .food-hit ellipse{pointer-events:all}
 .pile-piece[aria-pressed=true] .food-figure{filter:drop-shadow(0 0 2px #fff0bb) drop-shadow(0 0 2px #fff0bb)}
 .pile-piece:focus-visible .food-figure{filter:drop-shadow(0 0 2px #f8d979) drop-shadow(0 0 3px #f8d979)}
-.pile-game .food-selection{height:18px;line-height:18px;text-align:center;margin:0 0 6px;font-size:12px;color:#f0e3c8;flex:none}
+.pile-game .food-selection{flex:0 0 130px;box-sizing:border-box;max-width:130px;line-height:1.5;text-align:left;margin:0;font-size:12px;color:#173744;overflow-wrap:anywhere;pointer-events:none}
+.food-selection>strong,.food-selection>span{display:block}.food-selection>strong{font-weight:600;font-size:14px;line-height:1.35}.food-selection>span{margin-top:7px;color:#23414a}.food-selection.has-selection{padding:9px 0;border-top:1px solid #17374445;border-bottom:1px solid #17374445}
 .pile-game .food-bins{width:min(100%,570px);display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:0;flex:none}
-.pile-game .food-bin{min-height:70px;display:flex;flex-direction:row;align-items:center;gap:9px;padding:7px 18px;border:1px solid #e8d6ae80;background:#173744b8;box-shadow:inset 0 1px #f4e3b820;border-radius:9px;touch-action:manipulation}
-.pile-game .food-bin>svg{width:52px;height:46px;flex:none}
-.pile-game .food-bin strong{font-size:17px;font-weight:500}
-.pile-game .food-bin:hover{background:#173744d9;border-color:#f1dc9d}
-.pile-game .food-bin:focus-visible{outline:2px solid #f1dc9d;outline-offset:2px}
+.pile-game .food-destination{position:relative;min-height:104px;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:12px;padding:0;border:0!important;background:transparent!important;box-shadow:none!important;border-radius:0;touch-action:manipulation;cursor:pointer;color:#173744}
+.food-destination-art{display:block;flex:none;width:96px;height:100px;pointer-events:none;filter:drop-shadow(1px 3px 1px #17374435)}
+.food-destination-art>svg{display:block;width:100%;height:100%;max-width:none;margin:0;overflow:hidden}
+.food-trash-target{width:83px;height:84px}.food-trash-target>svg{overflow:visible}
+.pile-game .food-destination strong{font-size:17px;font-weight:600;line-height:1.4}
+.food-ready .food-destination-art{filter:drop-shadow(0 0 2px #f3e2b3) drop-shadow(1px 3px 1px #17374435)}
+.food-destination:hover .food-destination-art,.food-destination:focus-visible .food-destination-art{filter:drop-shadow(0 0 3px #fff1bc) drop-shadow(0 0 3px #fff1bc)}
+.pile-game .food-destination:focus-visible{outline:0}.food-destination:focus-visible strong{text-decoration:underline;text-underline-offset:4px}
+.pile-game .food-feedback-message{box-sizing:border-box;display:flex;align-items:center;justify-content:center;width:min(100%,570px);height:42px;min-height:42px;margin:3px 0 0;flex:none;font-size:12px;line-height:1.4;text-align:center;color:#173744;overflow-wrap:anywhere}
+.food-feedback-message[data-reaction=displeased],.food-feedback-message[data-reaction=retch]{color:#5c2e22}
+.food-retch-mark{display:none;position:absolute;left:calc(50% - 55px);bottom:1px;width:38px;height:16px;pointer-events:none}.food-retch-mark>svg{display:block;width:100%;height:100%}.pile-game[data-food-reaction=retch] .food-retch-mark{display:block}
 .drag-food{height:72px;padding:0;border:0!important;background:none!important;box-shadow:none!important;outline:0;z-index:10000}
-.drag-food .food-figure{width:100%;height:100%;margin:0;filter:drop-shadow(0 5px 3px #17374455)}
-.drag-food .food-hit{display:none}
-@media(max-width:650px){.pile-game{padding:6px}.pile-game .food-cat{width:75px;height:50px}.pile-game .food-observer{left:4px;top:3px}.pile-game .food-observer>span{display:none}.pile-game .food-selection{font-size:10px;height:16px;line-height:16px;margin-bottom:4px}.pile-game .food-bins{gap:9px}.pile-game .food-bin{min-height:55px;padding:4px 12px;gap:6px}.pile-game .food-bin>svg{width:40px;height:36px}.pile-game .food-bin strong{font-size:14px}}
-@media(max-height:450px) and (min-width:651px){.pile-game .food-bin{min-height:42px;padding:3px 12px}.pile-game .food-bin>svg{height:30px;width:36px}.pile-game .food-bin strong{font-size:14px}.pile-game .food-selection{height:14px;line-height:14px;font-size:10px;margin-bottom:3px}.pile-game .food-observer>span{display:none}.pile-game .food-cat{width:75px;height:50px}}
+.drag-food .food-figure{width:100%;height:100%;margin:0;filter:drop-shadow(0 5px 3px #17374455)}.drag-food .food-hit{display:none}
+@media(max-width:650px){.pile-game{padding:6px}.food-play-area{gap:8px}.pile-game .food-selection{flex-basis:76px;max-width:76px;font-size:10px;line-height:1.4}.food-selection>strong{font-size:11px}.food-selection>span{margin-top:5px}.pile-game .food-bins{gap:9px}.pile-game .food-destination{min-height:78px;gap:7px}.food-destination-art{width:70px;height:74px}.food-trash-target{width:56px;height:59px}.pile-game .food-destination strong{font-size:13px}.pile-game .food-feedback-message{font-size:10px;height:40px;min-height:40px;line-height:1.35;margin-top:2px}.food-retch-mark{left:calc(50% - 40px);width:30px;height:12px}}
+@media(max-height:450px) and (min-width:651px){.food-play-area{gap:10px}.pile-game .food-selection{flex-basis:105px;max-width:105px;font-size:10px}.food-selection>strong{font-size:11px}.pile-game .food-destination{min-height:60px;gap:8px}.food-destination-art{height:58px;width:56px}.food-trash-target{height:47px;width:45px}.pile-game .food-destination strong{font-size:13px}.pile-game .food-feedback-message{height:29px;min-height:29px;font-size:10px;line-height:1.3;margin-top:0}.food-retch-mark{left:calc(50% - 37px);height:10px;width:25px}}
+@media(prefers-reduced-motion:reduce){.food-cat-face{transform:none!important}}

@@ -1,29 +1,31 @@
-import {fitFoodScene} from './food-view.mjs?v=0.10.0';
-import {tunnelWalkPoints} from './tunnel-art.mjs?v=0.10.0';
-import {setupFocusUI,fitFocusedScene} from './focus.mjs?v=0.10.0';
-import {GAMES,FOODS,GROOM_STEPS,createMini,miniAction,solutionFor,connectedRoute} from './engine.mjs?v=0.10.0';
-import {renderScene,toolsFor,goalText} from './views.mjs?v=0.10.0';
-import {createModeController} from '../modes.mjs?v=0.10.0';
-import {catFigure,setCatWalkFrame} from '../characters.mjs?v=0.10.0';
-import {createSearchLife} from './search-life.mjs?v=0.10.0';
+import {fitFoodScene} from './food-view.mjs?v=0.11.0';
+import {createFoodFeedback} from './food-feedback.mjs?v=0.11.0';
+import {tunnelWalkPoints} from './tunnel-art.mjs?v=0.11.0';
+import {setupFocusUI,fitFocusedScene} from './focus.mjs?v=0.11.0';
+import {GAMES,FOODS,GROOM_STEPS,createMini,miniAction,solutionFor,connectedRoute} from './engine.mjs?v=0.11.0';
+import {renderScene,toolsFor,goalText} from './views.mjs?v=0.11.0';
+import {createModeController} from '../modes.mjs?v=0.11.0';
+import {catFigure,setCatWalkFrame} from '../characters.mjs?v=0.11.0';
+import {createSearchLife} from './search-life.mjs?v=0.11.0';
 const $=query=>document.querySelector(query),id=$('[data-game]').dataset.game,game=GAMES[id],scene=$('#scene'),tools=$('#tools'),win=$('#win');
-let attempt=0,settleTimer=null,settleEpoch=0,routeWalking=false,searchLife=null;
+let attempt=0,settleTimer=null,settleEpoch=0,routeWalking=false,routeAnimation=null,routeFrame=null,searchLife=null,foodFeedback=null;
 let state=createMini(id),history=[],selected=id==='grooming'?'wipe':id==='litter'?'scoop':id==='search'?1:null,drag=null,ignoreClickUntil=0,paused=false,platformPaused=false,sfx=true,audio=null,modes;
-const key=id==='litter'?'corio-litter-pairs-v1':id==='search'?'corio-search-50-v3':id==='food'?'corio-food-pile-v1':'corio-'+id+'-v1';let best=Array(game.levels.length).fill(null);
+const manyLevels=id==='search'||id==='tunnels';
+const key=id==='litter'?'corio-litter-pairs-v1':id==='search'?'corio-search-50-v3':id==='food'?'corio-food-pile-v1':id==='tunnels'?'corio-tunnels-50-v1':'corio-'+id+'-v1';let best=Array(game.levels.length).fill(null);
 try{sfx=localStorage.getItem('corio-litter-sfx-v1')!=='off';const value=JSON.parse(localStorage.getItem(key));if(Array.isArray(value))best=best.map((_,i)=>Number.isInteger(value[i])?value[i]:null);}catch{}
 const settingsOpen=()=>!!document.querySelector('[data-game-panel][open]');
 const blocked=()=>settingsOpen()||paused||platformPaused||win.open||modes?.isModalOpen();
-function status(text){$('#status').textContent=text;}
+function status(text){$('#status').textContent=text;if(id==='food')foodFeedback?.message(text);}
 function render(){
   const level=game.levels[state.index],focused=document.activeElement?.id,viewport=scene.querySelector('.search-viewport'),scroll=viewport?{x:viewport.scrollLeft,y:viewport.scrollTop}:null;
   $('#level-name').textContent=level.name;$('#level-number').textContent=`${state.index+1} / ${game.levels.length}`;$('#moves').textContent=state.moves;$('#goal').textContent=goalText(id,state,level);$('#undo').disabled=!history.length;
-  if(id==='search'){
-    $('#level-conditions').textContent=`${level.clues==='silhouettes'?'Силуэты':'Слова'} · ${level.lighting==='night'?'Ночной поиск':'Обычный свет'}`;
+  if(id==='search')$('#level-conditions').textContent=`${level.clues==='silhouettes'?'Силуэты':'Слова'} · ${level.lighting==='night'?'Ночной поиск':'Обычный свет'}`;
+  if(manyLevels){
     const first=Math.max(0,Math.min(game.levels.length-5,state.index-2));$('#levels').innerHTML=Array.from({length:5},(_,i)=>levelButton(first+i)).join('');
   }
   tools.innerHTML=toolsFor(id,selected,sfx);scene.innerHTML=renderScene(id,state,level,selected,drag?.type==='yarn'?drag.preview:null);
   for(const button of document.querySelectorAll('[data-level]')){const index=+button.dataset.level;button.setAttribute('aria-current',String(index===state.index));button.classList.toggle('completed',best[index]!==null);button.title=best[index]!==null?'Пройдено: '+best[index]+' действий':game.levels[index].name;}
-  fitFocusedScene(id==='search'?selected:1);if(id==='food')fitFoodScene(scene);
+  fitFocusedScene(id==='search'?selected:1);if(id==='food'){fitFoodScene(scene);foodFeedback?.afterRender();}
   if(scroll){const viewport=scene.querySelector('.search-viewport');viewport.scrollLeft=scroll.x;viewport.scrollTop=scroll.y;}
   if(focused)document.getElementById(focused)?.focus({preventScroll:true});
   searchLife?.afterRender();
@@ -41,41 +43,59 @@ function scheduleSettle(){
   settleTimer=setTimeout(settle,950);
 }
 function load(index){
-  searchLife?.newLevel();attempt++;routeWalking=false;cancelSettle();endDrag();history=[];state=createMini(id,index);selected=id==='grooming'?'wipe':id==='search'?1:null;paused=false;platformPaused=false;ignoreClickUntil=0;
+  searchLife?.newLevel();foodFeedback?.newLevel();attempt++;cancelRouteWalk();cancelSettle();endDrag();history=[];state=createMini(id,index);selected=id==='grooming'?'wipe':id==='search'?1:null;paused=false;platformPaused=false;ignoreClickUntil=0;
   if(win.open)win.close();if($('#pause-dialog').open)$('#pause-dialog').close();modes?.newAttempt(id==='litter'?game.levels[index].w*game.levels[index].h*2:solutionFor(id,index).length);render();status(game.rule);window.dispatchEvent(new Event('corio:resume'));
-  if(id==='search')try{localStorage.setItem('corio-search-current-v1',String(index));}catch{}
+  if(manyLevels)try{localStorage.setItem('corio-'+id+'-current-v1',String(index));}catch{}
 }
 function commit(action){
   if(blocked()||!modes.guard())return false;
-  const next=miniAction(state,action);if(next===state)return false;
+  const previous=state,next=miniAction(state,action);if(next===state)return false;
   if(next.moves>state.moves)history.push(state);state=next;if(id==='food'&&state.sorted.some(i=>i.id===selected))selected=null;render();if(state.message)status(state.message);modes.changed();
+  if(id==='food'&&action.type==='sort'&&next.moves>previous.moves)foodFeedback?.sorted({correct:next.mistakes===previous.mistakes,mistakes:next.mistakes,message:next.message});
   if(id==='litter')sandSound(action.type);
   if(id==='litter'&&state.pending)scheduleSettle();
   const portrait=win.querySelector('.win-cat');if(portrait)portrait.outerHTML=catFigure(id==='grooming'&&state.washed?'towel':id==='pet'?'sleep':'loaf',{className:'win-cat'});
   if(state.won){endDrag();best[state.index]=Math.min(best[state.index]??Infinity,state.moves);try{localStorage.setItem(key,JSON.stringify(best));}catch{}$('#win-title').textContent={search:'Все вещи нашлись',tunnels:'Кот добрался!',food:'Миска разобрана',pet:'Хороший вечер',grooming:'Чисто и спокойно',litter:'Лоток в порядке',yarn:'Нитки распутаны'}[id];$('#win-copy').textContent=`${state.moves} действий. ${state.index===game.levels.length-1?'Все уровни пройдены.':'Можно попробовать следующий уровень.'}`;$('#next').textContent=state.index===game.levels.length-1?'С первой':'Дальше';if(id==='tunnels')walkRoute();else win.showModal();}
   return true;
 }
+function cancelRouteWalk(){
+  if(routeFrame!==null)cancelAnimationFrame(routeFrame);
+  routeFrame=null;routeAnimation=null;routeWalking=false;
+}
+function syncRouteMotion(){
+  if(!routeAnimation||!routeWalking)return;
+  if(blocked()||document.hidden){
+    if(routeFrame!==null)cancelAnimationFrame(routeFrame);
+    routeFrame=null;routeAnimation.previous=null;
+  }else if(routeFrame===null)routeFrame=requestAnimationFrame(advanceRoute);
+}
 function walkRoute(){
-  routeWalking=true;
-  const level=game.levels[state.index],image=scene.querySelector('#route-cat'),points=tunnelWalkPoints(state,level),turn=attempt;
+  cancelRouteWalk();routeWalking=true;
+  const level=game.levels[state.index],image=scene.querySelector('#route-cat'),points=tunnelWalkPoints(state,level);
   const lengths=[0];for(let i=1;i<points.length;i++)lengths.push(lengths.at(-1)+Math.hypot(points[i].x-points[i-1].x,points[i].y-points[i-1].y));
   const total=lengths.at(-1),duration=matchMedia('(prefers-reduced-motion: reduce)').matches?0:Math.min(6500,total*5.5);
-  // Start on the first animation timestamp. A callback's timestamp may precede
-  // the performance.now() sampled while the current browser frame is running.
-  let previous=null,elapsed=0;
-  const frame=time=>{
-    if(turn!==attempt||!image.isConnected)return;
-    if(previous!==null&&!platformPaused&&!paused&&!settingsOpen()&&!document.hidden)elapsed+=Math.max(0,Math.min(80,time-previous));previous=time;
+  routeAnimation={image,points,lengths,total,duration,attempt,previous:null,elapsed:0};syncRouteMotion();
+}
+function advanceRoute(time){
+    routeFrame=null;
+    const motion=routeAnimation;
+    if(!motion||motion.attempt!==attempt||!motion.image.isConnected){cancelRouteWalk();return;}
+    if(blocked()||document.hidden){motion.previous=null;return;}
+    const {image,points,lengths,total,duration}=motion;
+    // Start from the first animation timestamp and discard blocked intervals.
+    if(motion.previous!==null)motion.elapsed+=Math.max(0,Math.min(80,time-motion.previous));motion.previous=time;
+    const elapsed=motion.elapsed;
     const progress=duration?Math.min(1,elapsed/duration):1,distance=progress*total;let a=0;while(a<points.length-2&&lengths[a+1]<distance)a++;
     const span=lengths[a+1]-lengths[a],part=span?(distance-lengths[a])/span:1,x=points[a].x+(points[a+1].x-points[a].x)*part,y=points[a].y+(points[a+1].y-points[a].y)*part;
-    image.setAttribute('x',x-43);image.setAttribute('y',y-63.17);setCatWalkFrame(image,Math.floor(elapsed/140),points[a+1].x<points[a].x?'left':'right');
-    if(progress<1||paused||platformPaused||settingsOpen()||document.hidden)requestAnimationFrame(frame);else{routeWalking=false;if(!win.open)win.showModal();}
-  };requestAnimationFrame(frame);
+    image.setAttribute('x',x-43);image.setAttribute('y',y-63.17);
+    const facing=points[a+1].x<points[a].x?'left':'right',walkFrame=Math.floor(elapsed/140)%4;
+    if(+image.dataset.walkFrame!==walkFrame||image.dataset.facing!==facing)setCatWalkFrame(image,walkFrame,facing);
+    if(progress<1)syncRouteMotion();else{cancelRouteWalk();if(!win.open)win.showModal();}
 }
 
-function undo(){if(paused||platformPaused||!history.length)return;routeWalking=false;cancelSettle();if(win.open)win.close();endDrag();state=history.pop();render();status('Действие отменено.');modes.changed();scheduleSettle();}
-function pause(){if(paused||platformPaused||win.open||state.won&&!routeWalking)return;paused=true;cancelSettle();endDrag();$('#pause-dialog').showModal();window.dispatchEvent(new Event('corio:pause'));if(audio)audio.suspend();}
-function resume(){paused=false;if($('#pause-dialog').open)$('#pause-dialog').close();scheduleSettle();window.dispatchEvent(new Event('corio:resume'));}
+function undo(){if(paused||platformPaused||!history.length)return;cancelRouteWalk();cancelSettle();if(win.open)win.close();endDrag();state=history.pop();render();if(id==='food')foodFeedback?.undo(state.mistakes);status('Действие отменено.');modes.changed();scheduleSettle();}
+function pause(){if(paused||platformPaused||win.open||state.won&&!routeWalking)return;paused=true;syncRouteMotion();cancelSettle();endDrag();$('#pause-dialog').showModal();window.dispatchEvent(new Event('corio:pause'));if(audio)audio.suspend();}
+function resume(){paused=false;if($('#pause-dialog').open)$('#pause-dialog').close();syncRouteMotion();scheduleSettle();window.dispatchEvent(new Event('corio:resume'));}
 function sandSound(type){
   if(!sfx)return;try{audio??=new(window.AudioContext||window.webkitAudioContext)();audio.resume();const duration=type==='rake'?.27:.17,buffer=audio.createBuffer(1,Math.ceil(audio.sampleRate*duration),audio.sampleRate),data=buffer.getChannelData(0);for(let i=0;i<data.length;i++){const t=i/data.length;data[i]=(Math.random()*2-1)*Math.sin(Math.PI*t)**1.5*(.7+.3*Math.sin(i*.018));}const source=audio.createBufferSource(),filter=audio.createBiquadFilter(),gain=audio.createGain();source.buffer=buffer;filter.type='lowpass';filter.frequency.value=type==='rake'?1500:1050;gain.gain.value=.065;source.connect(filter);filter.connect(gain);gain.connect(audio.destination);source.start();}catch{}
 }
@@ -140,22 +160,27 @@ scene.addEventListener('pointercancel',()=>{
   const restorePreview=drag.type==='yarn';endDrag();if(restorePreview)render();
 });
 $('#undo').addEventListener('click',undo);$('#restart').addEventListener('click',()=>load(state.index));$('#next').addEventListener('click',()=>load((state.index+1)%game.levels.length));$('#again').addEventListener('click',()=>load(state.index));$('#pause').addEventListener('click',pause);$('#resume').addEventListener('click',resume);
-win.addEventListener('cancel',e=>e.preventDefault());$('#pause-dialog').addEventListener('cancel',()=>{paused=false;scheduleSettle();window.dispatchEvent(new Event('corio:resume'));});
+win.addEventListener('cancel',e=>e.preventDefault());$('#pause-dialog').addEventListener('cancel',()=>{paused=false;syncRouteMotion();scheduleSettle();window.dispatchEvent(new Event('corio:resume'));});
 function levelButton(index){const level=game.levels[index];return`<button data-level="${index}" aria-label="Уровень ${index+1}: ${level.name}${id==='search'?', '+(level.clues==='words'?'слова':'силуэты')+', '+(level.lighting==='night'?'ночной':'обычный')+', предметов '+level.targets.length:''}">${index+1}</button>`;}
-if(id==='search')$('#level-grid').innerHTML=game.levels.map((_,index)=>levelButton(index)).join('');
+if(manyLevels)$('#level-grid').innerHTML=game.levels.map((_,index)=>levelButton(index)).join('');
 else $('#levels').innerHTML=game.levels.map((_,index)=>levelButton(index)).join('');
 const levelClick=event=>{const b=event.target.closest('[data-level]');if(b){load(+b.dataset.level);b.closest('dialog')?.close();}};
 $('#levels').addEventListener('click',levelClick);$('#level-grid')?.addEventListener('click',levelClick);
 document.addEventListener('keydown',event=>{if(event.ctrlKey||event.metaKey||event.altKey||settingsOpen()||modes.isModalOpen()||paused||platformPaused)return;if(event.code==='KeyZ'){event.preventDefault();undo();}if(event.code==='KeyR'&&!win.open){event.preventDefault();load(state.index);}});
 window.addEventListener('blur',pause);document.addEventListener('visibilitychange',()=>{if(document.hidden)pause();});
-window.addEventListener('corio:platform-pause',()=>{platformPaused=true;cancelSettle();endDrag();window.dispatchEvent(new Event('corio:pause'));if(audio)audio.suspend();});window.addEventListener('corio:platform-resume',()=>{platformPaused=false;scheduleSettle();if(!paused)window.dispatchEvent(new Event('corio:resume'));});
+window.addEventListener('corio:platform-pause',()=>{platformPaused=true;syncRouteMotion();cancelSettle();endDrag();window.dispatchEvent(new Event('corio:pause'));if(audio)audio.suspend();});window.addEventListener('corio:platform-resume',()=>{platformPaused=false;syncRouteMotion();scheduleSettle();if(!paused)window.dispatchEvent(new Event('corio:resume'));});
 modes=createModeController({gameId:id,host:$('[data-modes]'),getMoves:()=>state.moves,isWon:()=>state.won,canUndo:()=>history.length>0,onUndo:undo,onRestart:()=>load(state.index),onBlock:endDrag});
 Object.defineProperty(window,'__mini',{value:()=>({...structuredClone(state),selected,paused,platformPaused,routeWalking,best:[...best]})});Object.defineProperty(window,'__corioModes',{value:()=>modes.state()});
 const requestedLevel=Number(new URL(location.href).searchParams.get('level'));
-let savedLevel=0;if(id==='search')try{const index=Number(localStorage.getItem('corio-search-current-v1'));if(Number.isInteger(index)&&index>=0&&index<game.levels.length)savedLevel=index;}catch{}
+let savedLevel=0;if(manyLevels)try{const index=Number(localStorage.getItem('corio-'+id+'-current-v1'));if(Number.isInteger(index)&&index>=0&&index<game.levels.length)savedLevel=index;}catch{}
 if(id==='search')searchLife=createSearchLife({scene,isBlocked:blocked});
+if(id==='food'){foodFeedback=createFoodFeedback({scene,isBlocked:blocked});Object.defineProperty(window,'__corioFoodFeedback',{value:()=>foodFeedback.state()});}
 load(Number.isInteger(requestedLevel)&&requestedLevel>=1&&requestedLevel<=game.levels.length?requestedLevel-1:savedLevel);
 setupFocusUI();if(id==='food')new ResizeObserver(()=>fitFoodScene(scene)).observe(scene);
+if(id==='tunnels'){
+  const routePanels=new MutationObserver(syncRouteMotion);
+  for(const dialog of document.querySelectorAll('dialog'))routePanels.observe(dialog,{attributes:true,attributeFilter:['open']});
+}
 if(id==='food'){
   const cancelFoodDrag=new MutationObserver(()=>{if(settingsOpen()){
     if(drag&&scene.hasPointerCapture(drag.pointer))scene.releasePointerCapture(drag.pointer);

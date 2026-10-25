@@ -1,5 +1,6 @@
-import {SEARCH_LEVELS,SEARCH_SCENES} from './search-data.mjs?v=0.10.0';
-import {FOOD_LEVELS,FOOD_PILE_ASPECT,foodIsExposed} from './food-data.mjs?v=0.10.0';
+import {TUNNEL_LEVELS} from './tunnel-data.mjs?v=0.11.0';
+import {SEARCH_LEVELS,SEARCH_SCENES} from './search-data.mjs?v=0.11.0';
+import {FOOD_LEVELS,FOOD_PILE_ASPECT,foodIsExposed} from './food-data.mjs?v=0.11.0';
 export {FOOD_LEVELS,FOOD_PILE_ASPECT,foodIsExposed};
 // Original short scenarios for comparing mechanics. No clocks or offline decay.
 const copy=value=>structuredClone(value);
@@ -17,20 +18,7 @@ export const FOODS={
   raw:{name:'Сырое мясо',safe:false,why:'Может содержать опасные бактерии.',icon:'raw'},
   candy:{name:'Конфета',safe:false,why:'Выбираем кошачьи лакомства, а обычную конфету убираем.',icon:'candy'}
 };
-const dir=(a,b)=>b.x>a.x?1:b.x<a.x?3:b.y>a.y?2:0;
 const delta=[[0,-1],[1,0],[0,1],[-1,0]];
-const pathLevel=(name,w,h,points,fixed=[])=>{
-  const path=points.map(([x,y])=>({x,y}));
-  const pieces=path.map((p,i)=>{const before=path[i-1]||{x:-1,y:p.y},after=path[i+1]||{x:w,y:p.y},edges=[dir(p,before),dir(p,after)],fixedIndex=fixed.indexOf(i);return{...p,edges,turn:fixedIndex>=0?0:(Math.abs(edges[0]-edges[1])===2?1:i%3+1),kind:fixedIndex>=0?(fixedIndex%2?'hammock':'shelf'):'pipe',fixed:fixedIndex>=0};});
-  return{name,w,h,pieces,start:{x:-1,y:path[0].y},end:{x:w,y:path.at(-1).y}};
-};
-const tunnelLevels=[
-  pathLevel('Между полками',3,3,[[0,1],[1,1],[2,1]],[0,2]),
-  pathLevel('Первый подъём',4,3,[[0,2],[1,2],[1,1],[2,1],[3,1]],[0,3]),
-  pathLevel('Через гамак',5,4,[[0,2],[1,2],[1,1],[2,1],[3,1],[3,2],[4,2]],[0,3,6]),
-  pathLevel('Выше к окну',5,5,[[0,3],[1,3],[1,2],[1,1],[2,1],[3,1],[3,2],[4,2]],[0,4]),
-  pathLevel('Длинный вечерний путь',6,5,[[0,3],[1,3],[1,2],[1,1],[2,1],[3,1],[3,2],[3,3],[4,3],[5,3]],[0,4,8])
-];
 export function tunnelEdges(piece){return piece.edges.map(edge=>(edge+piece.turn)%4);}
 export function connectedRoute(state,level){
   const pieces=state.pieces,start=pieces.findIndex(p=>p.x===0&&p.y===level.start.y);
@@ -95,7 +83,7 @@ export function yarnConflicts(points,edges){
 }
 export const GAMES={
   search:{title:'Куда пропало?',levels:SEARCH_LEVELS,rule:'Найди предметы из списка. Приближай сцену кнопкой «+» и передвигай её, чтобы рассмотреть детали.'},
-  tunnels:{title:'Настенная трасса',levels:tunnelLevels,rule:'Поворачивай трубы. Соедини левую площадку с лакомством справа. Полки и гамаки закреплены.'},
+  tunnels:{title:'Настенная трасса',levels:TUNNEL_LEVELS,rule:'Поворачивай трубы. Соедини левую площадку с лакомством справа. Полки и гамаки закреплены.'},
   food:{title:'Что в миске?',levels:FOOD_LEVELS,rule:'Выбери открытый продукт в миске, затем отправь его в подходящую зону. Убирай верхние предметы, чтобы открывать нижние.'},
   pet:{title:'Вечер с котом',levels:petLevels,rule:'Помоги коту поесть, попить, поиграть и отдохнуть. Доведи все четыре показателя до трёх отметок.'},
   grooming:{title:'Чистые лапы',levels:groomingLevels,rule:'Выбери инструмент и коснись пятнышка. Следи за настроением: если кот устал, дай ему передышку.'},
@@ -175,7 +163,7 @@ export function miniAction(state,action){
 export function solutionFor(id,index){
   const level=GAMES[id].levels[index];
   if(id==='search')return level.targets.map(item=>({type:'find',item}));
-  if(id==='tunnels')return level.pieces.flatMap((p,piece)=>Array.from({length:p.fixed?0:(4-p.turn)%4},()=>({type:'turn',piece})));
+  if(id==='tunnels')return copy(level.solution);
   if(id==='food'){
     const remaining=level.items.map((type,id)=>({type,id})),actions=[];
     while(remaining.length){
