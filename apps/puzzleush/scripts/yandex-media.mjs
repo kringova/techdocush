@@ -11,6 +11,7 @@ import {sdkFixture} from './fixtures/yandex-sdk.mjs';
 const require=createRequire(import.meta.url),{chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
 const browser=await chromium.launch({headless:true,...(process.env.BROWSER_EXECUTABLE?{executablePath:process.env.BROWSER_EXECUTABLE}:{})});
 const origin=process.env.QA_ORIGIN||'http://127.0.0.1:4337',out=path.resolve('build/yandex-media');await mkdir(out,{recursive:true});
+const {version}=JSON.parse(await readFile(new URL('../package.json',import.meta.url),'utf8'));
 const fresh=g=>({version:4,activeGame:g,sudoku:{level:1,completed:{},saves:{}},nonogram:{level:1,completed:{},saves:{}},wordsearch:{level:1,completed:{},saves:{}},legacyCompleted:{sudoku:0,nonogram:0}});
 async function stillFrame(page){
  await page.evaluate(()=>document.fonts.ready);
@@ -61,7 +62,15 @@ try{
   if(g==='sudoku'){
    const state=fixture(g,1).sudoku.saves[1],p=generateSudoku(1),blanks=state.board.flatMap((n,i)=>n?[]:[i]).slice(0,8);
    for(const i of blanks){await video.locator(`[data-cell="${i}"]`).click();await video.locator(`[data-number="${p.solution[i]}"]`).click();await video.waitForTimeout(330);}
-   await video.locator('#hint-button').click();await video.locator('#explain-button').click();await video.waitForTimeout(2000);
+   await video.locator('#hint-button').click();await video.locator('#explain-button').click();await video.waitForTimeout(1500);await video.locator('#hint-dialog [data-close]').last().click();
+   // Record the actual explicit finish action, including the complete wave.
+   for(let step=0;step<81;step++){
+    if(await video.locator('#finish-notes-button').isVisible())break;
+    const board=await video.evaluate(()=>JSON.parse(localStorage.getItem('kletochki-yandex-sudoku-progress-v4')).sudoku.saves[1].board),cell=board.indexOf(0);
+    if(cell<0)throw Error('Expected visible finish button before the final digit');
+    await video.locator(`[data-cell="${cell}"]`).click();await video.locator(`[data-number="${p.solution[cell]}"]`).click();await video.waitForTimeout(110);
+   }
+   await video.locator('#finish-notes-button').click();await video.waitForSelector('#complete-dialog[open]');await video.waitForTimeout(450);
   }else if(g==='wordsearch'){
    const p=generateWordsearch(6);for(const word of p.words.slice(2,5)){const path=p.placements[word],a=await video.locator(`[data-letter="${path[0]}"]`).boundingBox(),b=await video.locator(`[data-letter="${path.at(-1)}"]`).boundingBox();await video.mouse.move(a.x+a.width/2,a.y+a.height/2);await video.mouse.down();await video.mouse.move(b.x+b.width/2,b.y+b.height/2,{steps:10});await video.mouse.up();await video.waitForTimeout(650);}await video.locator('#wordsearch-hint').click();await video.waitForTimeout(800);await video.locator('#word-initial-dialog-button').click();await video.waitForTimeout(1400);
   }else{
@@ -76,5 +85,5 @@ try{
   const hashes=Object.fromEntries(await Promise.all(names.map(async n=>[n,createHash('sha256').update(await readFile(path.join(dir,n))).digest('hex')])));
   await writeFile(path.join(dir,'media-release.json'),JSON.stringify({version:release.version,game:g,sharedHash:release.sharedHash,generatedAt:new Date().toISOString(),hashes},null,2)+'\n');
  }
- await writeFile(path.join(out,'README.txt'),'Материалы Клеточек 1.5.0. Скриншоты и видео сняты с реального интерфейса общих сборок. Ответы SDK при локальной съёмке тестовые, настоящая реклама не записана и не проверена. mobile-*.png 720×1280; desktop-*.png 1280×720; icon 512×512; cover 800×470. onboarding-preview — дополнительный предпросмотр, не скриншот геймплея для каталога.\n');
+ await writeFile(path.join(out,'README.txt'),`Материалы Клеточек ${version}. Скриншоты и видео сняты с реального интерфейса общих сборок. Ответы SDK при локальной съёмке тестовые, настоящая реклама не записана и не проверена. mobile-*.png 720×1280; desktop-*.png 1280×720; icon 512×512; cover 800×470. onboarding-preview — дополнительный предпросмотр, не скриншот геймплея для каталога.\n`);
 }finally{await browser.close();}

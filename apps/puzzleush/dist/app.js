@@ -7,7 +7,7 @@ import {createDoubleTap} from './engine/double-tap.js';
 import {createBenefits} from './engine/benefits.js';
 import {createPlatform} from './platform/adapter.js';
 import {createAnalytics,metricaSender} from './platform/analytics.js?v=3';
-import {mountOnboarding} from './platform/onboarding.js?v=7';
+import {mountOnboarding} from './platform/onboarding.js?v=8';
 import {STORAGE_KEY,V3_STORAGE_KEY,V2_STORAGE_KEY,LEGACY_STORAGE_KEY,chapterFor,chaptersFor,chapterLevels,levelCount,levelNumberFor,nextLevelFor,migrateProgressV1,migrateProgressV2,migrateProgressV3} from './engine/progress.js?v=5';
 
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
@@ -19,7 +19,7 @@ let benefits=null,benefitsError=false;
 if(isYandex)try{benefits=createBenefits(localStorage,`kletochki-yandex-${fixedGame}-benefits-v1`);}catch{benefitsError=true;const memory=new Map();benefits=createBenefits({getItem:k=>memory.get(k)||null,setItem:(k,v)=>memory.set(k,v)},'session');}
 const analyticsCounter=Number(document.documentElement.dataset.metrica||0);
 const analyticsEnabled=isYandex&&analyticsCounter>0;
-const analytics=createAnalytics({enabled:analyticsEnabled,send:metricaSender({enabled:isYandex,counterId:analyticsCounter}),context:()=>({game,level:store[game].level,levelNumber:levelNumberFor(game,store[game].level),group:chapterFor(game,store[game].level).label,size:game==='nonogram'?NONOGRAMS[store.nonogram.level-1].grid.length:game==='wordsearch'?generateWordsearch(store.wordsearch.level).size:9,version:'1.5.0'})});
+const analytics=createAnalytics({enabled:analyticsEnabled,send:metricaSender({enabled:isYandex,counterId:analyticsCounter}),context:()=>({game,level:store[game].level,levelNumber:levelNumberFor(game,store[game].level),group:chapterFor(game,store[game].level).label,size:game==='nonogram'?NONOGRAMS[store.nonogram.level-1].grid.length:game==='wordsearch'?generateWordsearch(store.wordsearch.level).size:9,version:'1.6.0'})});
 const platform=createPlatform({enabled:isYandex,onAdEvent:(name,params)=>analytics.event(name,params),onState(){document.body.dataset.platformPaused=String(platform.blocked());syncGameplay();},onError(){toast('Связь с Яндексом недоступна. Рекламу можно попробовать позже.');}});
 const tapGesture=createDoubleTap();
 const clone=x=>structuredClone(x),range=n=>Array.from({length:n},(_,i)=>i);
@@ -177,7 +177,7 @@ function renderControls(){
   $('#candidates-button').classList.toggle('active',s.auto);
   $('#candidates-button strong').textContent=s.auto?'Кандидаты расставлены':'Все кандидаты';
   $('#candidates-button small').textContent=s.auto?'Обновляются после каждого числа · нажми, чтобы пересчитать':'Расставить возможные цифры в пустых клетках';
-  if(isYandex){const unlocked=benefits.hasCandidates(puzzleKey());$('#candidates-button strong').textContent=unlocked?(s.auto?'Кандидаты расставлены':'Все кандидаты открыты'):'Все кандидаты · реклама';$('#candidates-button small').textContent=unlocked?'Доступны для этого уровня · пересчёт бесплатно':'Просмотр открывает автообновление для этого уровня';$('#hint-button span').textContent=`Подсказки: ${benefits.snapshot().hints}`;}
+  if(isYandex){const unlocked=benefits.hasCandidates(puzzleKey());$('#candidates-button strong').textContent='Кандидаты';$('#candidates-button').dataset.rewardNeeded=String(!unlocked);$('#candidates-button').title=unlocked?'Все кандидаты открыты · пересчёт бесплатно':'Все кандидаты · просмотр рекламы';$('#candidates-button small').textContent=unlocked?'Доступны для этого уровня · пересчёт бесплатно':'Просмотр открывает автообновление для этого уровня';$('#hint-button span').textContent=`Подсказки: ${benefits.snapshot().hints}`;}
  }else{$$('[data-paint]').forEach(b=>{b.classList.toggle('active',b.dataset.paint===paint);b.setAttribute('aria-pressed',b.dataset.paint===paint);});$('#nonogram-undo').disabled=!histories.nonogram.length;}
 }
 function enterNumber(n,{asValue=false}={}){
@@ -222,9 +222,10 @@ function cancelFinishEffect(){
 function animateFinish(cells){
  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){openComplete();return;}
  const board=$('.sudoku-board'),level=store.sudoku.level;board.classList.add('finish-celebration');
- for(const cell of cells){const target=$(`[data-cell="${cell}"]`);target.classList.add('finish-cell');target.style.setProperty('--finish-delay',`${(Math.floor(cell/9)+cell%9)*24}ms`);target.innerHTML=`<span class="finish-digit">${current().board[cell]}</span>`;}
- const sparkles=document.createElement('span');sparkles.className='finish-sparkles';sparkles.setAttribute('aria-hidden','true');sparkles.innerHTML=range(18).map(i=>`<i style="--spark-x:${6+i*37%88}%;--spark-delay:${i%6*45}ms;--spark-drift:${i%2?-1:1};--spark-color:${['#8da878','#8ea9bb','#c6cba8'][i%3]}"></i>`).join('');board.append(sparkles);
- const effect={board,timer:null};finishEffect=effect;effect.timer=setTimeout(()=>{if(finishEffect!==effect)return;cancelFinishEffect();if(game==='sudoku'&&store.sudoku.level===level&&current().won&&!$('dialog[open]'))openComplete();},1100);
+ const ordered=[...cells].sort((a,b)=>(Math.floor(a/9)+a%9)-(Math.floor(b/9)+b%9)||a-b);
+ for(const [i,cell] of ordered.entries()){const target=$(`[data-cell="${cell}"]`);target.classList.add('finish-cell');target.style.setProperty('--finish-delay',`${Math.round(i/Math.max(1,ordered.length-1)*1500)}ms`);target.innerHTML=`<span class="finish-digit">${current().board[cell]}</span>`;}
+ const sparkles=document.createElement('span');sparkles.className='finish-sparkles';sparkles.setAttribute('aria-hidden','true');sparkles.innerHTML=range(18).map(i=>`<i style="--spark-x:${6+i*37%88}%;--spark-delay:${i%6*80}ms;--spark-drift:${i%2?-1:1};--spark-color:${['#8da878','#8ea9bb','#c6cba8'][i%3]}"></i>`).join('');board.append(sparkles);
+ const effect={board,timer:null};finishEffect=effect;effect.timer=setTimeout(()=>{if(finishEffect!==effect)return;cancelFinishEffect();if(game==='sudoku'&&store.sudoku.level===level&&current().won&&!$('dialog[open]'))openComplete();},3200);
 }
 function undo(){if(!canMove()||!histories[game].length)return;const previous=histories[game].pop();if(game==='wordsearch'){previous.revealed=[...current().revealed];previous.hints=current().hints;previous.initials=[...current().initials];previous.activeInitial=current().activeInitial;}store[game].saves[store[game].level]=previous;activeHint=null;save();render();}
 function afterMove({finishCells=[]}={}){
@@ -385,7 +386,8 @@ ensureState();analytics.levelStart();render();
 document.body.dataset.platform=isYandex?'yandex':'web';
 if(isYandex){
  const tutorial=mountOnboarding({game,track:(name,params)=>analytics.event(name,params),onOpen:syncGameplay,onClose:()=>{syncGameplay();if(round()&&round().status!=='playing')openAttempt();}});
- $('#help-button').hidden=false;$('#help-button').addEventListener('click',tutorial.open);
+ $('#help-button').hidden=false;$('#help-button').textContent='?';$('#help-button').setAttribute('aria-label','Как играть');$('#help-button').title='Как играть';$('.workspace-header').append($('#help-button'));$('#help-button').addEventListener('click',tutorial.open);
+ $('#restart-button').innerHTML=icon('restart')+'Заново';$('#restart-button').title='Начать уровень заново';
  document.addEventListener('click',e=>{const b=e.target.closest('button[id]');if(b&&!b.closest('#onboarding-dialog'))analytics.activity('button_'+b.id);});
  setInterval(()=>analytics.flush(),10000);window.addEventListener('pagehide',()=>analytics.leave('pagehide'));
  new MutationObserver(syncGameplay).observe(document.body,{subtree:true,attributes:true,attributeFilter:['open']});

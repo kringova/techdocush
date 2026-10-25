@@ -75,6 +75,7 @@ jobs:
           trap 'kill "$puzzle_preview_pid" 2>/dev/null || true' EXIT
           node scripts/browser-viewport-qa.mjs
           node scripts/browser-finish-qa.mjs
+          node scripts/browser-banner-qa.mjs
       - name: Keep game viewport report
         if: always()
         uses: actions/upload-artifact@v4
@@ -83,6 +84,7 @@ jobs:
           path: |
             apps/puzzleush/test-results/yandex-viewport/
             apps/puzzleush/test-results/sudoku-finish/
+            apps/puzzleush/test-results/yandex-banner/
           if-no-files-found: ignore
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

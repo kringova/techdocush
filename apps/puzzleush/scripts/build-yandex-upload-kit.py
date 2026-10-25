@@ -50,7 +50,7 @@ COMMON = [
     ("Хочу подключить AI-описания", "Выключено"),
     ("Описание и продвижение", "Оставить вкладку «Русский», удалить «Английский» крестиком"),
     ("Вход и инап-покупки", "Не требуются; товаров за деньги в этих играх нет"),
-    ("Sticky-баннеры", "Выключены"),
+    ("Sticky-баннеры", "Включить в разделе «Реклама»: справа на десктопе, снизу на телефоне; показом управляет платформа"),
 ]
 GUIDE = """КЛЕТОЧКИ — ПОЛНЫЙ КОМПЛЕКТ ДЛЯ ЯНДЕКС ИГР
 
@@ -66,8 +66,9 @@ GUIDE = """КЛЕТОЧКИ — ПОЛНЫЙ КОМПЛЕКТ ДЛЯ ЯНДЕК�
 5. В «Скриншотах» выбрать «Десктопные» и файлы из screenshots-desktop-16x9; затем «Мобильные» → «Портретная» и файлы из screenshots-mobile-9x16. Мобильные9:16 не загружаются в альбомное поле16:9.
 6. Вертикальное видео, GIF, рекламные видео, maskable-иконка и обложка на витрину необязательны; оставить пустыми.
 7. Выключить AI-описания. В описании удалить английскую вкладку, оставить русский. Нажать «Сохранить».
-8. Открыть тестовый запуск с debug-панелью, проверить настоящий SDK, рекламу и сохранения; на iPhone — управление и поворот.
-9. После успешной проверки отправить на модерацию. При новом аккаунте Яндекс может разрешать только одну заявку новой игры за раз.
+8. В разделе «Реклама» включить штатный sticky-баннер: справа на десктопе, снизу на телефоне. Автоматический показ платформой; опцию управления баннером через API не включать.
+9. Открыть тестовый запуск с debug-панелью, проверить настоящий SDK, рекламу и сохранения, появление/скрытие баннера; на iPhone — управление и поворот.
+10. После успешной проверки отправить на модерацию. При новом аккаунте Яндекс может разрешать только одну заявку новой игры за раз.
 
 Банковские реквизиты и договор заполняются непосредственно у Яндекса. Их в комплекте нет.
 Счётчик Метрики выбран в игровых сборках; настройка целей через OAuth — отдельный шаг и загрузке не мешает.
@@ -77,6 +78,8 @@ GUIDE = """КЛЕТОЧКИ — ПОЛНЫЙ КОМПЛЕКТ ДЛЯ ЯНДЕК�
 CHECKS = """ПЕРЕД ОТПРАВКОЙ НА МОДЕРАЦИЮ
 Все игры: настоящий SDK/Game Ready, загрузка без ошибок, сохранение после перезагрузки,
 экран/касания/поворот на Android и iPhone, отсутствие браузерной прокрутки и меню на поле.
+Штатный sticky-баннер справа на десктопе/снизу на телефоне: при появлении/скрытии
+поле и кнопки помещаются в игровое окно и не перекрываются рекламой.
 Названия проверить на уникальность в Консоли. Договор и монетизация должны быть оформлены.
 
 Судоку: обучение/двойной тап, добровольная реклама для кандидатов и +3 подсказок,
@@ -92,7 +95,8 @@ CHECKS = """ПЕРЕД ОТПРАВКОЙ НА МОДЕРАЦИЮ
 """
 SOURCES = ["https://yandex.ru/dev/games/doc/ru/console/add-new-game/draft",
            "https://yandex.ru/dev/games/doc/ru/console/add-new-game",
-           "https://yandex.ru/dev/games/doc/ru/requirements/2/7"]
+           "https://yandex.ru/dev/games/doc/ru/requirements/2/7",
+           "https://yandex.ru/dev/games/doc/ru/console/adv-monetization"]
 
 
 def digest(data):
@@ -240,7 +244,8 @@ def html_page(games, version, checked_at):
 <h3>Скриншоты</h3>{screenshots('desktop')}{screenshots('mobile')}
 <h3>Рекламные видео</h3><p>Оставить пустым. Обязательное горизонтальное видео уже указано выше, в «Видео геймплея».</p>
 <p class="note"><b>Внизу формы:</b> «Хочу подключить AI-описания» — выключить. Затем «Сохранить».</p>
-<details><summary>Дополнительные разделы и все ответы</summary><p>Maskable-иконку, обложку на витрину и GIF можно оставить пустыми. Sticky-баннеры выключены; вход и покупки не требуются. extras/onboarding-preview.png не загружать вместо скриншота геймплея.</p><a href="{folder}/answers.txt">Все ответы одним текстом</a></details></section>''')
+<h3>После сохранения — раздел «Реклама»</h3><p><b>Sticky-баннеры включить:</b> справа на десктопе, снизу на телефоне. Показом управляет платформа; опцию управления баннером через API оставить выключенной.</p>
+<details><summary>Дополнительные разделы и все ответы</summary><p>Maskable-иконку, обложку на витрину и GIF можно оставить пустыми. Вход и покупки не требуются. extras/onboarding-preview.png не загружать вместо скриншота геймплея.</p><a href="{folder}/answers.txt">Все ответы одним текстом</a></details></section>''')
     return f'''<!doctype html><html lang="ru"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Клеточки — загрузка в Яндекс {esc(version)}</title>
 <style>body{{margin:0;background:#f5f3ed;color:#303b31;font:16px/1.6 system-ui,sans-serif}}main{{max-width:1000px;margin:auto;padding:28px 18px}}h1{{line-height:1.25}}section{{margin:36px 0;padding:24px;background:#fff;border-radius:16px}}table{{border-collapse:collapse;width:100%}}th,td{{text-align:left;vertical-align:top;border-bottom:1px solid #ddd;padding:10px;overflow-wrap:anywhere}}th{{width:42%}}a{{color:#3c5c45}}nav{{display:flex;gap:18px;flex-wrap:wrap}}textarea{{box-sizing:border-box;width:100%;padding:12px;font:inherit;background:#f8f8f2;border:1px solid #bbc6b1;border-radius:6px}}label{{display:block;font-weight:600}}small{{color:#68755e;font-weight:400}}button{{margin:6px 0 18px;padding:9px 16px;cursor:pointer;background:#4b5c43;color:white;border:0;border-radius:6px;font:inherit}}.previews{{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}}.previews img{{max-width:210px;max-height:310px;border:1px solid #ddd}}.note{{padding:16px;background:#e6ecdf;border-radius:10px}}.field{{margin-top:20px}}.screenshot-group,.file-field{{padding:16px;border:1px solid #bbc6b1;border-radius:8px;margin:14px 0}}h3{{margin-top:36px}}h4{{margin:0}}@media(max-width:600px){{section{{padding:14px}}th,td{{display:block;width:auto}}th{{border-bottom:0;padding-bottom:0}}}}</style>
 <main><h1>Клеточки — всё для загрузки в Яндекс</h1><p>Игровая версия {esc(version)}. Выбери игру, копируй значения и загружай указанные файлы. Каждая игра — отдельная карточка.</p><nav><a href="#sudoku">Судоку</a><a href="#nonogram">Японские</a><a href="#wordsearch">Поиск слов</a><a href="START-HERE.txt">Порядок действий</a><a href="CHECK-BEFORE-MODERATION.txt">Перед модерацией</a></nav><p class="note">Большой ZIP комплекта сначала распаковать. В поле «Архив» нужен игровой ZIP из папки выбранной игры. Десктоп, Android и iOS — целевые платформы; настоящий запуск на телефонах и рекламу проверить перед модерацией. Эта локальная страница никуда не отправляет данные.</p>{''.join(sections)}<p>Требования сверены 25.10.2026: <a href="{SOURCES[0]}">официальная форма Яндекса</a>. Для следующего выпуска агент проверяет их заново.</p></main>
@@ -308,7 +313,7 @@ def build(output, ffprobe, checked_at):
             for n, (key, label, _, _) in enumerate(FIELDS, 1):
                 value = game["fields"][key]
                 (folder / "fields" / f"{n:02}-{key}.txt").write_text(value + "\n")
-            answers += ["", "ФАЙЛЫ ДЛЯ ЗАГРУЗКИ", "Архив: " + game["archive"], *[f"{label}: {media_path(name)}" for name, label in MEDIA.items()], "", "ХОЧУ ПОДКЛЮЧИТЬ AI-ОПИСАНИЯ", "Выключено"]
+            answers += ["", "ФАЙЛЫ ДЛЯ ЗАГРУЗКИ", "Архив: " + game["archive"], *[f"{label}: {media_path(name)}" for name, label in MEDIA.items()], "", "ХОЧУ ПОДКЛЮЧИТЬ AI-ОПИСАНИЯ", "Выключено", "", "ПОСЛЕ СОХРАНЕНИЯ — РАЗДЕЛ РЕКЛАМА", dict(COMMON)["Sticky-баннеры"], "Управление баннером через API: выключено"]
             (folder / "answers.txt").write_text("\n".join(answers) + "\n")
             (folder / "form.json").write_text(json.dumps({"version": version, "settings": COMMON, "tagSuggestions": TAGS[game["game"]], "fields": game["fields"]}, ensure_ascii=False, indent=2) + "\n")
         manifest = {"version": version, "preparedAt": datetime.now(timezone.utc).isoformat(), "requirementsCheckedAt": checked_at,
