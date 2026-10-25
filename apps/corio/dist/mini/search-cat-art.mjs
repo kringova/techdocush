@@ -1,168 +1,168 @@
-// Source-pixel masks; source reference frames remain preserved.
+// Source-pixel masks; all source reference frames remain preserved.
 export const SEARCH_CATS={
   "room": {
     "bounds": [
-      860,
+      812,
       654,
-      610,
+      658,
       281
     ],
-    "frame": "search-room-belly-up-idle-frame-v1.png",
+    "frame": "search-room-belly-up-idle-frame-v2.png",
     "masks": {
       "eyes": [
         [
           [
-            947,
-            792
+            908,
+            788
           ],
           [
-            973,
+            921,
             791
           ],
           [
-            987,
-            800
+            925,
+            806
           ],
           [
-            987,
-            812
+            928,
+            831
           ],
           [
-            968,
-            829
+            921,
+            833
           ],
           [
-            949,
-            834
+            910,
+            822
           ],
           [
-            940,
-            827
+            902,
+            807
           ],
           [
-            940,
-            811
+            900,
+            797
           ]
         ],
         [
           [
-            991,
-            758
+            875,
+            779
           ],
           [
-            1006,
-            758
+            892,
+            780
           ],
           [
-            1015,
-            767
+            900,
+            787
           ],
           [
-            1014,
-            782
+            896,
+            800
           ],
           [
-            1008,
-            788
+            886,
+            804
           ],
           [
-            994,
-            786
+            874,
+            799
           ],
           [
-            987,
-            777
-          ],
-          [
-            987,
-            766
+            871,
+            790
           ]
         ]
       ],
       "ear": [
         [
           [
-            936,
-            717
+            892,
+            851
           ],
           [
-            961,
-            717
+            929,
+            849
           ],
           [
-            976,
-            732
+            948,
+            870
           ],
           [
-            991,
-            746
+            928,
+            894
           ],
           [
-            987,
-            760
+            887,
+            916
           ],
           [
-            980,
-            772
+            842,
+            918
           ],
           [
-            964,
-            783
+            837,
+            898
           ],
           [
-            946,
-            778
-          ],
-          [
-            939,
-            756
+            861,
+            879
           ]
         ]
       ],
       "lick": [
         [
           [
-            1001,
-            784
+            897,
+            753
           ],
           [
-            1014,
-            785
+            908,
+            756
           ],
           [
-            1027,
+            915,
+            769
+          ],
+          [
+            912,
+            783
+          ],
+          [
+            908,
+            797
+          ],
+          [
+            900,
+            801
+          ],
+          [
+            894,
             792
           ],
           [
-            1032,
-            805
+            894,
+            787
           ],
           [
-            1026,
-            818
+            888,
+            781
           ],
           [
-            1014,
-            820
+            886,
+            769
           ],
           [
-            1003,
-            813
-          ],
-          [
-            994,
-            804
-          ],
-          [
-            992,
-            793
+            890,
+            758
           ]
         ]
       ]
     },
-    "lickFrame": "search-room-belly-up-lick-frame-v1.png",
+    "lickFrame": "search-room-belly-up-lick-frame-v2.png",
     "basePatch": {
-      "file": "search-room-belly-up-frame-v1.png",
+      "file": "search-room-belly-up-frame-v2.png",
       "bounds": [
         842,
         614,
@@ -285,6 +285,99 @@ export const SEARCH_CATS={
       ],
       "featherSourcePixels": 6,
       "includes": "Union of full old stretch-cat footprint/shadow and new belly-up cat/shadow plus newly exposed rug restoration; excludes table and most upper furniture."
+    },
+    "headPatch": {
+      "file": "search-room-belly-up-frame-v2.png",
+      "bounds": [
+        802,
+        708,
+        282,
+        230
+      ],
+      "polygon": [
+        [
+          944,
+          708
+        ],
+        [
+          990,
+          719
+        ],
+        [
+          1030,
+          741
+        ],
+        [
+          1076,
+          744
+        ],
+        [
+          1078,
+          766
+        ],
+        [
+          1054,
+          791
+        ],
+        [
+          1053,
+          824
+        ],
+        [
+          1063,
+          856
+        ],
+        [
+          1084,
+          897
+        ],
+        [
+          1081,
+          925
+        ],
+        [
+          1010,
+          938
+        ],
+        [
+          916,
+          936
+        ],
+        [
+          850,
+          926
+        ],
+        [
+          805,
+          912
+        ],
+        [
+          802,
+          858
+        ],
+        [
+          810,
+          822
+        ],
+        [
+          845,
+          786
+        ],
+        [
+          884,
+          742
+        ],
+        [
+          919,
+          739
+        ],
+        [
+          938,
+          750
+        ]
+      ],
+      "featherSourcePixels": 5,
+      "role": "Union of old v1 head/neck/whiskers/shadow plus new v2 head/neck/rug contact; preserve v1 torso/paws/tail/rug outside this polygon."
     }
   },
   "kitchen": {

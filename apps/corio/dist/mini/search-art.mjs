@@ -1,15 +1,16 @@
-import {SEARCH_SCENES} from './search-data.mjs?v=0.9.0';
-import {PAINTED_SCENES} from './search-painted.mjs?v=0.9.0';
-import {SEARCH_CATS} from './search-cat-art.mjs?v=0.9.0';
-import {searchAmbient,searchNight} from './search-ambient.mjs?v=0.9.0';
-import {exactSearchSilhouette,movableSearchProp,repairSearchBackground} from './search-props.mjs?v=0.9.0';
+import {SEARCH_SCENES} from './search-data.mjs?v=0.9.1';
+import {PAINTED_SCENES} from './search-painted.mjs?v=0.9.1';
+import {SEARCH_CATS} from './search-cat-art.mjs?v=0.9.1';
+import {searchAmbient,searchNight} from './search-ambient.mjs?v=0.9.1';
+import {exactSearchSilhouette,movableSearchProp,repairSearchBackground} from './search-props.mjs?v=0.9.1';
 const asset=file=>new URL('../assets/'+file,import.meta.url).href;
 const scale=800/1536,height=1024*scale;
 let serial=0;
 function catBasePatch(scene){
-  const patch=SEARCH_CATS[scene].basePatch;if(!patch)return'';
+  return [SEARCH_CATS[scene].basePatch,SEARCH_CATS[scene].headPatch].filter(Boolean).map(patch=>{
   const id='cat-base-'+(++serial),[x,y,w,h]=patch.bounds;
   return `<g transform="scale(${scale})"><defs><filter id="${id}-soft" x="${x-12}" y="${y-12}" width="${w+24}" height="${h+24}" filterUnits="userSpaceOnUse"><feGaussianBlur stdDeviation="3"/></filter><mask id="${id}" maskUnits="userSpaceOnUse" x="${x-12}" y="${y-12}" width="${w+24}" height="${h+24}"><polygon points="${patch.polygon.map(p=>p.join(',')).join(' ')}" fill="white" filter="url(#${id}-soft)"/></mask></defs><image href="${asset(patch.file)}" width="1536" height="1024" mask="url(#${id})" pointer-events="none"/></g>`;
+  }).join('');
 }
 function catLayers(scene){
   const cat=SEARCH_CATS[scene],prefix='cat-detail-'+(++serial);
