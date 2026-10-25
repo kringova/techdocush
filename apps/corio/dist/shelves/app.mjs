@@ -1,10 +1,11 @@
-import {catFigure} from '../characters.mjs?v=0.8.1';
-import {createModeController} from '../modes.mjs?v=0.8.1';
-import {ITEMS,SHELF_LEVELS,createShelfGame,transfer,solveShelf} from './engine.mjs?v=0.8.1';
-import {shelfArt} from './art.mjs?v=0.8.1';
-import {setupFocusUI} from '../mini/focus.mjs?v=0.8.1';
+import {catFigure} from '../characters.mjs?v=0.8.2';
+import {createModeController} from '../modes.mjs?v=0.8.2';
+import {ITEMS,SHELF_LEVELS,createShelfGame,transfer,solveShelf} from './engine.mjs?v=0.8.2';
+import {shelfArt} from './art.mjs?v=0.8.2';
+import {setupFocusUI} from '../mini/focus.mjs?v=0.8.2';
+import {shelfCatEyes,createShelfLife} from './life.mjs?v=0.8.2';
 const $=s=>document.querySelector(s),board=$('#shelves'),win=$('#win');
-let modes=null,platformPaused=false,paused=false;
+let modes=null,platformPaused=false,paused=false,catLife=null;
 let state=createShelfGame(),selected=-1,history=[],drag=null,ghost=null,ignoreClickUntil=0;
 let best=Array(SHELF_LEVELS.length).fill(null);
 try{const saved=JSON.parse(localStorage.getItem('corio-shelves-v1'));if(Array.isArray(saved))best=best.map((_,i)=>Number.isInteger(saved[i])&&saved[i]>0?saved[i]:null);}catch{}
@@ -23,6 +24,7 @@ function render(){
 
     board.append(shelf);
   });
+  board.insertAdjacentHTML('beforeend',shelfCatEyes());catLife?.afterRender();
   $('#moves').textContent=state.moves;$('#level-number').textContent=`${state.index+1} / ${SHELF_LEVELS.length}`;$('#level-name').textContent=level.name;$('#undo').disabled=!history.length;
   $('#goal').textContent='Собери на каждой полке один вид вещей';
   for(const button of $('#levels').children){button.setAttribute('aria-current',String(+button.dataset.level===state.index));button.classList.toggle('completed',best[+button.dataset.level]!==null);}fit();
@@ -81,6 +83,7 @@ modes=createModeController({gameId:'shelves',host:document.querySelector('[data-
 Object.defineProperty(window,'__corioModes',{value:()=>modes.state()});
 window.addEventListener('corio:platform-pause',()=>{platformPaused=true;clearDrag();window.dispatchEvent(new Event('corio:pause'));});
 window.addEventListener('corio:platform-resume',()=>{platformPaused=false;window.dispatchEvent(new Event('corio:resume'));});
+catLife=createShelfLife({host:board,isBlocked:blocked});
 load(0);
 window.addEventListener('blur',pause);document.addEventListener('visibilitychange',()=>{if(document.hidden)pause();});
 new ResizeObserver(fit).observe($('#scene'));setupFocusUI();

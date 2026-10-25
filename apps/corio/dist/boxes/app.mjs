@@ -1,6 +1,6 @@
-import {createModeController} from '../modes.mjs?v=0.8.1';
-import {SIZE,LEVELS,createGame,move,covered,unlocked,findPath} from './game-engine.mjs?v=0.8.1';
-import {roomAtlas,paintRoom} from './room-art.mjs?v=0.8.1';
+import {createModeController} from '../modes.mjs?v=0.8.2';
+import {SIZE,LEVELS,createGame,move,covered,unlocked,findPath} from './game-engine.mjs?v=0.8.2';
+import {paintRoom,roomArtReady,decodeRoomArt} from './room-art.mjs?v=0.8.2';
 
 const $=selector=>document.querySelector(selector);
 const canvas=$('#board'),ctx=canvas.getContext('2d'),overlay=$('#overlay');
@@ -37,7 +37,7 @@ function round(context,x,y,w,h,r,fill,stroke=INK,line=2){
   context.beginPath();context.roundRect(x,y,w,h,Math.min(r,w/2,h/2));if(fill){context.fillStyle=fill;context.fill();}if(stroke){context.strokeStyle=stroke;context.lineWidth=line;context.stroke();}
 }
 function furniture(p){
-  const kind={shelf:'bookcase',pouf:'sofa'}[p.kind]||p.kind;
+  const kind=p.w===1&&p.h===1&&['shelf','table'].includes(p.kind)?'planter':({shelf:'bookcase',pouf:'sofa'}[p.kind]||p.kind);
   paintRoom(bg,kind,p.x*C+3,p.y*C+3,p.w*C-6,p.h*C-6,{rotation:p.w>p.h?Math.PI/2:0});
 }
 function drawBackground(){
@@ -175,11 +175,11 @@ canvas.addEventListener('pointerup',event=>{
 });
 canvas.addEventListener('pointercancel',()=>{touch=null;clearHold();});
 // Read-only state is available for prototype verification, never for moving the cat.
-Object.defineProperty(window,'__corio',{value:()=>({...game,boxes:game.boxes.map(b=>({...b})),phase,soundEnabled,animating:!!transition,renderedFrames,framePending:frameId!==null,undoDepth:history.length,covered:covered(LEVELS[game.levelIndex],game.boxes),unlocked:unlocked(game),best:[...best],artVersion:'boxes-room-kit-alpha-v2',heading,assetsReady:roomAtlas.complete&&roomAtlas.naturalWidth>0}),writable:false});
+Object.defineProperty(window,'__corio',{value:()=>({...game,boxes:game.boxes.map(b=>({...b})),phase,soundEnabled,animating:!!transition,renderedFrames,framePending:frameId!==null,undoDepth:history.length,covered:covered(LEVELS[game.levelIndex],game.boxes),unlocked:unlocked(game),best:[...best],artVersion:'boxes-kit-v2-cat-v2-planter-v1',heading,assetsReady:roomArtReady()}),writable:false});
 modes=createModeController({gameId:'boxes',host:document.querySelector('[data-modes]'),getMoves:()=>game.moves,isWon:()=>game.won,canUndo:()=>history.length>0,onUndo:undo,onRestart:()=>loadLevel(game.levelIndex),onBlock:clearHold,getSDK:async()=>window.__corioSDK||null});
 new MutationObserver(()=>{if($('#mode-dialog').open){clearHold();freezeDrawing();}else if(phase==='playing')resumeDrawing();}).observe($('#mode-dialog'),{attributes:true,attributeFilter:['open']});
 Object.defineProperty(window,'__corioModes',{value:()=>modes.state()});
 window.addEventListener('corio:platform-pause',()=>{if(platformPhase===null)platformPhase=phase;phase='platform';clearHold();freezeDrawing();window.dispatchEvent(new Event('corio:pause'));});
 window.addEventListener('corio:platform-resume',()=>{if(platformPhase!==null){phase=platformPhase;platformPhase=null;if(phase!=='paused'){resumeDrawing();window.dispatchEvent(new Event('corio:resume'));}}});
 document.addEventListener('visibilitychange',()=>{if(document.hidden){pause();freezeDrawing();}else if(phase==='playing')resumeDrawing();});
-try{await roomAtlas.decode();$('#loading').hidden=true;loadLevel(0);requestDraw();}catch{phase='error';$('#loading').textContent='Не загрузился кот. Обнови страницу.';}
+try{await decodeRoomArt();$('#loading').hidden=true;loadLevel(0);requestDraw();}catch{phase='error';$('#loading').textContent='Не загрузился кот. Обнови страницу.';}

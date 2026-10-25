@@ -4,6 +4,8 @@ export function fitFocusedScene(zoom=1){
   if(!svg)return;
   const scale=Math.min(viewport.clientWidth/800,viewport.clientHeight/520)*zoom;
   svg.style.width=(800*scale)+'px';svg.style.height=(520*scale)+'px';
+  const painting=svg.closest('.search-painting');
+  if(painting){painting.style.width=(800*scale)+'px';painting.style.height=(520*scale)+'px';painting.style.setProperty('--lamp-radius',(104*scale)+'px');}
   for(const target of svg.querySelectorAll('[data-find]')){
     const rect=target.querySelector('rect');if(!rect)continue;
     const original=['x','y','width','height'].map(name=>Number(rect.dataset[name]??(rect.dataset[name]=rect.getAttribute(name))));

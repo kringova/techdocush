@@ -3,3 +3,18 @@
 .search-cat:not([data-keyboard-focus]):focus>rect,.search-object:not([data-keyboard-focus]):focus>rect:first-child{stroke:none}
 .search-cat[data-keyboard-focus]:focus>rect,.search-object[data-keyboard-focus]:focus>rect:first-child{stroke:#f4df9f;stroke-width:2;stroke-dasharray:5 4}
 [data-lamp-cursor]{display:none}
+.search-painting{position:relative;flex:none;isolation:isolate;overflow:hidden}
+.search-painting>svg{display:block;max-width:none}
+.search-ambient{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.curtain-rod{position:absolute;inset:0;width:100%;height:100%}
+.curtain-cloth{position:absolute;left:22.15%;top:-.8%;width:9.15%;height:29.5%;transform-origin:70% 0;animation:curtain-sway 7s ease-in-out infinite;will-change:transform}
+@keyframes curtain-sway{0%,100%{transform:skewX(-3.4deg) scaleX(.98)}50%{transform:skewX(3.8deg) scaleX(1.02)}}
+.steam-wisp{position:absolute;left:10.7%;top:13.4%;width:3.9%;height:10.5%;opacity:0;animation:steam-rise 4.7s linear infinite;will-change:transform,opacity}
+.wisp-1{left:12%;animation-delay:-1.6s}.wisp-2{left:9.8%;animation-delay:-3.1s}
+@keyframes steam-rise{0%{transform:translate(0,30%);opacity:0}18%{opacity:.6}68%{opacity:.45}100%{transform:translate(12%,-30%);opacity:0}}
+.yard-stars .star{position:absolute;width:1.15%;height:1.7%;animation:star-breathe 5.2s ease-in-out infinite;will-change:opacity}
+.star-1{animation-delay:-1.9s!important}.star-2{animation-delay:-3.2s!important}.star-3{animation-delay:-4.4s!important}
+@keyframes star-breathe{0%,100%{opacity:.15}50%{opacity:1}}
+.search-night{position:absolute;inset:0;pointer-events:none;contain:strict;transform:translateZ(0);background:radial-gradient(circle var(--lamp-radius,90px) at var(--lamp-x,50%) var(--lamp-y,50%),transparent 0 62%,#0b1828c2 100%)}
+.life-paused .search-ambient *{animation-play-state:paused!important}
+@media(prefers-reduced-motion:reduce){.search-ambient *{animation:none!important}.steam-wisp{opacity:.3}.yard-stars .star{opacity:.6}}
