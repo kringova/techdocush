@@ -69,6 +69,78 @@
       "status": "prototype-draft",
       "prompt": "Brief and geometry stored in SVG metadata; C primary, domestic evening atmosphere",
       "review": "Rendered in browser with props and original saved cat; no external resources, logos, font dependencies or franchise assets"
+    },
+    {
+      "file": "cat-reactions-alpha-v1.png",
+      "sha256": "b781c1dd9cea1645c346a2e8aab0369a6e06557196a5a2b05d18c6e46b24cab4",
+      "role": "Original generated draft for art refinement 0.6; same cat and C palette",
+      "tool": "built-in image_gen",
+      "reviewSet": "visual/characters/art-pass-v1.json",
+      "userApproved": false
+    },
+    {
+      "file": "cat-wet-v1.png",
+      "sha256": "1c1bdf1ea82c40d2810d2f20c5ae59fc88f79eca80062f6c796e0107543d8c54",
+      "role": "Original generated draft for art refinement 0.6; same cat and C palette",
+      "tool": "built-in image_gen",
+      "reviewSet": "visual/characters/art-pass-v1.json",
+      "userApproved": false
+    },
+    {
+      "file": "cat-towel-v1.png",
+      "sha256": "74b91a203d8d10b134b11ded5e705a1bb7df1d1ca00512388eab90def816dbd9",
+      "role": "Original generated draft for art refinement 0.6; same cat and C palette",
+      "tool": "built-in image_gen",
+      "reviewSet": "visual/characters/art-pass-v1.json",
+      "userApproved": false
+    },
+    {
+      "file": "food-atlas-v1.png",
+      "sha256": "5af66220116b75b25f801bef538b0c6e025710f8a288a371c3ad20e8719e4a80",
+      "role": "Original generated draft for art refinement 0.6; same cat and C palette",
+      "tool": "built-in image_gen",
+      "reviewSet": "visual/characters/art-pass-v1.json",
+      "userApproved": false
+    },
+    {
+      "file": "litter-pairs-atlas-v1.png",
+      "sha256": "b555a65f95df425b5d4140e4658d7fdd079dac6889057f40ac148c14a2197fbd",
+      "role": "Original generated draft for art refinement 0.6; same cat and C palette",
+      "tool": "built-in image_gen",
+      "reviewSet": "visual/characters/art-pass-v1.json",
+      "userApproved": false
+    },
+    {
+      "file": "search-room-painted-v1.png",
+      "sha256": "b1c73885fe48b973b37f2feb85da0179fb6aed39916c04a6af3f1e6bd81912f0",
+      "role": "Original generated draft for art refinement 0.6; same cat and C palette",
+      "tool": "built-in image_gen",
+      "reviewSet": "visual/characters/art-pass-v1.json",
+      "userApproved": false
+    },
+    {
+      "file": "search-kitchen-painted-v1.png",
+      "sha256": "ff69b970142c6fc90ac65a26e1c3fba528546358ba6f529bca7140e5505945ab",
+      "role": "Original generated draft for art refinement 0.6; same cat and C palette",
+      "tool": "built-in image_gen",
+      "reviewSet": "visual/characters/art-pass-v1.json",
+      "userApproved": false
+    },
+    {
+      "file": "search-yard-painted-v1.png",
+      "sha256": "f26664bc3ae601619a7b7c6738b02773c308f5b6d40437178c7ef66429e85d27",
+      "role": "Original generated draft for art refinement 0.6; same cat and C palette",
+      "tool": "built-in image_gen",
+      "reviewSet": "visual/characters/art-pass-v1.json",
+      "userApproved": false
+    },
+    {
+      "file": "grooming-corner-painted-v1.png",
+      "sha256": "f08e27301cbff779ba1a21745d05565800c3dc6c0d6195d73bdb622803f00582",
+      "role": "Original generated draft for art refinement 0.6; same cat and C palette",
+      "tool": "built-in image_gen",
+      "reviewSet": "visual/characters/art-pass-v1.json",
+      "userApproved": false
     }
   ],
   "furniture": "Original code-drawn plan-view furniture; collision geometry matches footprints",
@@ -125,8 +197,8 @@
           "durationSeconds": 60,
           "peak": 0.21552924811840057,
           "rms": 0.04939852899237797,
-          "meanLeft": 1.6406272508760968e-8,
-          "meanRight": -2.915411167065063e-8,
+          "meanLeft": 1.6406272508760968e-08,
+          "meanRight": -2.915411167065063e-08,
           "seamStep": 0.0017393268644809723,
           "largestAdjacentStep": 0.020158632192760706
         },
@@ -156,8 +228,8 @@
           "durationSeconds": 60,
           "peak": 0.2724195122718811,
           "rms": 0.05231171203820593,
-          "meanLeft": 0.0000033602144898761615,
-          "meanRight": -0.000007988812686721601,
+          "meanLeft": 3.3602144898761615e-06,
+          "meanRight": -7.988812686721601e-06,
           "seamStep": 0.02878592163324356,
           "largestAdjacentStep": 0.06695017963647842
         },
@@ -187,8 +259,8 @@
           "durationSeconds": 60,
           "peak": 0.2097516804933548,
           "rms": 0.03990045353189665,
-          "meanLeft": -0.00000458489117583078,
-          "meanRight": 0.00000431319597441791,
+          "meanLeft": -4.58489117583078e-06,
+          "meanRight": 4.31319597441791e-06,
           "seamStep": 0.001985898707062006,
           "largestAdjacentStep": 0.00872015580534935
         },
@@ -252,8 +324,8 @@
           "durationSeconds": 60,
           "peak": 0.5585731267929077,
           "rms": 0.08074473626027463,
-          "meanLeft": -7.527537444937122e-9,
-          "meanRight": 4.7935780107927485e-8,
+          "meanLeft": -7.527537444937122e-09,
+          "meanRight": 4.7935780107927485e-08,
           "seamStep": 0.0028071203269064426,
           "largestAdjacentStep": 0.1529121808707714
         },
@@ -280,12 +352,12 @@
     "updatedAt": "2026-10-24T21:27:41.320Z"
   },
   "miniGames": {
-    "files": "mini/engine.mjs, mini/views.mjs, mini/search-art.mjs, mini/search-data.mjs",
+    "files": "mini/engine.mjs, mini/views.mjs, mini/search-art.mjs, mini/search-painted.mjs, characters.mjs",
     "levels": 5,
-    "sceneAndPropMethod": "Original code-native SVG/CSS; existing saved cat, yarn, bowl and brush reused",
+    "sceneAndPropMethod": "Original full-resolution painted scenes, transparent character/item atlases, SVG clip paths and interactive regions; CSS/SVG boards",
     "foodSources": "visual/care-prototype-sources.json",
     "hiddenObjectReference": "visual/hidden-object-reference.json",
-    "litterSound": "Original short filtered procedural noise triggered by scoop/rake gestures; separately muted; no samples",
-    "scope": "Mechanic prototypes. Character sprite is fixed-view; scene detail and animation remain provisional."
+    "litterSound": "Original short filtered procedural noise on reveal; no samples, separately muted",
+    "scope": "Nine prototypes. Same cat in situational poses; no full walking animation. New art awaits user assessment."
   }
 }

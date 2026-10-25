@@ -5,7 +5,7 @@ export const SERIES=[
   {id:'food',title:'Что в миске?',path:'food/',product:'corio_food_relax'},
   {id:'pet',title:'Вечер с котом',path:'pet/',product:'corio_pet_relax'},
   {id:'grooming',title:'Чистые лапы',path:'grooming/',product:'corio_grooming_relax'},
-  {id:'litter',title:'Тихий лоток',path:'litter/',product:'corio_litter_relax'},
+  {id:'litter',title:'Пары в лотке',path:'litter/',product:'corio_litter_relax'},
   {id:'yarn',title:'Распутай клубок',path:'yarn/',product:'corio_yarn_relax'},
   {id:'search',title:'Куда пропало?',path:'search/',product:'corio_search_relax'}
 ];

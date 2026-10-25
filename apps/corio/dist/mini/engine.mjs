@@ -1,4 +1,4 @@
-import {SEARCH_LEVELS,SEARCH_SCENES} from './search-data.mjs?v=0.5.0';
+import {SEARCH_LEVELS,SEARCH_SCENES} from './search-data.mjs?v=0.6.0';
 // Original short scenarios for comparing mechanics. No clocks or offline decay.
 const copy=value=>structuredClone(value);
 export const FOODS={
@@ -70,9 +70,11 @@ const groomingLevels=[
 export const GROOM_STEPS={dust:['wipe',null],tangle:['brush',null],mud:['water','soapy'],soapy:['soap','foam'],foam:['rinse','wet'],wet:['towel',null]};
 export const GROOM_TOOLS={wipe:'Тканевая салфетка',brush:'Щётка',water:'Тёплая вода',soap:'Шампунь для кошек',rinse:'Смыть пену',towel:'Полотенце',pause:'Передышка'};
 const litterLevels=Array.from({length:5},(_,i)=>{
-  const w=[4,5,5,6,6][i],h=[3,3,4,4,5][i],count=i+2,depth=i<2?1:i<4?2:3,clumps=[];
-  for(let n=0;clumps.length<count;n++){const cell=(n*7+i*3+2)%(w*h);if(!clumps.includes(cell))clumps.push(cell);}
-  return{name:['Найти два комочка','Первый слой','Грабли пригодятся','В глубине','Весь лоток'][i],w,h,depth,clumps};
+  const w=[3,4,4,5,6][i],h=[2,3,4,4,4][i],pairs=i+2;
+  const cells=[...Array.from({length:pairs},(_,shape)=>[shape,shape]).flat(),...Array(w*h-pairs*2).fill(null)];
+  let seed=7349+i*977;
+  for(let n=cells.length-1;n>0;n--){seed=(Math.imul(seed,1664525)+1013904223)>>>0;const at=seed%(n+1);[cells[n],cells[at]]=[cells[at],cells[n]];}
+  return{name:['Две первые пары','Пустые местечки','Четыре формы','Запомнить и найти','Весь лоток'][i],w,h,pairs,cells};
 });
 const circle=(n,r=34,cx=50,cy=50)=>Array.from({length:n},(_,i)=>({x:cx+r*Math.cos(-Math.PI/2+i*Math.PI*2/n),y:cy+r*Math.sin(-Math.PI/2+i*Math.PI*2/n)}));
 const yarnLevel=(name,n,wheel=false)=>{
@@ -102,7 +104,7 @@ export const GAMES={
   food:{title:'Что в миске?',levels:foodLevels,rule:'Выбери продукт на тарелке, затем отправь его в подходящую зону. Воду ставим в отдельную поилку.'},
   pet:{title:'Вечер с котом',levels:petLevels,rule:'Помоги коту поесть, попить, поиграть и отдохнуть. Доведи все четыре показателя до трёх отметок.'},
   grooming:{title:'Чистые лапы',levels:groomingLevels,rule:'Выбери инструмент и коснись пятнышка. Следи за настроением: если кот устал, дай ему передышку.'},
-  litter:{title:'Тихий лоток',levels:litterLevels,rule:'Ищи сухие комочки в наполнителе. Грабли снимают верхний слой с трёх клеток; совок копает и собирает.'},
+  litter:{title:'Пары в лотке',levels:litterLevels,rule:'Открывай ячейки совком и ищи две одинаковые формы. Здесь есть и пустые места. Несовпавшая пара снова скроется — запоминай, где что лежит.'},
   yarn:{title:'Распутай клубок',levels:yarnLevels,rule:'Перетаскивай клубочки, чтобы нити не пересекались. Между клубками должно оставаться место.'}
 };
 export function createMini(id,index=0){
@@ -111,9 +113,9 @@ export function createMini(id,index=0){
   if(id==='search')data={found:[],mistakes:0,hint:null};
   if(id==='tunnels')data={pieces:copy(level.pieces)};
   if(id==='food')data={remaining:level.items.map((type,id)=>({type,id})),sorted:[],mistakes:0};
-  if(id==='pet')data={needs:[...level.needs]};
-  if(id==='grooming')data={spots:copy(level.spots),patience:3};
-  if(id==='litter')data={depth:Array(level.w*level.h).fill(level.depth),found:[]};
+  if(id==='pet')data={needs:[...level.needs],pose:'loaf'};
+  if(id==='grooming')data={spots:copy(level.spots),patience:3,washed:false};
+  if(id==='litter')data={open:[],matched:[],empty:[],pending:false};
   if(id==='yarn')data={points:copy(level.points)};
   return{id,index,moves:0,won:false,message:'',...data};
 }
@@ -136,6 +138,7 @@ export function miniAction(state,action){
     if(action.type==='food'&&next.needs[0]>=4){next.message='Кот уже сыт. Лучше выбрать другое действие.';return{...state,message:next.message};}
     next.needs=next.needs.map((n,i)=>Math.max(0,Math.min(4,n+choice.effect[i])));
     if(next.needs.every((n,i)=>n===state.needs[i]))return state;
+    next.pose={food:'cautious',water:'cautious',play:'stretch',rest:'sleep'}[action.type];
     next.message={food:'Кот поел. После корма можно попить.',water:'В поилке свежая вода.',play:'Поиграли. На игру уходят силы, после неё хочется пить.',rest:'Кот немного отдохнул.'}[action.type];
     next.won=next.needs.every(n=>n>=3);
   }else if(id==='grooming'){
@@ -146,17 +149,25 @@ export function miniAction(state,action){
       if(next.patience===0)return{...state,message:'Кот хочет передохнуть. Нажми «Передышка».'};
       const mark=next.spots[at],step=GROOM_STEPS[mark.kind];next.patience--;
       if(step[0]!==action.tool)next.message='Для этого пятнышка нужен другой инструмент.';
-      else if(step[1]){mark.kind=step[1];next.message={soapy:'Пятно намочено. Теперь кошачий шампунь.',foam:'Пену нужно полностью смыть.',wet:'Осталось промокнуть полотенцем.'}[step[1]];}
+      else if(step[1]){mark.kind=step[1];if(action.tool==='water')next.washed=true;next.message={soapy:'Пятно намочено. Теперь кошачий шампунь.',foam:'Пену нужно полностью смыть.',wet:'Осталось промокнуть полотенцем.'}[step[1]];}
       else{next.spots.splice(at,1);next.message='Готово. Хорошо получилось.';}
     }next.won=!next.spots.length;
   }else if(id==='litter'){
-    const cell=action.cell;if(!Number.isInteger(cell)||cell<0||cell>=next.depth.length||!['rake','scoop'].includes(action.type))return state;
-    let changed=false;
-    if(action.type==='rake'){
-      const x=cell%level.w;for(let n=cell;n<=Math.min(cell+2,cell+level.w-1-x);n++)if(next.depth[n]>0){next.depth[n]--;changed=true;}
-    }else if(next.depth[cell]>0){next.depth[cell]--;changed=true;}
-    else if(level.clumps.includes(cell)&&!next.found.includes(cell)){next.found.push(cell);changed=true;next.message='Ещё один комочек в совке.';}
-    if(!changed)return state;next.won=next.found.length===level.clumps.length;
+    if(action.type==='settle'){
+      if(!state.pending)return state;
+      next.open=[];next.pending=false;next.message='Запомнили? Поищем дальше.';return next;
+    }
+    const cell=action.cell;
+    if(action.type!=='reveal'||state.pending||!Number.isInteger(cell)||cell<0||cell>=level.cells.length||[...state.open,...state.matched,...state.empty].includes(cell))return state;
+    if(level.cells[cell]===null){next.empty.push(cell);next.message='Только чистый наполнитель. Здесь пары нет.';}
+    else{
+      next.open.push(cell);
+      if(next.open.length===2){
+        if(level.cells[next.open[0]]===level.cells[cell]){next.matched.push(...next.open);next.open=[];next.message='Одинаковые! Пара нашлась.';}
+        else{next.pending=true;next.message='Разные формы. Сейчас они снова скроются.';}
+      }else next.message='Теперь найди такую же форму.';
+    }
+    next.won=next.matched.length===level.pairs*2;
   }else if(id==='yarn'){
     if(action.type!=='move'||!next.points[action.node]||!Number.isFinite(action.x)||!Number.isFinite(action.y))return state;
     const point={x:Math.max(8,Math.min(92,action.x)),y:Math.max(8,Math.min(92,action.y))};
@@ -178,7 +189,7 @@ export function solutionFor(id,index){
   if(id==='grooming'){
     const actions=[];let state=createMini(id,index);while(!state.won){const action=state.patience===0?{type:'pause'}:{type:'clean',spot:state.spots[0].id,tool:GROOM_STEPS[state.spots[0].kind][0]};actions.push(action);state=miniAction(state,action);}return actions;
   }
-  if(id==='litter')return level.clumps.flatMap(cell=>[...Array.from({length:level.depth},()=>({type:'scoop',cell})),{type:'scoop',cell}]);
+  if(id==='litter')return Array.from({length:level.pairs},(_,shape)=>level.cells.flatMap((value,cell)=>value===shape?[{type:'reveal',cell}]:[])).flat();
   if(id==='yarn'){
     // Move to known untangled geometry via a free staging area, respecting spacing.
     let state=createMini(id,index);const path=[];

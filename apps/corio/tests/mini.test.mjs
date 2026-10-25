@@ -30,9 +30,21 @@ test('grooming distinguishes cloth, water, shampoo, rinse and towel; rest is req
   const blocked=miniAction(state,{type:'clean',tool:'towel',spot:0});assert.equal(blocked.moves,state.moves);assert.equal(blocked.spots.length,1);
   state=miniAction(state,{type:'pause'});state=miniAction(state,{type:'clean',tool:'towel',spot:0});assert.equal(state.won,true);assert.equal(state.spots.length,0);assert.equal(GROOM_STEPS.dust[0],'wipe');
 });
-test('rake stops at the tray edge; clumps are only collected by scoop after uncovering',()=>{
-  const state=createMini('litter',2),level=GAMES.litter.levels[2],last=level.w-1,next=miniAction(state,{type:'rake',cell:last});assert.equal(next.depth[last],state.depth[last]-1);assert.equal(next.depth[last+1],state.depth[last+1]);assert.deepEqual(next.found,[]);
-  let dug=state;for(let i=0;i<level.depth;i++)dug=miniAction(dug,{type:'scoop',cell:level.clumps[0]});assert.equal(dug.found.length,0);dug=miniAction(dug,{type:'scoop',cell:level.clumps[0]});assert.equal(dug.found.length,1);
+test('litter has exact pairs and empty cells on every increasingly large board',()=>{
+  let previous=0;
+  for(const level of GAMES.litter.levels){assert.ok(level.cells.length>previous);previous=level.cells.length;assert.ok(level.cells.includes(null));for(let shape=0;shape<level.pairs;shape++)assert.equal(level.cells.filter(v=>v===shape).length,2);}
+});
+test('empty sand preserves the first selection; mismatches lock until settled without spending a move',()=>{
+  const level=GAMES.litter.levels[0],a=level.cells.indexOf(0),b=level.cells.indexOf(1),empty=level.cells.indexOf(null);
+  let state=miniAction(createMini('litter'),{type:'reveal',cell:a});
+  state=miniAction(state,{type:'reveal',cell:empty});assert.deepEqual(state.open,[a]);assert.deepEqual(state.empty,[empty]);assert.equal(miniAction(state,{type:'reveal',cell:empty}),state);
+  state=miniAction(state,{type:'reveal',cell:b});assert.equal(state.pending,true);assert.equal(miniAction(state,{type:'reveal',cell:level.cells.lastIndexOf(0)}),state);
+  const settled=miniAction(state,{type:'settle'});assert.equal(settled.moves,state.moves);assert.equal(settled.pending,false);assert.deepEqual(settled.open,[]);assert.deepEqual(settled.empty,[empty]);assert.deepEqual(state.open,[a,b]);
+});
+test('litter matching clears only equal forms and does not require digging empty cells',()=>{
+  const level=GAMES.litter.levels[0];let state=createMini('litter');
+  for(const action of solutionFor('litter',0))state=miniAction(state,action);
+  assert.equal(state.won,true);assert.equal(state.matched.length,4);assert.deepEqual(state.empty,[]);assert.equal(state.moves,4);
 });
 test('yarn overlap and collinear shortcuts do not count as untangling',()=>{
   const state=createMini('yarn'),target=state.points[1],rejected=miniAction(state,{type:'move',node:0,...target});assert.equal(rejected.moves,state.moves);assert.deepEqual(rejected.points,state.points);

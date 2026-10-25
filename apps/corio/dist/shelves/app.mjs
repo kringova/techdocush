@@ -1,5 +1,6 @@
-import {createModeController} from '../modes.mjs?v=0.5.0';
-import {ITEMS,SHELF_LEVELS,createShelfGame,transfer,solveShelf} from './engine.mjs?v=0.5.0';
+import {catFigure} from '../characters.mjs?v=0.6.0';
+import {createModeController} from '../modes.mjs?v=0.6.0';
+import {ITEMS,SHELF_LEVELS,createShelfGame,transfer,solveShelf} from './engine.mjs?v=0.6.0';
 const $=s=>document.querySelector(s),board=$('#shelves'),win=$('#win');
 let modes=null,platformPaused=false;
 let state=createShelfGame(),selected=-1,history=[],drag=null,ghost=null,ignoreClickUntil=0;
@@ -70,3 +71,5 @@ Object.defineProperty(window,'__corioModes',{value:()=>modes.state()});
 window.addEventListener('corio:platform-pause',()=>{platformPaused=true;clearDrag();window.dispatchEvent(new Event('corio:pause'));});
 window.addEventListener('corio:platform-resume',()=>{platformPaused=false;window.dispatchEvent(new Event('corio:resume'));});
 load(0);
+
+const observer=document.querySelector('.heading img');if(observer)observer.outerHTML=catFigure('attentive',{className:'shelf-cat',label:'Белый кот наблюдает за полочками'});
