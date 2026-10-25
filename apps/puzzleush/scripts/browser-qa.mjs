@@ -50,7 +50,7 @@ try{
   await mp.screenshot({path:`test-results/nonogram-${width}.png`,fullPage:true});
   await mp.locator('#levels-button').tap();await mp.locator('[data-level="30"]').tap();
   assert.equal(await mp.locator('.nonogram-cell').count(),400);assert.ok(await mp.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
-  const cell=await mp.locator('[data-pixel="0"]').boundingBox();assert.ok(cell.width>=30,`20x20 touch target ${width}: ${cell.width}`);
+  assert.equal(await mp.locator('.nonogram-viewport.fit').count(),1);const completeField=await mp.locator('.nonogram-viewport').evaluate(v=>({w:v.scrollWidth-v.clientWidth,h:v.scrollHeight-v.clientHeight}));assert.ok(completeField.w<=1&&completeField.h<=1);await mp.locator('[data-zoom=in]').tap();const cell=await mp.locator('[data-pixel="0"]').boundingBox();assert.ok(cell.width>=30,`20x20 touch target ${width}: ${cell.width}`);
   await mp.screenshot({path:`test-results/nonogram-20x20-${width}.png`,fullPage:true});
   checks.push(`mobile ${width}: touch fill/cross, undo, saved state, both grid sizes fit`);await mobile.close();
  }

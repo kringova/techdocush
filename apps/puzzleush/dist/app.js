@@ -1,4 +1,5 @@
 import {DIGITS,PEERS,candidates,conflicts,contradictionHint,emptyNotes,generateSudoku,getHint,shortCell} from './engine/sudoku.js?v=4';
+import {fitNonogram as nonogramFitSize} from './engine/nonogram-view.js';
 import {NONOGRAMS,lineState,nonogramSolved,autoCrossLines,correctBlackLine} from './engine/nonogram.js?v=2';
 import {generateWordsearch,selectedWord,revealWord,wordsearchSolved,initialLetterCells} from './engine/wordsearch.js?v=2';
 import {mountWordsearch} from './wordsearch-ui.js?v=2';
@@ -6,7 +7,7 @@ import {createDoubleTap} from './engine/double-tap.js';
 import {createBenefits} from './engine/benefits.js';
 import {createPlatform} from './platform/adapter.js';
 import {createAnalytics,metricaSender} from './platform/analytics.js?v=3';
-import {mountOnboarding} from './platform/onboarding.js?v=5';
+import {mountOnboarding} from './platform/onboarding.js?v=6';
 import {STORAGE_KEY,V3_STORAGE_KEY,V2_STORAGE_KEY,LEGACY_STORAGE_KEY,chapterFor,chaptersFor,chapterLevels,levelCount,levelNumberFor,nextLevelFor,migrateProgressV1,migrateProgressV2,migrateProgressV3} from './engine/progress.js?v=5';
 
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
@@ -18,7 +19,7 @@ let benefits=null,benefitsError=false;
 if(isYandex)try{benefits=createBenefits(localStorage,`kletochki-yandex-${fixedGame}-benefits-v1`);}catch{benefitsError=true;const memory=new Map();benefits=createBenefits({getItem:k=>memory.get(k)||null,setItem:(k,v)=>memory.set(k,v)},'session');}
 const analyticsCounter=Number(document.documentElement.dataset.metrica||0);
 const analyticsEnabled=isYandex&&analyticsCounter>0;
-const analytics=createAnalytics({enabled:analyticsEnabled,send:metricaSender({enabled:isYandex,counterId:analyticsCounter}),context:()=>({game,level:store[game].level,levelNumber:levelNumberFor(game,store[game].level),group:chapterFor(game,store[game].level).label,size:game==='nonogram'?NONOGRAMS[store.nonogram.level-1].grid.length:game==='wordsearch'?generateWordsearch(store.wordsearch.level).size:9,version:'1.4.1'})});
+const analytics=createAnalytics({enabled:analyticsEnabled,send:metricaSender({enabled:isYandex,counterId:analyticsCounter}),context:()=>({game,level:store[game].level,levelNumber:levelNumberFor(game,store[game].level),group:chapterFor(game,store[game].level).label,size:game==='nonogram'?NONOGRAMS[store.nonogram.level-1].grid.length:game==='wordsearch'?generateWordsearch(store.wordsearch.level).size:9,version:'1.4.2'})});
 const platform=createPlatform({enabled:isYandex,onAdEvent:(name,params)=>analytics.event(name,params),onState(){document.body.dataset.platformPaused=String(platform.blocked());syncGameplay();},onError(){toast('Связь с Яндексом недоступна. Рекламу можно попробовать позже.');}});
 const tapGesture=createDoubleTap();
 const clone=x=>structuredClone(x),range=n=>Array.from({length:n},(_,i)=>i);
@@ -52,7 +53,8 @@ function readStore(){
  }catch{loadError=true;storageAvailable=false;return fresh();}
 }
 let store=readStore(),game=fixedGame||store.activeGame,selected=-1,pencil=false,paint='fill',activeHint=null;
-let histories={sudoku:[],nonogram:[],wordsearch:[]},stroke=null,toastTimer,zoomCell=32,fitNonogram=false;
+let histories={sudoku:[],nonogram:[],wordsearch:[]},stroke=null,toastTimer,zoomCell=32,fitNonogram=true;
+let nonogramResize=null;
 let wordView=null,wordMode='drag';
 const puzzleKey=()=>generateSudoku(store.sudoku.level).puzzle.join('');
 const round=()=>isYandex&&game==='sudoku'?benefits.attempt(puzzleKey()):null;
@@ -105,7 +107,7 @@ function renderChrome(){
  $('#rules-button').innerHTML=`${icon('info')}${sudoku?'Как играть и пользоваться пометками':'Как читать числа у края поля'}`;
  if(game==='wordsearch'){$('#journey-copy').textContent='30 тем, поля от 6 × 6 до 12 × 12. Любой уровень доступен сразу.';$('#guide-kicker').textContent='КОГДА СЛОВО НЕ НАХОДИТСЯ';$('#guide-title').innerHTML='Узнай,<br>что искать.';$('#guide-copy').textContent='Сначала видны тема и количество слов. Подсказка раскроет одно из оставшихся — и поиск продолжится.';$('#guide-button').innerHTML=`Раскрыть слово${icon('arrow')}`;$('#guide-footnote').textContent='Найденные слова остаются в твоём списке.';$('#rules-button').innerHTML=`${icon('info')}Как искать и выделять слова`;}
 }
-function renderBoard(){wordView?.destroy();wordView=null;game==='sudoku'?renderSudoku():game==='wordsearch'?renderWordsearch():renderNonogram();}
+function renderBoard(){nonogramResize?.disconnect();nonogramResize=null;wordView?.destroy();wordView=null;game==='sudoku'?renderSudoku():game==='wordsearch'?renderWordsearch():renderNonogram();}
 function renderWordsearch(){
  const p=generateWordsearch(store.wordsearch.level),s=current();
  $('#board-caption').textContent=`Уровень ${p.level} · ${p.theme}`;
@@ -219,14 +221,14 @@ function afterMove(){
 function renderNonogram(){
  const p=NONOGRAMS[store.nonogram.level-1],s=current(),n=p.grid.length;
  const previous=$('.nonogram-viewport'),position=previous?.dataset.level===String(p.level)?{left:previous.scrollLeft,top:previous.scrollTop}:{left:0,top:0};
- const large=n>10;if(!large&&paint==='move')paint='fill';$('#pan-button').hidden=!large;
- $('.touch-note').textContent=large?'Для прокрутки выбери «Двигать». Закраска и крестик доступны касанием и штрихом. На ПК крестик — ПКМ.':'Касайся клеток или веди пальцем. На компьютере ПКМ ставит крестик.';
+ const large=n>5;if((!large||fitNonogram)&&paint==='move')paint='fill';$('#pan-button').hidden=!large||fitNonogram;
+ $('.touch-note').textContent=large&&fitNonogram?'Поле видно целиком. + увеличивает клетки; «Всё поле» возвращает обзор.':large?'Для прокрутки выбери «Двигать». Закраска и крестик доступны касанием и штрихом. На ПК крестик — ПКМ.':'Касайся клеток или веди пальцем. На компьютере ПКМ ставит крестик.';
  $('#board-caption').textContent=`Уровень ${p.level} · ${n} × ${n}`;
- const maxRow=Math.max(...p.rows.map(r=>r.length)),maxCol=Math.max(...p.cols.map(r=>r.length));
- const cw=n===5?46:Math.max(48,maxRow*11+10),ch=n===5?50:Math.max(48,maxCol*12+10);
+ const maxCol=Math.max(...p.cols.map(r=>r.length));
+ const cw=Math.max(n===5?46:48,...p.rows.map(clue=>clue.reduce((sum,v)=>sum+String(v).length*8,0)+(clue.length-1)*5+11)),ch=Math.max(n===5?50:48,maxCol*15+7);
  const dimensions=large&&!fitNonogram?`width:${cw+n*zoomCell}px;height:${ch+n*zoomCell}px;aspect-ratio:auto;`:'';
- let html=large?`<div class="nonogram-view-tools"><span>Масштаб</span><button data-zoom="out" aria-label="Уменьшить поле" ${fitNonogram||zoomCell<=24?'disabled':''}>−</button><span class="zoom-value">${fitNonogram?'Обзор':Math.round(zoomCell/32*100)+'%'}</span><button data-zoom="in" aria-label="Увеличить поле" ${!fitNonogram&&zoomCell>=48?'disabled':''}>+</button><button data-zoom="fit" class="${fitNonogram?'active':''}">${fitNonogram?'Крупно':'Всё поле'}</button></div>`:'';
- html+=`<div class="nonogram-viewport ${large?'large':''}" data-level="${p.level}" tabindex="${large?0:-1}" aria-label="Поле ${n} на ${n}${large?', можно перемещать':''}"><div class="nonogram-board ${s.won?'nonogram-completed':''} ${paint==='move'?'pan-mode':''}" role="group" aria-label="Японский кроссворд, поле ${n} на ${n}" style="--size:${n};--clue-width:${cw}px;--clue-height:${ch}px;${dimensions}"><div class="nonogram-corner" aria-hidden="true">${n}×${n}</div>`;
+ let html=large?`<div class="nonogram-view-tools"><span>Масштаб</span><button data-zoom="out" aria-label="Уменьшить поле" ${fitNonogram||zoomCell<=24?'disabled':''}>−</button><span class="zoom-value">${fitNonogram?'Целиком':Math.round(zoomCell/32*100)+'%'}</span><button data-zoom="in" aria-label="Увеличить поле" ${!fitNonogram&&zoomCell>=48?'disabled':''}>+</button><button data-zoom="fit" class="${fitNonogram?'active':''}">Всё поле</button></div>`:'';
+ html+=`<div class="nonogram-viewport ${large?'large':''} ${large&&fitNonogram?'fit':''}" data-level="${p.level}" tabindex="${large?0:-1}" aria-label="Поле ${n} на ${n}${large?(fitNonogram?', видно целиком':', можно перемещать'):''}"><div class="nonogram-board ${s.won?'nonogram-completed':''} ${paint==='move'?'pan-mode':''}" role="group" aria-label="Японский кроссворд, поле ${n} на ${n}" style="--size:${n};--clue-width:${cw}px;--clue-height:${ch}px;${dimensions}"><div class="nonogram-corner" aria-hidden="true">${n}×${n}</div>`;
  for(let c=0;c<n;c++){
   const line=range(n).map(r=>s.cells[r*n+c]),status=lineState(line,p.cols[c]);
   html+=`<div class="n-clue col ${correctBlackLine(line,p.grid.map(row=>row[c]))?'complete':''} ${!status.valid?'invalid':''}" data-clue-col="${c}" aria-label="Столбец ${c+1}, группы ${p.cols[c].join(', ')}">${p.cols[c].map(v=>`<span>${v}</span>`).join('')}</div>`;
@@ -239,7 +241,9 @@ function renderNonogram(){
  $('#board-mount').innerHTML=html+'</div></div>';
  $('.nonogram-viewport').scrollLeft=position.left;$('.nonogram-viewport').scrollTop=position.top;
  $$('[data-zoom]').forEach(b=>b.addEventListener('click',()=>changeNonogramZoom(b.dataset.zoom)));
- const board=$('.nonogram-board');board.addEventListener('contextmenu',e=>e.preventDefault());board.addEventListener('pointerdown',startStroke);
+ const board=$('.nonogram-board');
+ if(large&&fitNonogram){const viewport=$('.nonogram-viewport'),fit=()=>{if(!viewport.isConnected)return;const size=nonogramFitSize({size:n,clueWidth:cw,clueHeight:ch,width:viewport.clientWidth,height:viewport.clientHeight});board.style.width=size.width+'px';board.style.height=size.height+'px';board.style.aspectRatio='auto';board.style.setProperty('--clue-width',size.clueWidth+'px');board.style.setProperty('--clue-height',size.clueHeight+'px');board.style.setProperty('--clue-scale',size.scale);};nonogramResize=new ResizeObserver(fit);nonogramResize.observe(viewport);fit();}
+ board.addEventListener('contextmenu',e=>e.preventDefault());board.addEventListener('pointerdown',startStroke);
  board.addEventListener('keydown',e=>{const b=e.target.closest('[data-pixel]');if(!b||current().won||platform.blocked()||(paint==='move'&&e.key.toLowerCase()!=='x'))return;const i=Number(b.dataset.pixel);if(e.key===' '||e.key==='Enter'||e.key==='x'||e.key==='X'){e.preventDefault();pushHistory();const v=e.key.toLowerCase()==='x'?0:paint==='cross'?0:1;current().cells[i]=current().cells[i]===v?-1:v;afterMove();$(`[data-pixel="${i}"]`)?.focus({preventScroll:true});}});
  const invalidRows=p.rows.filter((clue,r)=>!lineState(s.cells.slice(r*n,r*n+n),clue).valid).length;
  const invalidCols=p.cols.filter((clue,c)=>!lineState(range(n).map(r=>s.cells[r*n+c]),clue).valid).length;
@@ -248,7 +252,7 @@ function renderNonogram(){
 }
 function changeNonogramZoom(action){
  const old=$('.nonogram-viewport'),x=(old.scrollLeft+old.clientWidth/2)/old.scrollWidth,y=(old.scrollTop+old.clientHeight/2)/old.scrollHeight;
- if(action==='fit')fitNonogram=!fitNonogram;else{zoomCell=fitNonogram?32:Math.max(24,Math.min(48,zoomCell+(action==='in'?8:-8)));fitNonogram=false;}
+ if(action==='fit')fitNonogram=true;else{zoomCell=fitNonogram?32:Math.max(24,Math.min(48,zoomCell+(action==='in'?8:-8)));fitNonogram=false;}
  renderBoard();const next=$('.nonogram-viewport');next.scrollLeft=x*next.scrollWidth-next.clientWidth/2;next.scrollTop=y*next.scrollHeight-next.clientHeight/2;
 }
 function startStroke(e){
@@ -321,7 +325,7 @@ function openLevels(){
  $('#levels-content').innerHTML=chapters.map(ch=>`<section class="level-chapter"><h3>${ch.label}</h3><div class="level-grid">${chapterLevels(ch).map(n=>{const done=store[game].completed[n];return `<button class="level-item ${done?'done':''} ${n===store[game].level?'current':''}" data-level="${n}" data-level-number="${levelNumberFor(game,n)}" aria-label="Уровень ${levelNumberFor(game,n)}${done?', пройден':''}">${levelNumberFor(game,n)}</button>`;}).join('')}</div></section>`).join('');
  $$('[data-level]').forEach(b=>b.addEventListener('click',()=>{hideDialog('#levels-dialog');setLevel(Number(b.dataset.level));}));showDialog('#levels-dialog');
 }
-function setLevel(level){analytics.leave('level_change');store[game].level=level;analytics.levelStart();histories[game]=[];selected=-1;activeHint=null;pencil=false;tapGesture.reset();fitNonogram=false;ensureState();save();render();window.scrollTo({top:0,behavior:'instant'});if(round()&&round().status!=='playing')openAttempt();}
+function setLevel(level){analytics.leave('level_change');store[game].level=level;analytics.levelStart();histories[game]=[];selected=-1;activeHint=null;pencil=false;tapGesture.reset();fitNonogram=true;ensureState();save();render();window.scrollTo({top:0,behavior:'instant'});if(round()&&round().status!=='playing')openAttempt();}
 function openComplete(){
  const level=store[game].level;$('#complete-title').textContent=game==='sudoku'?'Всё сошлось!':game==='wordsearch'?'Все слова нашлись!':NONOGRAMS[level-1].name;
  const count=Object.keys(store[game].completed).length;
@@ -333,7 +337,7 @@ function openRules(){
  $('#rules-content').innerHTML=game==='sudoku'?`<p>Заполни поле цифрами от 1 до 9. В каждой строке, столбце и блоке 3×3 цифры встречаются по одному разу.</p><h3>Пометки и все кандидаты</h3><ul><li>Выбери клетку и нажми цифру. «Пометки» включают маленькие записи карандашом.</li><li>«Все кандидаты» расставят допустимые цифры во всех пустых клетках. Они обновляются после ввода чисел. Повторное нажатие пересчитает их с нуля.</li><li>Ручная правка пометок выключает автообновление, чтобы сохранить твою работу.</li><li>Если в клетке осталась одна допустимая пометка, двойной клик или двойной тап впишет её. Этот ход можно отменить.</li></ul><h3>Когда не видишь следующего хода</h3><p>«Подсказка» сначала покажет, куда посмотреть. Затем можно открыть объяснение. Числа она не вводит. Если ход снимает кандидатов, их можно убрать отдельной кнопкой после объяснения.</p><h3>Проверка записей</h3><p>Верные введённые числа тёмные, неверные красные. Проверяется соответствие единственному решению, включая случаи без повторов. Лимита ошибок на этом сайте нет. В тупике подсказка объяснит, какие клетки перекрывают нужное число.</p><h3>Сложность и уровни</h3><p>Все уровни доступны сразу. Выбери «Базовый», «Средний», «Сложный» или «Эксперт» над полем. В базовой группе пять задач; экспертные требуют пар и исключений кандидатов.</p><h3>На компьютере</h3><p>Стрелки выбирают клетку, 1–9 вводят цифру, N включает пометки, Backspace стирает, Ctrl/Cmd+Z отменяет ход.</p>`:`<p>Числа слева описывают закрашенные группы в строке, числа сверху — в столбце. Порядок групп совпадает с порядком чисел.</p><h3>Что значит «3 1»</h3><p>Сначала группа из трёх закрашенных клеток, потом хотя бы одна пустая, затем одна закрашенная. До и после групп тоже могут быть пустые клетки.</p><h3>Управление</h3><ul><li>Клик закрашивает клетку, правая кнопка мыши ставит крестик. Повторное действие снимает отметку.</li><li>На телефоне выбери «Закрасить» или «Крестик», затем касайся клеток или веди пальцем.</li><li>Пробел или Enter закрашивает выбранную клетку, X ставит крестик.</li><li>«Отмена» возвращает весь последний штрих вместе с автокрестиками.</li><li>На больших полях «Двигать» позволяет перетаскивать поле. Масштаб меняется кнопками +/−, а «Всё поле» показывает обзор.</li></ul><h3>Обратная связь</h3><p>Собранная группа приглушает числа. Красные числа означают, что текущие отметки уже не могут совпасть с этой линией. Когда строка или столбец закрашены верно, оставшиеся пустые клетки автоматически получают крестики. Все размеры и уровни можно выбрать сразу.</p>`;
  showDialog('#rules-dialog');
 }
-$$('.game-tab').forEach(b=>b.addEventListener('click',()=>{if(fixedGame||game===b.dataset.game)return;game=b.dataset.game;store.activeGame=game;selected=-1;activeHint=null;stroke=null;tapGesture.reset();fitNonogram=false;ensureState();save();render();}));
+$$('.game-tab').forEach(b=>b.addEventListener('click',()=>{if(fixedGame||game===b.dataset.game)return;game=b.dataset.game;store.activeGame=game;selected=-1;activeHint=null;stroke=null;tapGesture.reset();fitNonogram=true;ensureState();save();render();}));
 $('#notes-button').addEventListener('click',()=>{pencil=!pencil;renderControls();renderBoard();});
 $('#erase-button').addEventListener('click',erase);$('#undo-button').addEventListener('click',undo);$('#nonogram-undo').addEventListener('click',undo);
 $('#candidates-button').addEventListener('click',fillCandidates);$('#hint-button').addEventListener('click',openHint);$('#guide-button').addEventListener('click',openHint);

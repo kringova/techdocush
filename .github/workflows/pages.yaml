@@ -63,6 +63,24 @@ jobs:
         run: |
           chmod +x build.sh
           ./build.sh
+      - name: Check game viewports before publishing
+        working-directory: apps/puzzleush
+        timeout-minutes: 5
+        run: |
+          npm install --prefix "$RUNNER_TEMP/puzzleush-qa" --no-package-lock --no-save playwright-core@1.63.0
+          export PLAYWRIGHT_MODULE="$RUNNER_TEMP/puzzleush-qa/node_modules/playwright-core"
+          export BROWSER_EXECUTABLE="$(command -v google-chrome)"
+          python3 -m http.server 4337 --bind 127.0.0.1 --directory . > "$RUNNER_TEMP/puzzleush-http.log" 2>&1 &
+          puzzle_preview_pid=$!
+          trap 'kill "$puzzle_preview_pid" 2>/dev/null || true' EXIT
+          node scripts/browser-viewport-qa.mjs
+      - name: Keep game viewport report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kletochki-viewport-qa
+          path: apps/puzzleush/test-results/yandex-viewport/
+          if-no-files-found: ignore
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:

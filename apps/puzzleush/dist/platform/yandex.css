@@ -1,5 +1,5 @@
-html:has(body[data-platform="yandex"]){height:100%;overflow:hidden;overscroll-behavior:none}
-body[data-platform="yandex"]{height:100dvh;overflow:hidden;overscroll-behavior:none}
+html[data-platform="yandex"]{height:100%;overflow:hidden;overscroll-behavior:none}
+body[data-platform="yandex"]{height:100vh;height:100dvh;overflow:hidden;overscroll-behavior:none}
 body[data-platform="yandex"] .page-shell{height:100%;max-width:620px;padding:8px 12px;display:flex;flex-direction:column}
 body[data-platform="yandex"] .site-header{height:36px;flex-shrink:0;gap:12px;border:0}
 body[data-platform="yandex"] .wordmark{font-size:23px;letter-spacing:-1px}
@@ -109,3 +109,55 @@ body[data-platform="yandex"] .word-chip{font-size:9px;padding:4px 6px}
 
 body[data-platform="yandex"] .word-initial-status{font-size:9px;margin-bottom:5px}
 @media(orientation:landscape) and (max-height:500px){body[data-platform="yandex"] .word-initial-button{min-height:32px;font-size:9px}body[data-platform="yandex"] .word-initial-status{font-size:8px;gap:0}body[data-platform="yandex"] .word-initial-status .text-button{min-height:24px}}
+
+body[data-platform="yandex"] .difficulty-controls button{min-width:0}
+@media(orientation:landscape) and (max-height:500px){body[data-platform="yandex"] .difficulty-controls button{font-size:9px;padding-inline:1px}}
+/* Short portrait windows keep a usable board beside the controls. */
+@media(orientation:portrait) and (max-height:600px), (max-width:899px) and (min-height:501px) and (max-height:600px){
+ body[data-platform="yandex"] .site-header{height:25px}
+ body[data-platform="yandex"] .wordmark{font-size:20px}
+ body[data-platform="yandex"] main{padding-top:3px}
+ body[data-platform="yandex"] .workspace-header{height:36px;margin-bottom:4px}
+ body[data-platform="yandex"] .workspace-header h1{font-size:24px}
+ body[data-platform="yandex"] .level-current{font-size:25px}
+ body[data-platform="yandex"] .difficulty-controls{margin-bottom:5px}
+ body[data-platform="yandex"] .difficulty-controls button{min-height:28px}
+ body[data-platform="yandex"] .game-area{display:grid;grid-template-columns:minmax(0,1fr) 120px;grid-template-rows:18px minmax(0,1fr) 32px 20px;gap:0 8px}
+ body[data-platform="yandex"] .board-meta{grid-column:1;grid-row:1;font-size:7px;gap:2px}
+ body[data-platform="yandex"] .board-caption{font-size:7px}
+ body[data-platform="yandex"] .level-dots{display:none}
+ body[data-platform="yandex"] .board-mount{grid-column:1;grid-row:2;height:100%}
+ body[data-platform="yandex"] .board-status{grid-column:1;grid-row:3;font-size:7px;min-height:0}
+ body[data-platform="yandex"] .mistakes-status{grid-column:2;grid-row:1;text-align:left;font-size:8px}
+ body[data-platform="yandex"] #sudoku-controls,body[data-platform="yandex"] #nonogram-controls,body[data-platform="yandex"] #wordsearch-controls{grid-column:2;grid-row:2/4;align-self:center;min-width:0}
+ body[data-platform="yandex"] .number-pad{grid-template-columns:repeat(3,1fr);gap:3px}
+ body[data-platform="yandex"] .number-button{min-height:31px;font-size:19px}
+ body[data-platform="yandex"] .number-button small{display:none}
+ body[data-platform="yandex"] .tool-row{grid-template-columns:repeat(2,1fr);gap:2px;padding:0}
+ body[data-platform="yandex"] .tool-button{min-height:33px;font-size:8px;gap:2px}
+ body[data-platform="yandex"] .tool-button svg{height:14px}
+ body[data-platform="yandex"] .candidates-button{padding:5px;min-height:43px;margin-top:5px;gap:0}
+ body[data-platform="yandex"] .candidates-button .candidate-icon,body[data-platform="yandex"] .candidates-button svg{display:none}
+ body[data-platform="yandex"] .candidates-button strong{font-size:9px}
+ body[data-platform="yandex"] .candidates-button small{font-size:7px}
+ body[data-platform="yandex"] .game-bottom{grid-column:1/-1;grid-row:4;margin:0}
+ body[data-platform="yandex"] .paint-toolbar{flex-direction:column;margin:0}
+ body[data-platform="yandex"] .paint-button{min-height:34px;font-size:9px}
+ body[data-platform="yandex"] .paint-undo{min-height:32px;align-self:center}
+ body[data-platform="yandex"] .touch-note{font-size:8px;line-height:1.4}
+ body[data-platform="yandex"] .nonogram-view-tools{gap:3px;font-size:8px}
+ body[data-platform="yandex"] .nonogram-view-tools>span:first-child{display:none}
+ body[data-platform="yandex"] .nonogram-view-tools button{min-height:28px;min-width:26px;padding:2px 4px}
+ body[data-platform="yandex"] .nonogram-view-tools .zoom-value{min-width:32px;font-size:8px}
+ body[data-platform="yandex"] .nonogram-view-tools [data-zoom=fit]{font-size:8px;min-width:52px}
+ body[data-platform="yandex"] .word-summary{font-size:9px;gap:2px;flex-wrap:wrap;margin:3px 0}
+ body[data-platform="yandex"] .word-summary .text-button{font-size:8px;min-height:24px}
+ body[data-platform="yandex"] .word-list{max-height:75px;min-height:0;margin-bottom:4px}
+ body[data-platform="yandex"] .word-chip{font-size:8px;gap:2px;padding:2px 4px}
+ body[data-platform="yandex"] .word-initial-button{min-height:28px;font-size:8px;padding:2px 4px}
+ body[data-platform="yandex"] .word-initial-status{font-size:8px;gap:0;margin-bottom:4px}
+ body[data-platform="yandex"] .word-initial-status .text-button{font-size:8px;min-height:22px}
+ body[data-platform="yandex"] .word-modes{gap:3px;margin-bottom:4px}
+ body[data-platform="yandex"] .word-modes button{min-height:32px;font-size:8px;padding:3px}
+ body[data-platform="yandex"] #wordsearch-hint{min-height:34px;font-size:10px;padding:5px}
+}
