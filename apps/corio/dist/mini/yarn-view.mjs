@@ -1,4 +1,4 @@
-import {yarnConflicts,yarnCrossings} from './engine.mjs?v=0.14.0';
+import {yarnConflicts,yarnCrossings} from './engine.mjs?v=0.14.1';
 const YARN=new URL('../assets/yarn-v1.png',import.meta.url).href;
 const n=value=>Number(value.toFixed(3));
 export function renderYarnView(points,level){

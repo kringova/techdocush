@@ -1,12 +1,12 @@
-import {fitFoodScene,renderFoodInfo} from './food-view.mjs?v=0.14.0';
-import {createFoodFeedback} from './food-feedback.mjs?v=0.14.0';
-import {tunnelWalkPoints} from './tunnel-art.mjs?v=0.14.0';
-import {setupFocusUI,fitFocusedScene} from './focus.mjs?v=0.14.0';
-import {GAMES,FOODS,GROOM_STEPS,createMini,miniAction,solutionFor,connectedRoute} from './engine.mjs?v=0.14.0';
-import {renderScene,toolsFor,goalText} from './views.mjs?v=0.14.0';
-import {createModeController} from '../modes.mjs?v=0.14.0';
-import {catFigure,setCatWalkFrame} from '../characters.mjs?v=0.14.0';
-import {createSearchLife} from './search-life.mjs?v=0.14.0';
+import {fitFoodScene,renderFoodInfo} from './food-view.mjs?v=0.14.1';
+import {createFoodFeedback} from './food-feedback.mjs?v=0.14.1';
+import {tunnelWalkPoints} from './tunnel-art.mjs?v=0.14.1';
+import {setupFocusUI,fitFocusedScene} from './focus.mjs?v=0.14.1';
+import {GAMES,FOODS,GROOM_STEPS,createMini,miniAction,solutionFor,connectedRoute} from './engine.mjs?v=0.14.1';
+import {renderScene,toolsFor,goalText} from './views.mjs?v=0.14.1';
+import {createModeController} from '../modes.mjs?v=0.14.1';
+import {catFigure,setCatWalkFrame} from '../characters.mjs?v=0.14.1';
+import {createSearchLife} from './search-life.mjs?v=0.14.1';
 const $=query=>document.querySelector(query),id=$('[data-game]').dataset.game,game=GAMES[id],scene=$('#scene'),tools=$('#tools'),win=$('#win');
 // Keep the live note/status nodes across scene renders; feedback owns this host.
 const foodNote=id==='food'?$('#food-note'):null;
@@ -44,7 +44,7 @@ function endDrag(){
   const current=drag,restorePreview=current?.type==='yarn';drag=null;
   restoreFoodDrag(current);
   if(current&&scene.hasPointerCapture(current.pointer))try{scene.releasePointerCapture(current.pointer);}catch{}
-  document.querySelector('.drag-food')?.remove();if(current?.type==='food')$('#food-info').innerHTML=renderFoodInfo(state,selected);if(restorePreview)render();
+  document.querySelector('.drag-food')?.remove();if(current?.type==='food'){$('#food-info').innerHTML=renderFoodInfo(state,selected);if(current.active)status(current.noteMessage);}if(restorePreview)render();
 }
 function cancelSettle(){clearTimeout(settleTimer);settleTimer=null;settleEpoch++;}
 function scheduleSettle(){
@@ -154,7 +154,7 @@ scene.addEventListener('pointerdown',event=>{
   const node=event.target.closest('[data-node]'),food=pixelTarget.closest('[data-food]');
   if(id==='food'&&food&&food.dataset.exposed!=='true'){ignoreClickUntil=performance.now()+350;status('Сначала убери то, что лежит сверху.');return;}
   if(node){event.preventDefault();const at=pointFor(event),index=+node.dataset.node;drag={type:'yarn',pointer:event.pointerId,node:index,start:at,original:{...state.points[index]},preview:structuredClone(state.points)};scene.setPointerCapture(event.pointerId);}
-  else if(food&&food.dataset.exposed==='true'){drag={type:'food',pointer:event.pointerId,item:+food.dataset.food,x:event.clientX,y:event.clientY,element:food,active:false};scene.setPointerCapture(event.pointerId);}
+  else if(food&&food.dataset.exposed==='true'){drag={type:'food',pointer:event.pointerId,item:+food.dataset.food,x:event.clientX,y:event.clientY,element:food,active:false,noteMessage:$('#status').textContent};scene.setPointerCapture(event.pointerId);}
   else if(id==='grooming'&&event.target.closest('[data-spot]')){event.preventDefault();drag={type:'brush',pointer:event.pointerId,visited:new Set()};scene.setPointerCapture(event.pointerId);brushAt(event);}
 });
 scene.addEventListener('pointermove',event=>{

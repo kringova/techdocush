@@ -1,9 +1,9 @@
-import {catFigure} from '../characters.mjs?v=0.14.0';
-import {createModeController} from '../modes.mjs?v=0.14.0';
-import {ITEMS,SHELF_LEVELS,createShelfGame,transfer,solveShelf} from './engine.mjs?v=0.14.0';
-import {shelfArt} from './art.mjs?v=0.14.0';
-import {setupFocusUI} from '../mini/focus.mjs?v=0.14.0';
-import {shelfCatEyes,createShelfLife} from './life.mjs?v=0.14.0';
+import {catFigure} from '../characters.mjs?v=0.14.1';
+import {createModeController} from '../modes.mjs?v=0.14.1';
+import {ITEMS,SHELF_LEVELS,createShelfGame,transfer,solveShelf} from './engine.mjs?v=0.14.1';
+import {shelfArt} from './art.mjs?v=0.14.1';
+import {setupFocusUI} from '../mini/focus.mjs?v=0.14.1';
+import {shelfCatEyes,createShelfLife} from './life.mjs?v=0.14.1';
 const $=s=>document.querySelector(s),board=$('#shelves'),win=$('#win');
 let modes=null,platformPaused=false,paused=false,catLife=null;
 let state=createShelfGame(),selected=-1,history=[],drag=null,ghost=null,ignoreClickUntil=0;
