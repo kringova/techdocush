@@ -1,9 +1,9 @@
-import {foodView} from './food-view.mjs?v=0.14.1';
-import {renderYarnView} from './yarn-view.mjs?v=0.14.1';
-import {renderTunnelView} from './tunnel-art.mjs?v=0.14.1';
-import {searchView} from './search-art.mjs?v=0.14.1';
-import {FOODS,PET_ACTIONS,GROOM_TOOLS,GROOM_STEPS,tunnelEdges,connectedRoute,yarnConflicts,yarnCrossings} from './engine.mjs?v=0.14.1';
-import {catFigure,litterShape,foodFigure} from '../characters.mjs?v=0.14.1';
+import {foodView} from './food-view.mjs?v=0.15.0';
+import {renderYarnView} from './yarn-view.mjs?v=0.15.0';
+import {renderTunnelView} from './tunnel-art.mjs?v=0.15.0';
+import {searchView} from './search-art.mjs?v=0.15.0';
+import {FOODS,PET_ACTIONS,GROOM_TOOLS,GROOM_STEPS,tunnelEdges,connectedRoute,traceTunnelRoute,yarnConflicts,yarnCrossings} from './engine.mjs?v=0.15.0';
+import {catFigure,litterShape,foodFigure} from '../characters.mjs?v=0.15.0';
 const asset=file=>new URL('../assets/'+file,import.meta.url).href;
 export const CAT=asset('player-v1.png'),YARN=asset('yarn-v1.png');
 const img=(file,alt='',className='')=>`<img class="${className}" src="${asset(file)}" alt="${alt}" draggable="false">`;
@@ -39,7 +39,7 @@ export function renderScene(id,state,level,selected,preview){
 function spotName(kind){return{dust:'Пыль',tangle:'Свободные шерстинки',mud:'Грязное пятно',soapy:'Мокрое пятно',foam:'Пена',wet:'Мокрая шерсть'}[kind];}
 export function goalText(id,state,level){
   if(id==='search')return`Найдено ${state.found.length} / ${level.targets.length}`;
-  if(id==='tunnels')return state.won?'Трасса соединена':'Цель: связать две площадки';
+  if(id==='tunnels'){const count=(level.checkpoints||[]).length;if(state.won)return'Трасса соединена';if(count){const trace=traceTunnelRoute(state,level);return `Колокольчики на пути: ${trace.visitedCheckpoints.length} / ${count}`;}return'Проведи кота к миске';}
   if(id==='food')return`Разобрано ${state.sorted.length} / ${level.items.length}`;
   if(id==='pet')return`Готово ${state.needs.filter(n=>n>=3).length} / 4`;
   if(id==='grooming')return`Осталось пятнышек: ${state.spots.length}`;

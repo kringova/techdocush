@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {TUNNEL_LEVELS} from '../dist/mini/tunnel-data.mjs';
 import {solveTunnelLevel,validateTunnelLevel,tunnelGeometryKey,tunnelRouteMetrics} from '../dist/mini/tunnel-solver.mjs';
-import {connectedRoute} from '../dist/mini/engine.mjs';
+import {connectedRoute,traceTunnelRoute} from '../dist/mini/tunnel-route.mjs';
 const clone=v=>structuredClone(v),dirs=[[0,-1],[1,0],[0,1],[-1,0]];
 const freeze=v=>{if(v&&typeof v==='object'){Object.freeze(v);for(const x of Object.values(v))freeze(x);}return v;};
 function replay(level,actions){const pieces=clone(level.pieces);for(const action of actions){assert.equal(action.type,'turn');assert.ok(pieces[action.piece]&&!pieces[action.piece].fixed);pieces[action.piece].turn=(pieces[action.piece].turn+1)%4;}return pieces;}
@@ -13,8 +13,12 @@ function bruteShortest(level){
  const wins=turns=>{
   const edges=level.pieces.map((p,i)=>p.edges.map(e=>(e+turns[i])%4)),cells=new Map(level.pieces.map((p,i)=>[p.x+','+p.y,i]));
   const first=cells.get('0,'+level.start.y);if(first===undefined||!edges[first].includes(3))return false;
-  const todo=[first],visited=new Set(todo);
-  for(let at=0;at<todo.length;at++){const i=todo[at],p=level.pieces[i];for(const e of edges[i]){const[dx,dy]=dirs[e],x=p.x+dx,y=p.y+dy;if(x===level.end.x&&y===level.end.y)return true;const next=cells.get(x+','+y);if(next!==undefined&&!visited.has(next)&&edges[next].includes((e+2)%4)){visited.add(next);todo.push(next);}}}return false;
+  let i=first,incoming=3;const visited=new Set(),checkpoints=new Set();
+  while(i!==undefined){const p=level.pieces[i];if(!edges[i].includes(incoming))return false;
+   const crossing=p.kind==='crossing',key=i+':'+(crossing?incoming%2:'single');if(visited.has(key))return false;visited.add(key);checkpoints.add(i);
+   const e=crossing?(incoming+2)%4:edges[i].find(e=>e!==incoming);if(e===undefined)return false;
+   const[dx,dy]=dirs[e],x=p.x+dx,y=p.y+dy;if(x===level.end.x&&y===level.end.y)return(level.checkpoints||[]).every(i=>checkpoints.has(i));i=cells.get(x+','+y);incoming=(e+2)%4;
+  }return false;
  };
  for(let cursor=0;cursor<queue.length;cursor++){const s=queue[cursor];if(wins(s.turns))return s.cost;for(const i of movable){const turns=[...s.turns];turns[i]=(turns[i]+1)%4;const key=turns.join(',');if(!seen.has(key)){seen.add(key);queue.push({turns,cost:s.cost+1});}}}
  return null;
@@ -27,9 +31,10 @@ const branchFixture=()=>({w:5,h:4,start:{x:-1,y:2},end:{x:5,y:2},pieces:[
 ]});
 
 test('50tunnel geometries remain distinct without names, turns, translations or reflected padding',()=>{
- assert.equal(TUNNEL_LEVELS.length,50);assert.equal(new Set(TUNNEL_LEVELS.map(tunnelGeometryKey)).size,50);
+ assert.equal(TUNNEL_LEVELS.length,50);assert.equal(new Set(TUNNEL_LEVELS.map(l=>tunnelGeometryKey(l,{includeCheckpoints:false}))).size,50);
+ assert.equal(new Set(TUNNEL_LEVELS.map(level=>level.name)).size,50);assert.ok(TUNNEL_LEVELS.every(level=>!/^Трасса \d/.test(level.name)));
  for(const [index,level]of TUNNEL_LEVELS.entries()){
-  assert.equal(level.id,'tunnels-50-v1-'+(index+1));assert.ok(level.w<=7&&level.h<=6);
+  assert.equal(level.id,'tunnels-50-v2-'+(index+1));assert.ok(level.w<=7&&level.h<=6);assert.ok(level.idea.length>15);
   validateTunnelLevel(level);
   const modified=clone(level);modified.name='Other name';modified.h+=2;modified.start.y++;modified.end.y++;for(const p of modified.pieces){p.y++;if(!p.fixed)p.turn=(p.turn+1)%4;}
   assert.equal(tunnelGeometryKey(modified),tunnelGeometryKey(level));
@@ -57,17 +62,22 @@ test('all50solutions are globally shortest, initially unsolved and replay throug
    pieces[action.piece].turn=(pieces[action.piece].turn+1)%4;
    if(index<level.solution.length-1)assert.equal(connectedRoute({pieces},level).length,0,'Cannot win cheaper with the action prefix');
   }
-  const route=connectedRoute({pieces},level);assert.ok(route.length>0,level.id);assert.equal(new Set(route).size,route.length);
+  const route=connectedRoute({pieces},level);assert.ok(route.length>0,level.id);
+  const trace=traceTunnelRoute({pieces},level);assert.equal(trace.complete,true);assert.deepEqual(trace.missing,[]);assert.deepEqual(trace.steps,result.steps);
+  assert.equal(new Set(trace.steps.map(s=>s.piece+':'+s.channel)).size,trace.steps.length);
+  for(const step of trace.steps)if(pieces[step.piece].kind==='crossing')assert.equal(step.outgoing,(step.incoming+2)%4);
   assert.equal(pieces[route[0]].x,0);assert.equal(pieces[route[0]].y,level.start.y);
   assert.equal(pieces[route.at(-1)].x,level.w-1);assert.equal(pieces[route.at(-1)].y,level.end.y);
   for(let i=1;i<route.length;i++)assert.equal(Math.abs(pieces[route[i]].x-pieces[route[i-1]].x)+Math.abs(pieces[route[i]].y-pieces[route[i-1]].y),1);
-  assert.deepEqual(tunnelRouteMetrics(level,result.route),Object.fromEntries(Object.entries(level.metrics).filter(([key])=>!['rotationCost','feasibleRoutes','falseSpurs','band'].includes(key))));
+  assert.deepEqual(tunnelRouteMetrics(level,result.route),Object.fromEntries(Object.entries(level.metrics).filter(([key])=>!['rotationCost','feasibleRoutes','exitRoutes','band'].includes(key))));
+  assert.equal(result.proof.exitRouteCoverage.length,level.pieces.length,'No isolated filler: every module belongs to a feasible exit route before checkpoints');
   assert.equal(JSON.stringify(level),before);
  }
 });
 test('fixed shelves and hammocks stay horizontal; every movable module has exactly two supported ports',()=>{
  let shelves=0,hammocks=0;
  for(const level of TUNNEL_LEVELS)for(const p of level.pieces){
+  if(p.kind==='crossing'){assert.equal(p.fixed,true);assert.equal(p.turn,0);assert.deepEqual(p.edges,[0,1,2,3]);continue;}
   assert.equal(p.edges.length,2);assert.equal(new Set(p.edges).size,2);
   if(p.fixed){assert.deepEqual(p.edges,[1,3]);assert.equal(p.turn,0);assert.ok(['shelf','hammock'].includes(p.kind));if(p.kind==='shelf')shelves++;else hammocks++;}
   else{assert.equal(p.kind,'pipe');assert.ok([1,2,3].includes(Math.abs(p.edges[0]-p.edges[1])));}
@@ -76,16 +86,19 @@ test('fixed shelves and hammocks stay horizontal; every movable module has exact
 });
 test('the sequence introduces height changes, false paths, route choices and leftward return travel',()=>{
  for(const [index,l]of TUNNEL_LEVELS.entries()){
-  if(index<10)assert.ok(l.w<=5&&l.h<=4);
-  if(index>=10&&index<20)assert.ok(l.metrics.verticalSteps>=2&&l.metrics.fixedPlatforms>=1);
-  if(index>=20&&index<30)assert.ok(l.metrics.feasibleRoutes>=2&&l.metrics.distractors>=1,'Two genuinely different routes, noTpiece');
-  if(index>=30)assert.ok(l.metrics.leftSteps>=1,'Every return-course optimum includes a left step');
-  if(index>=40)assert.ok(l.metrics.feasibleRoutes>=2&&l.metrics.rotationCost>=18);
+  if(index<5)assert.ok(l.w<=4&&l.h<=3);
+  if(index>=5&&index<10)assert.ok(l.metrics.leftSteps>=1);
+  if(index>=10&&index<15)assert.equal(l.checkpoints.length,1);
+  if(index>=15&&index<20)assert.equal(l.checkpoints.length,2);
+  if(index>=20&&index<30){assert.ok(l.metrics.exitRoutes>=2&&l.metrics.distractors>=1);assert.ok(l.checkpoints.length>=2&&l.metrics.leftSteps>=2&&l.metrics.routePieces>=17);}
+  if(index>=30&&index<40){assert.equal(l.metrics.crossings,1);assert.equal(l.metrics.repeatedCrossings,0);}
+  if(index>=40){assert.equal(l.metrics.repeatedCrossings,1);assert.ok(l.checkpoints.length>=2&&l.metrics.leftSteps>=1);}
+  for(const i of l.checkpoints){assert.ok(l.pieces[i].fixed);assert.ok(['shelf','hammock'].includes(l.pieces[i].kind));assert.deepEqual(l.pieces[i].edges,[1,3]);}
  }
- assert.ok(TUNNEL_LEVELS[30].route.some((p,i,a)=>i>0&&TUNNEL_LEVELS[30].pieces[p].x<TUNNEL_LEVELS[30].pieces[a[i-1]].x));
+ assert.ok(TUNNEL_LEVELS[24].route.length>=18&&TUNNEL_LEVELS[24].metrics.leftSteps>=2);
 });
 test('path solver matches an independent rotation-state BFS on small tutorials and a real two-route choice',()=>{
- for(const l of TUNNEL_LEVELS.slice(0,7))assert.equal(solveTunnelLevel(l).minMoves,bruteShortest(l));
+ for(const l of TUNNEL_LEVELS.slice(0,5))assert.equal(solveTunnelLevel(l).minMoves,bruteShortest(l));
  const l=branchFixture();l.solution=[{type:'invalid-reference',piece:999}];l.minMoves=999;
  const result=solveTunnelLevel(l);assert.equal(result.minMoves,1);assert.equal(result.minMoves,bruteShortest(l));
  assert.deepEqual(result.route,[0,1,7,8,9,5,6]);assert.deepEqual(result.actions,[{type:'turn',piece:7}]);

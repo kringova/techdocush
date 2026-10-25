@@ -1,7 +1,9 @@
-import {TUNNEL_LEVELS} from './tunnel-data.mjs?v=0.14.1';
-import {SEARCH_LEVELS,SEARCH_SCENES} from './search-data.mjs?v=0.14.1';
-import {FOOD_LEVELS,FOOD_PILE_ASPECT,foodIsExposed} from './food-data.mjs?v=0.14.1';
-import {YARN_LEVELS,YARN_ANCHOR,YARN_POINT_SPACING} from './yarn-data.mjs?v=0.14.1';
+import {tunnelEdges,traceTunnelRoute,connectedRoute} from './tunnel-route.mjs?v=0.15.0';
+export {tunnelEdges,traceTunnelRoute,connectedRoute};
+import {TUNNEL_LEVELS} from './tunnel-data.mjs?v=0.15.0';
+import {SEARCH_LEVELS,SEARCH_SCENES} from './search-data.mjs?v=0.15.0';
+import {FOOD_LEVELS,FOOD_PILE_ASPECT,foodIsExposed} from './food-data.mjs?v=0.15.0';
+import {YARN_LEVELS,YARN_ANCHOR,YARN_POINT_SPACING} from './yarn-data.mjs?v=0.15.0';
 export {FOOD_LEVELS,FOOD_PILE_ASPECT,foodIsExposed};
 // Original short scenarios for comparing mechanics. No clocks or offline decay.
 const copy=value=>structuredClone(value);
@@ -19,22 +21,6 @@ export const FOODS={
   raw:{name:'Сырое мясо',safe:false,why:'Может содержать опасные бактерии.',icon:'raw'},
   candy:{name:'Конфета',safe:false,why:'Выбираем кошачьи лакомства, а обычную конфету убираем.',icon:'candy'}
 };
-const delta=[[0,-1],[1,0],[0,1],[-1,0]];
-export function tunnelEdges(piece){return piece.edges.map(edge=>(edge+piece.turn)%4);}
-export function connectedRoute(state,level){
-  const pieces=state.pieces,start=pieces.findIndex(p=>p.x===0&&p.y===level.start.y);
-  if(start<0||!tunnelEdges(pieces[start]).includes(3))return[];
-  const queue=[start],parents=new Map([[start,-1]]);
-  for(let cursor=0;cursor<queue.length;cursor++){
-    const index=queue[cursor],piece=pieces[index];
-    for(const edge of tunnelEdges(piece)){
-      const [dx,dy]=delta[edge],x=piece.x+dx,y=piece.y+dy;
-      if(x===level.end.x&&y===level.end.y){const route=[];let at=index;while(at>=0){route.unshift(at);at=parents.get(at);}return route;}
-      const next=pieces.findIndex(p=>p.x===x&&p.y===y);
-      if(next>=0&&!parents.has(next)&&tunnelEdges(pieces[next]).includes((edge+2)%4)){parents.set(next,index);queue.push(next);}
-    }
-  }return[];
-}
 const petLevels=[
   {name:'Вода и ужин',needs:[1,1,4,4]},
   {name:'Хочется поиграть',needs:[3,3,0,3]},
@@ -94,7 +80,7 @@ export function yarnCrossings(points,edges){
 }
 export const GAMES={
   search:{title:'Куда пропало?',levels:SEARCH_LEVELS,rule:'Найди предметы из списка. Приближай сцену кнопкой «+» и передвигай её, чтобы рассмотреть детали.'},
-  tunnels:{title:'Настенная трасса',levels:TUNNEL_LEVELS,rule:'Поворачивай трубы. Соедини левую площадку с лакомством справа. Полки и гамаки закреплены.'},
+  tunnels:{title:'Настенная трасса',levels:TUNNEL_LEVELS,rule:'Поворачивай тоннели. Проведи кота к лакомству через все колокольчики. Полки и гамаки закреплены.'},
   food:{title:'Что в миске?',levels:FOOD_LEVELS,rule:'Выбери открытый продукт в миске, затем отправь его в подходящую зону. Убирай верхние предметы, чтобы открывать нижние.'},
   pet:{title:'Вечер с котом',levels:petLevels,rule:'Помоги коту поесть, попить, поиграть и отдохнуть. Доведи все четыре показателя до трёх отметок.'},
   grooming:{title:'Чистые лапы',levels:groomingLevels,rule:'Выбери инструмент и коснись пятнышка. Следи за настроением: если кот устал, дай ему передышку.'},
@@ -120,7 +106,8 @@ export function miniAction(state,action){
     else if(action.type==='find'){if(next.found.includes(action.item))return state;if(level.targets.includes(action.item)){next.found.push(action.item);next.hint=null;next.message='Нашлось: '+SEARCH_SCENES[level.scene].find(item=>item.id===action.item).name+'.';}else{next.mistakes++;next.message='Этот предмет не из списка. Посмотри ещё.';}}else return state;next.won=next.found.length===level.targets.length;
   }else if(id==='tunnels'){
     const piece=next.pieces[action.piece];if(action.type!=='turn'||!piece||piece.fixed)return state;piece.turn=(piece.turn+1)%4;
-    next.won=connectedRoute(next,level).length>0;
+    const trace=traceTunnelRoute(next,level);next.won=trace.complete;
+    next.message=trace.complete?'Путь готов.':trace.connected?'До миски есть путь, но он проходит не через все колокольчики.':level.checkpoints?.length?'Соедини начало с миской через все колокольчики.':'Поверни тоннели, чтобы соединить площадку с миской.';
   }else if(id==='food'){
     const at=next.remaining.findIndex(item=>item.id===action.item);if(action.type!=='sort'||at<0||!['safe','away'].includes(action.bin)||!foodIsExposed(state.remaining,level,action.item))return state;
     const item=next.remaining[at],food=FOODS[item.type];

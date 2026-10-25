@@ -1,19 +1,20 @@
-import {fitFoodScene,renderFoodInfo} from './food-view.mjs?v=0.14.1';
-import {createFoodFeedback} from './food-feedback.mjs?v=0.14.1';
-import {tunnelWalkPoints} from './tunnel-art.mjs?v=0.14.1';
-import {setupFocusUI,fitFocusedScene} from './focus.mjs?v=0.14.1';
-import {GAMES,FOODS,GROOM_STEPS,createMini,miniAction,solutionFor,connectedRoute} from './engine.mjs?v=0.14.1';
-import {renderScene,toolsFor,goalText} from './views.mjs?v=0.14.1';
-import {createModeController} from '../modes.mjs?v=0.14.1';
-import {catFigure,setCatWalkFrame} from '../characters.mjs?v=0.14.1';
-import {createSearchLife} from './search-life.mjs?v=0.14.1';
+import {fitFoodScene,renderFoodInfo} from './food-view.mjs?v=0.15.0';
+import {createFoodFeedback} from './food-feedback.mjs?v=0.15.0';
+import {tunnelWalkPoints} from './tunnel-art.mjs?v=0.15.0';
+import {setupFocusUI,fitFocusedScene} from './focus.mjs?v=0.15.0';
+import {GAMES,FOODS,GROOM_STEPS,createMini,miniAction,solutionFor,connectedRoute} from './engine.mjs?v=0.15.0';
+import {renderScene,toolsFor,goalText} from './views.mjs?v=0.15.0';
+import {createModeController} from '../modes.mjs?v=0.15.0';
+import {catFigure,setCatWalkFrame} from '../characters.mjs?v=0.15.0';
+import {createSearchLife} from './search-life.mjs?v=0.15.0';
 const $=query=>document.querySelector(query),id=$('[data-game]').dataset.game,game=GAMES[id],scene=$('#scene'),tools=$('#tools'),win=$('#win');
 // Keep the live note/status nodes across scene renders; feedback owns this host.
 const foodNote=id==='food'?$('#food-note'):null;
 let attempt=0,settleTimer=null,settleEpoch=0,routeWalking=false,routeAnimation=null,routeFrame=null,searchLife=null,foodFeedback=null;
 let state=createMini(id),history=[],selected=id==='grooming'?'wipe':id==='litter'?'scoop':id==='search'?1:null,drag=null,ignoreClickUntil=0,paused=false,platformPaused=false,sfx=true,audio=null,modes;
 const manyLevels=id==='search'||id==='tunnels';
-const key=id==='litter'?'corio-litter-pairs-v1':id==='search'?'corio-search-50-v3':id==='food'?'corio-food-pile-v1':id==='tunnels'?'corio-tunnels-50-v1':id==='yarn'?'corio-yarn-thread-v1':'corio-'+id+'-v1';let best=Array(game.levels.length).fill(null);
+const key=id==='litter'?'corio-litter-pairs-v1':id==='search'?'corio-search-50-v3':id==='food'?'corio-food-pile-v1':id==='tunnels'?'corio-tunnels-50-v2':id==='yarn'?'corio-yarn-thread-v1':'corio-'+id+'-v1';let best=Array(game.levels.length).fill(null);
+const currentLevelKey=id==='tunnels'?'corio-tunnels-v2-current-v1':'corio-'+id+'-current-v1';
 try{sfx=localStorage.getItem('corio-litter-sfx-v1')!=='off';const value=JSON.parse(localStorage.getItem(key));if(Array.isArray(value))best=best.map((_,i)=>Number.isInteger(value[i])?value[i]:null);}catch{}
 const settingsOpen=()=>!!document.querySelector('[data-game-panel][open]');
 const blocked=()=>settingsOpen()||paused||platformPaused||win.open||modes?.isModalOpen();
@@ -59,8 +60,8 @@ function scheduleSettle(){
 }
 function load(index){
   searchLife?.newLevel();foodFeedback?.newLevel();attempt++;cancelRouteWalk();cancelSettle();endDrag();history=[];state=createMini(id,index);selected=id==='grooming'?'wipe':id==='search'?1:null;paused=false;platformPaused=false;ignoreClickUntil=0;
-  if(win.open)win.close();if($('#pause-dialog').open)$('#pause-dialog').close();modes?.newAttempt(id==='litter'?game.levels[index].w*game.levels[index].h*2:solutionFor(id,index).length);render();status(id==='food'?'Возьми продукт сверху. Отправь его коту или в мусор.':game.rule);window.dispatchEvent(new Event('corio:resume'));
-  if(manyLevels)try{localStorage.setItem('corio-'+id+'-current-v1',String(index));}catch{}
+  if(win.open)win.close();if($('#pause-dialog').open)$('#pause-dialog').close();modes?.newAttempt(id==='litter'?game.levels[index].w*game.levels[index].h*2:solutionFor(id,index).length);render();status(id==='food'?'Возьми продукт сверху. Отправь его коту или в мусор.':id==='tunnels'?tunnelInstruction(game.levels[index]):game.rule);window.dispatchEvent(new Event('corio:resume'));
+  if(manyLevels)try{localStorage.setItem(currentLevelKey,String(index));}catch{}
 }
 function commit(action){
   if(blocked()||!modes.guard())return false;
@@ -75,7 +76,12 @@ function commit(action){
 }
 function cancelRouteWalk(){
   if(routeFrame!==null)cancelAnimationFrame(routeFrame);
+  for(const module of scene.querySelectorAll('.is-current')){module.classList.remove('is-current');delete module.dataset.motionChannel;}
   routeFrame=null;routeAnimation=null;routeWalking=false;
+}
+function tunnelInstruction(level){
+  if(level.pieces.some(p=>p.kind==='crossing'))return'Проведи путь через все колокольчики. В пересечении два отдельных прямых прохода.';
+  return level.checkpoints?.length?'Путь к миске должен пройти через все места с колокольчиком.':'Поворачивай тоннели и соедини площадку кота с миской.';
 }
 function syncRouteMotion(){
   if(!routeAnimation||!routeWalking)return;
@@ -103,6 +109,13 @@ function advanceRoute(time){
     const progress=duration?Math.min(1,elapsed/duration):1,distance=progress*total;let a=0;while(a<points.length-2&&lengths[a+1]<distance)a++;
     const span=lengths[a+1]-lengths[a],part=span?(distance-lengths[a])/span:1,x=points[a].x+(points[a+1].x-points[a].x)*part,y=points[a].y+(points[a+1].y-points[a].y)*part;
     image.setAttribute('x',x-43);image.setAttribute('y',y-63.17);
+    const at=part<.5?points[a]:points[a+1],piece=at.piece,channel=at.channel;
+    if(piece!==motion.piece||channel!==motion.channel){
+      motion.module?.classList.remove('is-current');if(motion.module)delete motion.module.dataset.motionChannel;
+      motion.module=piece===undefined?null:(scene.querySelector('#route-module-'+piece)||scene.querySelector('#piece-'+piece));
+      if(motion.module){motion.module.classList.add('is-current');motion.module.dataset.motionChannel=channel;}
+      motion.piece=piece;motion.channel=channel;
+    }
     const facing=points[a+1].x<points[a].x?'left':'right',walkFrame=Math.floor(elapsed/140)%4;
     if(+image.dataset.walkFrame!==walkFrame||image.dataset.facing!==facing)setCatWalkFrame(image,walkFrame,facing);
     if(progress<1)syncRouteMotion();else{cancelRouteWalk();if(!win.open)win.showModal();}
@@ -116,6 +129,7 @@ function sandSound(type){
 }
 scene.addEventListener('click',event=>{
   if(drag||blocked()||performance.now()<ignoreClickUntil&&!(id==='food'&&event.target.closest('[data-bin]')))return;
+  if(event.target.closest('[data-crossing]')){status('Здесь два отдельных тоннеля: слева направо и сверху вниз. Повернуть между ними нельзя.');return;}
   const food=event.target.closest('[data-food]'),bin=event.target.closest('[data-bin]'),piece=event.target.closest('[data-piece]'),spot=event.target.closest('[data-spot]'),cell=event.target.closest('[data-cell]');
   if(id==='search'){if(event.target.closest('[data-cat-react]')){searchLife.callCat();return;}const find=event.target.closest('[data-find]');if(find||event.target.closest('.search-viewport svg'))commit({type:'find',item:find?.dataset.find||null});return;}
   if(food&&food.dataset.exposed!=='true'){status('Сначала убери то, что лежит сверху.');return;}
@@ -127,6 +141,7 @@ scene.addEventListener('click',event=>{
 });
 scene.addEventListener('keydown',event=>{
   if(drag||blocked())return;const node=event.target.closest('[data-node]'),piece=event.target.closest('[data-piece]');
+  if(event.target.closest('[data-crossing]')&&['Enter',' '].includes(event.key)){event.preventDefault();status('Здесь два отдельных тоннеля: слева направо и сверху вниз. Повернуть между ними нельзя.');return;}
   if(event.target.closest('[data-cat-react]')&&['Enter',' '].includes(event.key)){event.preventDefault();searchLife.callCat();return;}
   const find=event.target.closest('[data-find]');if(find&&['Enter',' '].includes(event.key)){event.preventDefault();commit({type:'find',item:find.dataset.find});}
   if(piece&&['Enter',' '].includes(event.key)){event.preventDefault();commit({type:'turn',piece:+piece.dataset.piece});}
@@ -200,7 +215,7 @@ window.addEventListener('corio:platform-pause',()=>{platformPaused=true;syncRout
 modes=createModeController({gameId:id,host:$('[data-modes]'),getMoves:()=>state.moves,isWon:()=>state.won,canUndo:()=>history.length>0,onUndo:undo,onRestart:()=>load(state.index),onBlock:endDrag});
 Object.defineProperty(window,'__mini',{value:()=>({...structuredClone(state),selected,paused,platformPaused,routeWalking,best:[...best]})});Object.defineProperty(window,'__corioModes',{value:()=>modes.state()});
 const requestedLevel=Number(new URL(location.href).searchParams.get('level'));
-let savedLevel=0;if(manyLevels)try{const index=Number(localStorage.getItem('corio-'+id+'-current-v1'));if(Number.isInteger(index)&&index>=0&&index<game.levels.length)savedLevel=index;}catch{}
+let savedLevel=0;if(manyLevels)try{const index=Number(localStorage.getItem(currentLevelKey));if(Number.isInteger(index)&&index>=0&&index<game.levels.length)savedLevel=index;}catch{}
 if(id==='search')searchLife=createSearchLife({scene,isBlocked:blocked});
 if(id==='food'){foodFeedback=createFoodFeedback({scene,isBlocked:blocked});Object.defineProperty(window,'__corioFoodFeedback',{value:()=>foodFeedback.state()});}
 load(Number.isInteger(requestedLevel)&&requestedLevel>=1&&requestedLevel<=game.levels.length?requestedLevel-1:savedLevel);

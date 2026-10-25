@@ -1,5 +1,5 @@
-import {tunnelEdges,connectedRoute} from './engine.mjs?v=0.14.1';
-import {catWalkFrame} from '../characters.mjs?v=0.14.1';
+import {tunnelEdges,connectedRoute,traceTunnelRoute} from './engine.mjs?v=0.15.0';
+import {catWalkFrame} from '../characters.mjs?v=0.15.0';
 const asset=file=>new URL('../assets/'+file,import.meta.url).href;
 const KIT={"straight-h":{"crop":[16,171,488,211],"ends":{"L":[66,276],"R":[454,276]}},"straight-v":{"crop":[578,13,202,430],"ends":{"U":[679,58],"D":[679,399]}},"elbow-lu":{"crop":[876,72,357,339],"ends":{"L":[925,312],"U":[1145,114]}},"elbow-ur":{"crop":[56,483,374,353],"ends":{"U":[156,527],"R":[384,737]}},"elbow-rd":{"crop":[472,542,360,329],"ends":{"R":[783,639],"D":[568,825]}},"elbow-dl":{"crop":[873,543,358,331],"ends":{"D":[1134,826],"L":[920,640]}},"shelf":{"crop":[9,966,469,204],"ends":{"L":[40,995],"R":[448,995]}},"hammock":{"crop":[474,928,449,246],"ends":{"L":[518,982],"R":[884,982]}},"treat-bowl":{"crop":[956,1003,286,183],"ends":{}}};
 let serial=0;
@@ -27,26 +27,28 @@ export function tunnelGeometry(level){
   return{width:(level.w+2)*100+50,y:lo*100-60,height:(hi-lo+1)*100+120};
 }
 export function tunnelWalkPoints(state,level){
-  const route=connectedRoute(state,level),points=[{x:50,y:(level.start.y+.5)*100+22}];
+  const trace=traceTunnelRoute(state,level),route=trace.complete?trace.route:[],points=[{x:50,y:(level.start.y+.5)*100+22}];
   for(const [at,i] of route.entries()){const p=state.pieces[i],x=(p.x+1.5)*100,y=(p.y+.5)*100+22;
     if(p.kind==='hammock'){
       const before=at?state.pieces[route[at-1]]:level.start,after=at<route.length-1?state.pieces[route[at+1]]:level.end;
       const sag=[{x:x-50,y},{x:x-25,y:y+15},{x,y:y+21},{x:x+25,y:y+15},{x:x+50,y}];
-      points.push(...(after.x<before.x?sag.reverse():sag));
+      points.push(...(after.x<before.x?sag.reverse():sag).map(point=>({...point,piece:i,channel:'single'})));
     }
-    else points.push({x,y});
+    else points.push({x,y,piece:i,channel:trace.steps[at].channel});
   }
   points.push({x:(level.w+1.5)*100,y:(level.end.y+.5)*100+22});return points;
 }
 export function renderTunnelView(state,level){
   const geometry=tunnelGeometry(level),W=geometry.width,startY=(level.start.y+.5)*100,endY=(level.end.y+.5)*100;
-  const mask='tunnel-cat-mask-'+(++serial),pipes=state.pieces.filter(p=>p.kind==='pipe');
+  const mask='tunnel-cat-mask-'+(++serial),pipes=state.pieces.filter(p=>p.kind==='pipe'||p.kind==='crossing'),trace=traceTunnelRoute(state,level),checkpoints=new Set(level.checkpoints||[]);
   const tiles=state.pieces.map((piece,index)=>{
     const x=(piece.x+1.5)*100,y=(piece.y+.5)*100;
-    if(piece.kind==='shelf'||piece.kind==='hammock')return align(piece.kind,x,y+22);
+    if(piece.kind==='shelf'||piece.kind==='hammock')return `<g id="route-module-${index}" class="tunnel-module ${checkpoints.has(index)?'has-checkpoint':''}">${align(piece.kind,x,y+22)}</g>`;
+    if(piece.kind==='crossing')return `<g id="route-module-${index}" class="tunnel-module tunnel-crossing" data-crossing="${index}" role="button" tabindex="0" aria-label="Пересечение: два отдельных прямых прохода. Посмотреть правило"><g class="crossing-vertical">${align('straight-v',x,y)}</g><path d="M${x-38} ${y+28}h76" stroke="#173744" stroke-width="7" opacity=".35"/><g class="crossing-horizontal">${align('straight-h',x,y)}</g><rect x="${x-48}" y="${y-48}" width="96" height="96" rx="8" class="crossing-hit" fill="transparent"/></g>`;
     const edges=tunnelEdges(piece),drawing=align(pipeId(edges),x,y);
-    return`<g role="button" tabindex="0" data-piece="${index}" id="piece-${index}" aria-label="Повернуть туннель ${index+1}" class="tunnel-piece">${drawing}<rect x="${x-47}" y="${y-44}" width="94" height="88" rx="12" fill="transparent" class="tunnel-hit"/><g class="turn-handle" transform="translate(${x+25} ${y+30})"><circle r="12"/><path d="M-5 2a5 5 0 1 0 1-6m-2-2 2 3 3-2"/></g></g>`;
+    return`<g role="button" tabindex="0" data-piece="${index}" id="piece-${index}" aria-label="Повернуть туннель ${index+1}" class="tunnel-piece tunnel-module" data-route-module="${index}">${drawing}<rect x="${x-47}" y="${y-44}" width="94" height="88" rx="12" fill="transparent" class="tunnel-hit"/><g class="turn-handle" transform="translate(${x+25} ${y+30})"><circle r="12"/><path d="M-5 2a5 5 0 1 0 1-6m-2-2 2 3 3-2"/></g></g>`;
   }).join('');
+  const marks=[...checkpoints].map(index=>{const p=state.pieces[index],x=(p.x+1.5)*100+25,y=(p.y+.5)*100+41,reached=trace.visitedCheckpoints.includes(index);return `<g class="tunnel-checkpoint ${reached?'checkpoint-reached':''}" data-checkpoint="${index}" data-reached="${reached}" transform="translate(${x} ${y})" role="img" aria-label="Обязательное место${reached?': путь проходит здесь':''}"><path d="M0-17v8" stroke="#173744" stroke-width="2"/><circle r="16" fill="${reached?'#a5bba5':'#ecd69e'}" stroke="#173744" stroke-width="2"/>${reached?'<path d="m-7 0 5 5 9-11" fill="none" stroke="#173744" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>':'<path d="M-8 5h16c-3-2-3-4-3-7a5 5 0 0 0-10 0c0 3 0 5-3 7Zm7 3h2M0-9v2" fill="#d99852" stroke="#173744" stroke-width="1.6" stroke-linejoin="round"/>'}</g>`;}).join('');
   const c=KIT['treat-bowl'].crop,scale=54/c[2],dish=drawImage('treat-bowl',`translate(${W-35-27-c[0]*scale} ${endY+22-((c[1]+c[3]-8)*scale)}) scale(${scale})`);
-  return`<div class="tunnel-wall"><svg viewBox="0 ${geometry.y} ${W} ${geometry.height}" aria-label="Кошачьи полки, тканевые гамаки и открытые туннели на домашней стене"><defs><mask id="${mask}" maskUnits="userSpaceOnUse" x="-100" y="${geometry.y-100}" width="${W+200}" height="${geometry.height+200}"><rect x="-100" y="${geometry.y-100}" width="${W+200}" height="${geometry.height+200}" fill="white"/>${pipes.map(p=>`<rect x="${(p.x+1)*100}" y="${(p.y+.5)*100-80}" width="100" height="160" fill="black"/>`).join('')}</mask></defs>${align('shelf',50,startY+22)}${align('shelf',W-75,endY+22,75)}${tiles}${dish}<g mask="url(#${mask})">${catWalkFrame(0,{id:'route-cat',x:7,y:startY+22-63.17,width:86,height:65.67})}</g></svg></div>`;
+  return`<div class="tunnel-wall"><svg viewBox="0 ${geometry.y} ${W} ${geometry.height}" aria-label="Кошачьи полки, тканевые гамаки и открытые туннели на домашней стене"><defs><mask id="${mask}" maskUnits="userSpaceOnUse" x="-100" y="${geometry.y-100}" width="${W+200}" height="${geometry.height+200}"><rect x="-100" y="${geometry.y-100}" width="${W+200}" height="${geometry.height+200}" fill="white"/>${pipes.map(p=>`<rect x="${(p.x+1)*100}" y="${(p.y+.5)*100-80}" width="100" height="160" fill="black"/>`).join('')}</mask></defs>${align('shelf',50,startY+22)}${align('shelf',W-75,endY+22,75)}${tiles}${marks}${dish}<g mask="url(#${mask})">${catWalkFrame(0,{id:'route-cat',x:7,y:startY+22-63.17,width:86,height:65.67})}</g></svg></div>`;
 }
