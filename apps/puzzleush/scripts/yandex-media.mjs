@@ -64,5 +64,5 @@ try{
   execFileSync(process.env.FFMPEG||'ffmpeg',['-y','-i',raw,'-t','27','-vf','scale=1280:720,setsar=1','-c:v','libx264','-pix_fmt','yuv420p','-movflags','+faststart','-an',path.join(dir,'gameplay-16x9.mp4')],{stdio:'ignore'});
   await rm(path.join(dir,'raw-video'),{recursive:true,force:true});console.log(`${g}: icon, cover, 4 screenshots, onboarding preview, MP4`);
  }
- await writeFile(path.join(out,'README.txt'),'Материалы Клеточек 1.4.2. Скриншоты и видео сняты с реального интерфейса общих сборок. Ответы SDK при локальной съёмке тестовые, настоящая реклама не записана и не проверена. mobile-*.png 720×1280; desktop-*.png 1280×720; icon 512×512; cover 800×470. onboarding-preview — дополнительный предпросмотр, не скриншот геймплея для каталога.\n');
+ await writeFile(path.join(out,'README.txt'),'Материалы Клеточек 1.5.0. Скриншоты и видео сняты с реального интерфейса общих сборок. Ответы SDK при локальной съёмке тестовые, настоящая реклама не записана и не проверена. mobile-*.png 720×1280; desktop-*.png 1280×720; icon 512×512; cover 800×470. onboarding-preview — дополнительный предпросмотр, не скриншот геймплея для каталога.\n');
 }finally{await browser.close();}

@@ -20,6 +20,17 @@ export function conflicts(board) {
 export function candidates(board, exclusions=emptyNotes()) {
  return board.map((v,i)=>v?[]:DIGITS.filter(n=>!PEERS[i].some(j=>board[j]===n)&&!exclusions[i]?.includes(n)));
 }
+// Finish only a complete set of visible single notes, never a subset or a search.
+export function completionFromNotes(board,notes){
+ const unavailable={ready:false,valid:false,placements:[],board:null};
+ if(!Array.isArray(board)||board.length!==81||!Array.isArray(notes)||notes.length!==81)return unavailable;
+ const empty=board.flatMap((n,i)=>n?[]:[i]);
+ if(!empty.length||!empty.every(i=>Array.isArray(notes[i])&&notes[i].length===1))return unavailable;
+ const placements=empty.map(cell=>({cell,value:notes[cell][0]})),next=[...board];
+ for(const {cell,value} of placements)next[cell]=value;
+ const valid=next.every(n=>DIGITS.includes(n))&&conflicts(next).length===0;
+ return {ready:true,valid,placements,board:valid?next:null};
+}
 export function solve(board, limit=2) {
  if(board.length!==81||board.some(n=>!Number.isInteger(n)||n<0||n>9)||conflicts(board).length)return {count:0,solution:null};
  const work=[...board];let count=0,solution=null;
