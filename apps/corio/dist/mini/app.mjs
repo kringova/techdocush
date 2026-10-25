@@ -1,13 +1,15 @@
-import {fitFoodScene,renderFoodInfo} from './food-view.mjs?v=0.13.0';
-import {createFoodFeedback} from './food-feedback.mjs?v=0.13.0';
-import {tunnelWalkPoints} from './tunnel-art.mjs?v=0.13.0';
-import {setupFocusUI,fitFocusedScene} from './focus.mjs?v=0.13.0';
-import {GAMES,FOODS,GROOM_STEPS,createMini,miniAction,solutionFor,connectedRoute} from './engine.mjs?v=0.13.0';
-import {renderScene,toolsFor,goalText} from './views.mjs?v=0.13.0';
-import {createModeController} from '../modes.mjs?v=0.13.0';
-import {catFigure,setCatWalkFrame} from '../characters.mjs?v=0.13.0';
-import {createSearchLife} from './search-life.mjs?v=0.13.0';
+import {fitFoodScene,renderFoodInfo} from './food-view.mjs?v=0.14.0';
+import {createFoodFeedback} from './food-feedback.mjs?v=0.14.0';
+import {tunnelWalkPoints} from './tunnel-art.mjs?v=0.14.0';
+import {setupFocusUI,fitFocusedScene} from './focus.mjs?v=0.14.0';
+import {GAMES,FOODS,GROOM_STEPS,createMini,miniAction,solutionFor,connectedRoute} from './engine.mjs?v=0.14.0';
+import {renderScene,toolsFor,goalText} from './views.mjs?v=0.14.0';
+import {createModeController} from '../modes.mjs?v=0.14.0';
+import {catFigure,setCatWalkFrame} from '../characters.mjs?v=0.14.0';
+import {createSearchLife} from './search-life.mjs?v=0.14.0';
 const $=query=>document.querySelector(query),id=$('[data-game]').dataset.game,game=GAMES[id],scene=$('#scene'),tools=$('#tools'),win=$('#win');
+// Keep the live note/status nodes across scene renders; feedback owns this host.
+const foodNote=id==='food'?$('#food-note'):null;
 let attempt=0,settleTimer=null,settleEpoch=0,routeWalking=false,routeAnimation=null,routeFrame=null,searchLife=null,foodFeedback=null;
 let state=createMini(id),history=[],selected=id==='grooming'?'wipe':id==='litter'?'scoop':id==='search'?1:null,drag=null,ignoreClickUntil=0,paused=false,platformPaused=false,sfx=true,audio=null,modes;
 const manyLevels=id==='search'||id==='tunnels';
@@ -25,7 +27,7 @@ function render(){
   }
   tools.innerHTML=toolsFor(id,selected,sfx);scene.innerHTML=renderScene(id,state,level,selected,drag?.type==='yarn'?drag.preview:null);
   for(const button of document.querySelectorAll('[data-level]')){const index=+button.dataset.level;button.setAttribute('aria-current',String(index===state.index));button.classList.toggle('completed',best[index]!==null);button.title=best[index]!==null?'Пройдено: '+best[index]+' действий':game.levels[index].name;}
-  fitFocusedScene(id==='search'?selected:1);if(id==='food'){$('#food-info').innerHTML=renderFoodInfo(state,selected);fitFoodScene(scene);foodFeedback?.afterRender();}
+  fitFocusedScene(id==='search'?selected:1);if(id==='food'){scene.querySelector('[data-food-note-slot]').append(foodNote);foodNote.hidden=false;$('#food-info').innerHTML=renderFoodInfo(state,selected);fitFoodScene(scene);foodFeedback?.afterRender();}
   if(scroll){const viewport=scene.querySelector('.search-viewport');viewport.scrollLeft=scroll.x;viewport.scrollTop=scroll.y;}
   if(focused)document.getElementById(focused)?.focus({preventScroll:true});
   searchLife?.afterRender();
@@ -57,7 +59,7 @@ function scheduleSettle(){
 }
 function load(index){
   searchLife?.newLevel();foodFeedback?.newLevel();attempt++;cancelRouteWalk();cancelSettle();endDrag();history=[];state=createMini(id,index);selected=id==='grooming'?'wipe':id==='search'?1:null;paused=false;platformPaused=false;ignoreClickUntil=0;
-  if(win.open)win.close();if($('#pause-dialog').open)$('#pause-dialog').close();modes?.newAttempt(id==='litter'?game.levels[index].w*game.levels[index].h*2:solutionFor(id,index).length);render();status(game.rule);window.dispatchEvent(new Event('corio:resume'));
+  if(win.open)win.close();if($('#pause-dialog').open)$('#pause-dialog').close();modes?.newAttempt(id==='litter'?game.levels[index].w*game.levels[index].h*2:solutionFor(id,index).length);render();status(id==='food'?'Возьми продукт сверху. Отправь его коту или в мусор.':game.rule);window.dispatchEvent(new Event('corio:resume'));
   if(manyLevels)try{localStorage.setItem('corio-'+id+'-current-v1',String(index));}catch{}
 }
 function commit(action){
@@ -117,7 +119,7 @@ scene.addEventListener('click',event=>{
   const food=event.target.closest('[data-food]'),bin=event.target.closest('[data-bin]'),piece=event.target.closest('[data-piece]'),spot=event.target.closest('[data-spot]'),cell=event.target.closest('[data-cell]');
   if(id==='search'){if(event.target.closest('[data-cat-react]')){searchLife.callCat();return;}const find=event.target.closest('[data-find]');if(find||event.target.closest('.search-viewport svg'))commit({type:'find',item:find?.dataset.find||null});return;}
   if(food&&food.dataset.exposed!=='true'){status('Сначала убери то, что лежит сверху.');return;}
-  if(food){selected=+food.dataset.food;render();status(`${FOODS[state.remaining.find(i=>i.id===selected).type].name}: выбери зону внизу.`);}
+  if(food){selected=+food.dataset.food;render();status(FOODS[state.remaining.find(i=>i.id===selected).type].why);}
   if(bin){if(selected===null)status('Сначала выбери продукт на тарелке.');else commit({type:'sort',item:selected,bin:bin.dataset.bin});}
   if(piece)commit({type:'turn',piece:+piece.dataset.piece});
   if(spot)commit({type:'clean',spot:+spot.dataset.spot,tool:selected});
@@ -167,6 +169,7 @@ scene.addEventListener('pointermove',event=>{
       Object.assign(item.style,{position:'fixed',pointerEvents:'none',width:width+'px',height:height+'px',transform:'translate(-50%,-50%) '+rotation});
       document.body.append(item);
       $('#food-info').innerHTML=renderFoodInfo(state,drag.item);
+      status(FOODS[state.remaining.find(i=>i.id===drag.item).type].why);
     }
     if(drag.active){event.preventDefault();drag.element.style.left=(event.clientX-drag.offsetX)+'px';drag.element.style.top=(event.clientY-drag.offsetY)+'px';}
   }
@@ -174,7 +177,7 @@ scene.addEventListener('pointermove',event=>{
 scene.addEventListener('pointerup',event=>{
   if(!drag||event.pointerId!==drag.pointer)return;const current=drag;restoreFoodDrag(current);drag=null;
   if(current.type==='yarn'){ignoreClickUntil=performance.now()+200;const p=current.preview[current.node];commit({type:'move',node:current.node,...p});render();}
-  if(current.type==='food'){ignoreClickUntil=performance.now()+200;if(current.active){selected=current.item;const bin=document.elementFromPoint(event.clientX,event.clientY)?.closest('[data-bin]');if(bin)commit({type:'sort',item:current.item,bin:bin.dataset.bin});else{render();status('Выбери зону для продукта.');}}else{selected=current.item;render();status('Теперь выбери подходящую зону внизу.');}}
+  if(current.type==='food'){ignoreClickUntil=performance.now()+200;if(current.active){selected=current.item;const bin=document.elementFromPoint(event.clientX,event.clientY)?.closest('[data-bin]');if(bin)commit({type:'sort',item:current.item,bin:bin.dataset.bin});else{render();status('Выбери зону для продукта.');}}else{selected=current.item;render();status(FOODS[state.remaining.find(i=>i.id===selected).type].why);}}
   if(current.type==='brush')ignoreClickUntil=performance.now()+200;
   document.querySelector('.drag-food')?.remove();try{scene.releasePointerCapture(event.pointerId);}catch{}
 });

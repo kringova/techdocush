@@ -1,7 +1,7 @@
-import {FOODS} from './engine.mjs?v=0.13.0';
-import {FOOD_PILE_ASPECT,foodIsExposed} from './food-data.mjs?v=0.13.0';
-import {foodFigure} from '../characters.mjs?v=0.13.0';
-import {foodCatPortrait} from './food-feedback.mjs?v=0.13.0';
+import {FOODS} from './engine.mjs?v=0.14.0';
+import {FOOD_PILE_ASPECT,foodIsExposed} from './food-data.mjs?v=0.14.0';
+import {foodFigure} from '../characters.mjs?v=0.14.0';
+import {foodCatPortrait} from './food-feedback.mjs?v=0.14.0';
 const bowl=new URL('../assets/food-pile-bowl-alpha-v1.png',import.meta.url).href;
 const crop=[35,113,1184,1036],mouth={x:627,y:558,ry:480};
 const rx=mouth.ry*FOOD_PILE_ASPECT;
@@ -10,7 +10,7 @@ const hearts='<span class="food-heart-burst" aria-hidden="true">'+Array.from({le
 const trashAsset=new URL('../assets/food-trash-painted-alpha-v1.png',import.meta.url).href;
 const trash=`<svg viewBox="0 0 1254 1254" aria-hidden="true"><image href="${trashAsset}" width="1254" height="1254"/></svg>`;
 export function renderFoodInfo(state,selected){
-  const chosen=state.remaining.find(item=>item.id===selected),food=chosen?FOODS[chosen.type]:null;
+  const chosen=state.remaining.find(item=>item.id===selected)||state.sorted.at(-1),food=chosen?FOODS[chosen.type]:null;
   return food?`<strong>${food.name}</strong>${food.detail?`<p>${food.detail}</p>`:''}`:'<strong>Выбери продукт</strong>';
 }
 export function foodView(state,level,selected){
@@ -19,12 +19,18 @@ export function foodView(state,level,selected){
     const p=level.placements[item.id],food=FOODS[item.type],exposed=foodIsExposed(state.remaining,level,item.id);
     return `<button id="food-${item.id}" class="food-piece pile-piece" data-food="${item.id}" data-exposed="${exposed}" aria-label="${food.name}${food.detail?', '+food.detail:''}${exposed?'':', под другими продуктами'}" aria-disabled="${!exposed}" aria-pressed="${selected===item.id}" tabindex="${exposed?0:-1}" style="left:${p.x}%;top:${p.y}%;width:${p.width}%;height:${p.height}%;transform:rotate(${p.angle}deg);z-index:${p.z}">${foodFigure(item.type)}<svg class="food-hit" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><ellipse cx="50" cy="50" rx="50" ry="50" fill="transparent"/></svg></button>`;
   }).join('');
-  return `<div class="food-table pile-game"><div class="food-play-area"><div class="food-pile-stage" style="aspect-ratio:${crop[2]}/${crop[3]}"><svg class="pile-bowl" viewBox="${crop.join(' ')}" aria-hidden="true"><image href="${bowl}" width="1254" height="1254"/></svg><div class="food-pile" role="group" aria-label="Продукты в миске" style="left:${pileBox.left}%;top:${pileBox.top}%;width:${pileBox.width}%;height:${pileBox.height}%">${pieces}</div></div></div><div class="food-bins ${chosen?'food-ready':''}"><button id="food-safe" data-bin="safe" class="food-bin food-destination" aria-label="Коту"><span class="food-destination-art food-cat-target" data-food-cat>${foodCatPortrait()}</span>${hearts}<span class="food-retch-mark" aria-hidden="true"><svg viewBox="0 0 50 20"><path d="M4 15q1-6 8-5 3-9 10-5 7-5 10 3 10-1 14 7Z" fill="#c19a68" stroke="#173744" stroke-width="1.5"/></svg></span></button><button id="food-away" data-bin="away" class="food-bin food-destination" aria-label="В мусор"><span class="food-destination-art food-trash-target">${trash}</span></button></div></div>`;
+  return `<div class="food-table pile-game"><div class="food-play-area"><div class="food-pile-stage" style="aspect-ratio:${crop[2]}/${crop[3]}"><svg class="pile-bowl" viewBox="${crop.join(' ')}" aria-hidden="true"><image href="${bowl}" width="1254" height="1254"/></svg><div class="food-pile" role="group" aria-label="Продукты в миске" style="left:${pileBox.left}%;top:${pileBox.top}%;width:${pileBox.width}%;height:${pileBox.height}%">${pieces}</div></div><div class="food-note-slot" data-food-note-slot></div></div><div class="food-bins ${chosen?'food-ready':''}"><button id="food-safe" data-bin="safe" class="food-bin food-destination" aria-label="Коту"><span class="food-destination-art food-cat-target" data-food-cat>${foodCatPortrait()}</span>${hearts}<span class="food-retch-mark" aria-hidden="true"><svg viewBox="0 0 50 20"><path d="M4 15q1-6 8-5 3-9 10-5 7-5 10 3 10-1 14 7Z" fill="#c19a68" stroke="#173744" stroke-width="1.5"/></svg></span></button><button id="food-away" data-bin="away" class="food-bin food-destination" aria-label="В мусор"><span class="food-destination-art food-trash-target">${trash}</span></button></div></div>`;
 }
 export function fitFoodScene(scene){
   const stage=scene.querySelector('.food-pile-stage');if(!stage)return;
   const table=scene.querySelector('.pile-game'),face=Math.min(330,scene.clientWidth*.41,Math.max(82,scene.clientHeight*.42));
   table.style.setProperty('--food-face-size',face+'px');table.style.setProperty('--food-dock-height',Math.round(face*.71)+'px');
-  const area=scene.querySelector('.food-play-area'),height=Math.max(40,area.clientHeight),width=Math.max(40,Math.min(area.clientWidth,height*crop[2]/crop[3]));
+  const area=scene.querySelector('.food-play-area'),height=Math.max(40,area.clientHeight),compact=matchMedia('(max-width:650px)').matches,gap=area.clientWidth<650?6:18;
+  const dockOverlap=parseFloat(getComputedStyle(table).getPropertyValue('--food-dock-overlap'))||12;
+  const noteWidth=compact?Math.min(360,area.clientWidth):Math.min(300,Math.max(160,area.clientWidth*.31),area.clientWidth*.46),noteHeight=compact?Math.min(150,height*.42):Math.max(40,height-2*(dockOverlap+2));
+  table.style.setProperty('--food-note-width',noteWidth+'px');table.style.setProperty('--food-note-min-height',(compact?noteHeight:Math.min(noteHeight,noteWidth*1.25))+'px');table.style.setProperty('--food-note-max-height',noteHeight+'px');
+  table.style.setProperty('--food-note-font',(compact?(area.clientWidth<330?12:14):Math.min(16,Math.max(12,noteWidth*.055)))+'px');
+  area.style.gap=gap+'px';
+  const width=Math.max(40,compact?Math.min(area.clientWidth,(height-noteHeight-gap)*crop[2]/crop[3]):Math.min(area.clientWidth-noteWidth-gap,height*crop[2]/crop[3]));
   stage.style.width=width+'px';stage.style.height=width*crop[3]/crop[2]+'px';
 }

@@ -1,7 +1,7 @@
-import {TUNNEL_LEVELS} from './tunnel-data.mjs?v=0.13.0';
-import {SEARCH_LEVELS,SEARCH_SCENES} from './search-data.mjs?v=0.13.0';
-import {FOOD_LEVELS,FOOD_PILE_ASPECT,foodIsExposed} from './food-data.mjs?v=0.13.0';
-import {YARN_LEVELS,YARN_ANCHOR,YARN_POINT_SPACING} from './yarn-data.mjs?v=0.13.0';
+import {TUNNEL_LEVELS} from './tunnel-data.mjs?v=0.14.0';
+import {SEARCH_LEVELS,SEARCH_SCENES} from './search-data.mjs?v=0.14.0';
+import {FOOD_LEVELS,FOOD_PILE_ASPECT,foodIsExposed} from './food-data.mjs?v=0.14.0';
+import {YARN_LEVELS,YARN_ANCHOR,YARN_POINT_SPACING} from './yarn-data.mjs?v=0.14.0';
 export {FOOD_LEVELS,FOOD_PILE_ASPECT,foodIsExposed};
 // Original short scenarios for comparing mechanics. No clocks or offline decay.
 const copy=value=>structuredClone(value);

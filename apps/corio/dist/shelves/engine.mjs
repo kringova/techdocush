@@ -1,4 +1,4 @@
-import {SHELF_LEVELS} from './levels.mjs?v=0.13.0';
+import {SHELF_LEVELS} from './levels.mjs?v=0.14.0';
 export {SHELF_LEVELS};
 export const ITEMS={yarn:{name:'Клубок',plural:'Клубки',file:'yarn-v1.png'},bowl:{name:'Миска',plural:'Миски',file:'bowl-v1.png'},brush:{name:'Щётка',plural:'Щётки',file:'brush-v1.png'}};
 export function solved(shelves,capacity){return shelves.every(s=>s.length===0||(s.length===capacity&&s.every(item=>item===s[0])));}
