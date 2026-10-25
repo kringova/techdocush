@@ -1,14 +1,14 @@
-import {tunnelWalkPoints} from './tunnel-art.mjs?v=0.8.2';
-import {setupFocusUI,fitFocusedScene} from './focus.mjs?v=0.8.2';
-import {GAMES,FOODS,GROOM_STEPS,createMini,miniAction,solutionFor,connectedRoute} from './engine.mjs?v=0.8.2';
-import {renderScene,toolsFor,goalText} from './views.mjs?v=0.8.2';
-import {createModeController} from '../modes.mjs?v=0.8.2';
-import {catFigure,setCatWalkFrame} from '../characters.mjs?v=0.8.2';
-import {createSearchLife} from './search-life.mjs?v=0.8.2';
+import {tunnelWalkPoints} from './tunnel-art.mjs?v=0.9.0';
+import {setupFocusUI,fitFocusedScene} from './focus.mjs?v=0.9.0';
+import {GAMES,FOODS,GROOM_STEPS,createMini,miniAction,solutionFor,connectedRoute} from './engine.mjs?v=0.9.0';
+import {renderScene,toolsFor,goalText} from './views.mjs?v=0.9.0';
+import {createModeController} from '../modes.mjs?v=0.9.0';
+import {catFigure,setCatWalkFrame} from '../characters.mjs?v=0.9.0';
+import {createSearchLife} from './search-life.mjs?v=0.9.0';
 const $=query=>document.querySelector(query),id=$('[data-game]').dataset.game,game=GAMES[id],scene=$('#scene'),tools=$('#tools'),win=$('#win');
 let attempt=0,settleTimer=null,settleEpoch=0,routeWalking=false,searchLife=null;
 let state=createMini(id),history=[],selected=id==='grooming'?'wipe':id==='litter'?'scoop':id==='search'?1:null,drag=null,ignoreClickUntil=0,paused=false,platformPaused=false,sfx=true,audio=null,modes;
-const key=id==='litter'?'corio-litter-pairs-v1':id==='search'?'corio-search-50-v1':'corio-'+id+'-v1';let best=Array(game.levels.length).fill(null);
+const key=id==='litter'?'corio-litter-pairs-v1':id==='search'?'corio-search-50-v2':'corio-'+id+'-v1';let best=Array(game.levels.length).fill(null);
 try{sfx=localStorage.getItem('corio-litter-sfx-v1')!=='off';const value=JSON.parse(localStorage.getItem(key));if(Array.isArray(value))best=best.map((_,i)=>Number.isInteger(value[i])?value[i]:null);}catch{}
 const settingsOpen=()=>!!document.querySelector('[data-game-panel][open]');
 const blocked=()=>settingsOpen()||paused||platformPaused||win.open||modes?.isModalOpen();

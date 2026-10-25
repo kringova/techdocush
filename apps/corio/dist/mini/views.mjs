@@ -1,7 +1,7 @@
-import {renderTunnelView} from './tunnel-art.mjs?v=0.8.2';
-import {searchView} from './search-art.mjs?v=0.8.2';
-import {FOODS,PET_ACTIONS,GROOM_TOOLS,GROOM_STEPS,tunnelEdges,connectedRoute,yarnConflicts} from './engine.mjs?v=0.8.2';
-import {catFigure,litterShape,foodFigure} from '../characters.mjs?v=0.8.2';
+import {renderTunnelView} from './tunnel-art.mjs?v=0.9.0';
+import {searchView} from './search-art.mjs?v=0.9.0';
+import {FOODS,PET_ACTIONS,GROOM_TOOLS,GROOM_STEPS,tunnelEdges,connectedRoute,yarnConflicts} from './engine.mjs?v=0.9.0';
+import {catFigure,litterShape,foodFigure} from '../characters.mjs?v=0.9.0';
 const asset=file=>new URL('../assets/'+file,import.meta.url).href;
 export const CAT=asset('player-v1.png'),YARN=asset('yarn-v1.png');
 const img=(file,alt='',className='')=>`<img class="${className}" src="${asset(file)}" alt="${alt}" draggable="false">`;

@@ -30,8 +30,16 @@ export function createCatIdle({host,isBlocked,parts=['eyes','ear','lick']}){
     schedule();
   }
   function reconcile(){
-    host.classList.toggle('life-paused',blocked()||reduced.matches);
-    if(blocked()||reduced.matches)clear();else schedule();
+    const suspended=blocked()||reduced.matches;
+    host.classList.toggle('life-paused',suspended);
+    if(suspended)clear();else schedule();
+    // Pin compositor animation time as well as its CSS play state. WebKit can
+    // otherwise deliver a late transform sample while a modal is opening.
+    const ambient=host.querySelector('.search-ambient');
+    for(const a of ambient?.getAnimations({subtree:true})||[]){
+      if(suspended){const time=a.currentTime;a.pause();if(time!==null)a.currentTime=time;}
+      else if(a.playState==='paused')a.play();
+    }
   }
   document.addEventListener('visibilitychange',reconcile);
   window.addEventListener('blur',()=>{focused=false;reconcile();});

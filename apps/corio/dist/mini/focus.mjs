@@ -2,16 +2,17 @@ export function fitFocusedScene(zoom=1){
   if(!document.body.classList.contains('focus-game'))return;
   const viewport=document.querySelector('.search-viewport'),svg=viewport?.querySelector('svg');
   if(!svg)return;
-  const scale=Math.min(viewport.clientWidth/800,viewport.clientHeight/520)*zoom;
-  svg.style.width=(800*scale)+'px';svg.style.height=(520*scale)+'px';
+  const width=svg.viewBox.baseVal.width,height=svg.viewBox.baseVal.height;
+  const scale=Math.min(viewport.clientWidth/width,viewport.clientHeight/height)*zoom;
+  svg.style.width=(width*scale)+'px';svg.style.height=(height*scale)+'px';
   const painting=svg.closest('.search-painting');
-  if(painting){painting.style.width=(800*scale)+'px';painting.style.height=(520*scale)+'px';painting.style.setProperty('--lamp-radius',(104*scale)+'px');}
+  if(painting){painting.style.width=(width*scale)+'px';painting.style.height=(height*scale)+'px';painting.style.setProperty('--lamp-radius',(104*scale)+'px');}
   for(const target of svg.querySelectorAll('[data-find]')){
     const rect=target.querySelector('rect');if(!rect)continue;
     const original=['x','y','width','height'].map(name=>Number(rect.dataset[name]??(rect.dataset[name]=rect.getAttribute(name))));
     const w=Math.max(original[2],26/scale),h=Math.max(original[3],26/scale);
-    rect.setAttribute('x',Math.max(0,Math.min(800-w,original[0]+original[2]/2-w/2)));
-    rect.setAttribute('y',Math.max(0,Math.min(520-h,original[1]+original[3]/2-h/2)));
+    rect.setAttribute('x',Math.max(0,Math.min(width-w,original[0]+original[2]/2-w/2)));
+    rect.setAttribute('y',Math.max(0,Math.min(height-h,original[1]+original[3]/2-h/2)));
     rect.setAttribute('width',w);rect.setAttribute('height',h);
   }
 }

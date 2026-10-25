@@ -1,8 +1,9 @@
-import {createCatIdle} from './cat-idle.mjs?v=0.8.2';
+import {createCatIdle} from './cat-idle.mjs?v=0.9.0';
 const asset=file=>new URL('../assets/'+file,import.meta.url).href;
 export function createSearchLife({scene,isBlocked}){
   let focused=document.hasFocus(),voice=true,audio=null,voiceStarts=0,voiceError=false;
-  let lampTimer=null,lampPending=null,lamp={x:400,y:260},lastLamp=0,lampUpdates=0,keyboardFocus=false;
+  const sceneHeight=800*1024/1536;
+  let lampTimer=null,lampPending=null,lamp={x:400,y:sceneHeight/2},lastLamp=0,lampUpdates=0,keyboardFocus=false;
   function markFocus(){for(const node of scene.querySelectorAll('.search-cat,.search-object'))node.toggleAttribute('data-keyboard-focus',keyboardFocus);}
   try{voice=localStorage.getItem('corio-cat-voice-v1')!=='off';}catch{}
   const blocked=()=>!focused||document.hidden||isBlocked();
@@ -23,17 +24,17 @@ export function createSearchLife({scene,isBlocked}){
     lampTimer=null;if(blocked()||!lampPending)return;
     lamp=lampPending;lampPending=null;lastLamp=performance.now();
     const glow=scene.querySelector('[data-lamp-glow]');if(!glow)return;
-    glow.style.setProperty('--lamp-x',lamp.x/8+'%');glow.style.setProperty('--lamp-y',lamp.y/5.2+'%');lampUpdates++;
+    glow.style.setProperty('--lamp-x',lamp.x/8+'%');glow.style.setProperty('--lamp-y',lamp.y/sceneHeight*100+'%');lampUpdates++;
   }
   function setLamp(x,y,immediate=false){
     if(blocked()||!scene.querySelector('.night-scene'))return;
-    lampPending={x:Math.max(0,Math.min(800,x)),y:Math.max(0,Math.min(520,y))};
+    lampPending={x:Math.max(0,Math.min(800,x)),y:Math.max(0,Math.min(sceneHeight,y))};
     if(immediate){clearTimeout(lampTimer);paintLamp();}
     else if(lampTimer===null)lampTimer=setTimeout(paintLamp,Math.max(0,34-(performance.now()-lastLamp)));
   }
   function pointer(event){
     const svg=event.target.closest('svg[data-search-scene]');if(!svg?.classList.contains('night-scene'))return;
-    const r=svg.getBoundingClientRect();setLamp((event.clientX-r.x)*800/r.width,(event.clientY-r.y)*520/r.height,event.type==='pointerdown');
+    const r=svg.getBoundingClientRect();setLamp((event.clientX-r.x)*800/r.width,(event.clientY-r.y)*sceneHeight/r.height,event.type==='pointerdown');
   }
   function reconcile(){
     idle.reconcile();
@@ -55,8 +56,8 @@ export function createSearchLife({scene,isBlocked}){
   Object.defineProperty(window,'__corioCat',{value:()=>({voice,voicePlaying:!!audio&&!audio.paused,voiceDuration:audio?.duration||0,voiceVolume:audio?.volume??0,voiceStarts,voiceError,...idle.snapshot(),lamp:{...lamp},lampUpdates,lampPending:lampTimer!==null})});
   return{
     callCat,
-    afterRender(){markFocus();idle.afterRender();const glow=scene.querySelector('[data-lamp-glow]');if(glow){glow.style.setProperty('--lamp-x',lamp.x/8+'%');glow.style.setProperty('--lamp-y',lamp.y/5.2+'%');}},
-    newLevel(){idle.newLevel();stopVoice();clearTimeout(lampTimer);lampTimer=null;lampPending=null;lamp={x:400,y:260};},
+    afterRender(){markFocus();idle.afterRender();const glow=scene.querySelector('[data-lamp-glow]');if(glow){glow.style.setProperty('--lamp-x',lamp.x/8+'%');glow.style.setProperty('--lamp-y',lamp.y/sceneHeight*100+'%');}},
+    newLevel(){idle.newLevel();stopVoice();clearTimeout(lampTimer);lampTimer=null;lampPending=null;lamp={x:400,y:sceneHeight/2};},
     reconcile
   };
 }
