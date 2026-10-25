@@ -22,6 +22,6 @@ export function setupFocusUI(){
   const updateMode=()=>{if(label){const s=window.__corioModes();label.textContent=s.mode==='calm'?'Без лимита':`${s.remaining} ходов`;label.parentElement.classList.toggle('challenge-active',s.mode==='challenge');}};
   new MutationObserver(updateMode).observe(modeHost,{subtree:true,childList:true,characterData:true,attributes:true});updateMode();
   modeHost.addEventListener('click',event=>{if(event.target.closest('[data-mode]'))document.getElementById('mode-settings').close();});
-  new ResizeObserver(()=>fitFocusedScene(window.__mini().selected||1)).observe(document.getElementById('scene'));
+  new ResizeObserver(()=>fitFocusedScene(window.__mini?.().selected||1)).observe(document.getElementById('scene'));
   document.addEventListener('contextmenu',event=>{if(event.target.closest('#scene'))event.preventDefault();});
 }

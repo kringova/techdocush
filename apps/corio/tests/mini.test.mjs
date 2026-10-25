@@ -1,16 +1,27 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {GAMES,FOODS,GROOM_STEPS,createMini,miniAction,solutionFor,connectedRoute,yarnConflicts} from '../dist/mini/engine.mjs';
-for(const[id,game]of Object.entries(GAMES))test(`${id}: five distinct short scenarios finish through valid actions without mutating old states`,()=>{
-  assert.equal(game.levels.length,5);const definitions=new Set();
-  for(let index=0;index<5;index++){
+import {SEARCH_SCENES} from '../games/corio/mini/search-data.mjs';
+for(const[id,game]of Object.entries(GAMES))test(`${id}: all scenarios finish through valid actions without mutating old states`,()=>{
+  const count=id==='search'?50:5;assert.equal(game.levels.length,count);const definitions=new Set();
+  for(let index=0;index<count;index++){
     definitions.add(JSON.stringify(game.levels[index]));let state=createMini(id,index);assert.equal(state.won,false);
     if(id==='yarn')assert.ok(yarnConflicts(state.points,game.levels[index].edges).length>0);
     const actions=solutionFor(id,index);assert.ok(actions?.length);
     for(const action of actions){const before=JSON.stringify(state),next=miniAction(state,action);assert.equal(JSON.stringify(state),before);assert.ok(next.moves>=state.moves);state=next;}
     assert.equal(state.won,true,`${id} ${index+1}`);assert.ok(state.moves>0);assert.equal(miniAction(state,actions[0]),state);
   }
-  assert.equal(definitions.size,5);
+  assert.equal(definitions.size,count);
+});
+test('search has all12fixed scene/clue/light variants, unique target lists and a growing search load',()=>{
+  const levels=GAMES.search.levels,combinations=new Set(),lists=new Set();let previous=0;
+  for(const level of levels){
+    combinations.add([level.scene,level.clues,level.lighting].join('/'));
+    const key=[level.scene,level.clues,level.lighting,[...level.targets].sort().join(',')].join('/');assert.ok(!lists.has(key),'No repeated variant with the same target set');lists.add(key);
+    assert.equal(new Set(level.targets).size,level.targets.length);assert.ok(level.targets.length>=previous);previous=level.targets.length;
+    for(const target of level.targets)assert.ok(SEARCH_SCENES[level.scene].some(item=>item.id===target));
+  }
+  assert.equal(combinations.size,12);assert.equal(levels[0].targets.length,3);assert.equal(levels.at(-1).targets.length,12);
 });
 test('wall route needs reciprocal joints; fixed shelves cannot turn',()=>{
   let state=createMini('tunnels');const level=GAMES.tunnels.levels[0];assert.deepEqual(connectedRoute(state,level),[]);assert.equal(miniAction(state,{type:'turn',piece:0}),state);

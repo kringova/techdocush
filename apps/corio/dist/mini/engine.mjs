@@ -1,4 +1,4 @@
-import {SEARCH_LEVELS,SEARCH_SCENES} from './search-data.mjs?v=0.7.1';
+import {SEARCH_LEVELS,SEARCH_SCENES} from './search-data.mjs?v=0.8.0';
 // Original short scenarios for comparing mechanics. No clocks or offline decay.
 const copy=value=>structuredClone(value);
 export const FOODS={
