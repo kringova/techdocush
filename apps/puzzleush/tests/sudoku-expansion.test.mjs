@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {readFile} from 'node:fs/promises';
 import {generateSudoku,SUDOKU_LEVEL_COUNT,logicalSolve,emptyNotes} from '../dist/engine/sudoku.js';
-import {SUDOKU_CHAPTERS,chapterFor,chapterLevels,levelCount,levelOrder,nextLevelFor,migrateProgressV3,STORAGE_KEY,V3_STORAGE_KEY} from '../dist/engine/progress.js';
+import {SUDOKU_CHAPTERS,chapterFor,chapterLevels,levelCount,levelOrder,levelNumberFor,nextLevelFor,migrateProgressV3,STORAGE_KEY,V3_STORAGE_KEY} from '../dist/engine/progress.js';
 
 test('the original 30 puzzles and their solutions keep their exact identities',async()=>{
  const expected=JSON.parse(await readFile(new URL('./fixtures/sudoku-1.3.1-hashes.json',import.meta.url)));
@@ -20,6 +20,15 @@ test('next puzzle continues the same difficulty and skips already completed task
  assert.equal(nextLevelFor('sudoku',10),31);assert.equal(nextLevelFor('sudoku',20),51);assert.equal(nextLevelFor('sudoku',30),81);
  assert.equal(nextLevelFor('sudoku',30,{81:{at:'before'}}),82);assert.equal(nextLevelFor('sudoku',130),null);
  assert.equal(nextLevelFor('nonogram',29),30);assert.equal(nextLevelFor('wordsearch',30),null);
+});
+test('visible numbering is consecutive across difficulty groups while ids keep their puzzles',()=>{
+ assert.deepEqual(levelOrder('sudoku').map(id=>levelNumberFor('sudoku',id)),Array.from({length:130},(_,i)=>i+1));
+ assert.deepEqual(SUDOKU_CHAPTERS.map(c=>chapterLevels(c).map(id=>levelNumberFor('sudoku',id))),[
+  Array.from({length:5},(_,i)=>i+1),Array.from({length:25},(_,i)=>i+6),Array.from({length:40},(_,i)=>i+31),Array.from({length:60},(_,i)=>i+71)
+ ]);
+ for(const [id,number] of [[31,11],[50,30],[11,31],[51,41],[21,71],[30,80],[81,81],[130,130]])assert.equal(levelNumberFor('sudoku',id),number);
+ for(const game of ['nonogram','wordsearch'])for(let id=1;id<=30;id++)assert.equal(levelNumberFor(game,id),id);
+ assert.throws(()=>levelNumberFor('sudoku',131));
 });
 test('new medium, hard and expert tasks are graded by their full logical paths',()=>{
  for(let n=31;n<=130;n++){

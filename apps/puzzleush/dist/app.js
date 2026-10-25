@@ -7,7 +7,7 @@ import {createBenefits} from './engine/benefits.js';
 import {createPlatform} from './platform/adapter.js';
 import {createAnalytics,metricaSender} from './platform/analytics.js?v=3';
 import {mountOnboarding} from './platform/onboarding.js?v=5';
-import {STORAGE_KEY,V3_STORAGE_KEY,V2_STORAGE_KEY,LEGACY_STORAGE_KEY,chapterFor,chaptersFor,chapterLevels,levelCount,nextLevelFor,migrateProgressV1,migrateProgressV2,migrateProgressV3} from './engine/progress.js?v=4';
+import {STORAGE_KEY,V3_STORAGE_KEY,V2_STORAGE_KEY,LEGACY_STORAGE_KEY,chapterFor,chaptersFor,chapterLevels,levelCount,levelNumberFor,nextLevelFor,migrateProgressV1,migrateProgressV2,migrateProgressV3} from './engine/progress.js?v=5';
 
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const icon=name=>`<svg aria-hidden="true"><use href="#i-${name}"/></svg>`;
@@ -18,7 +18,7 @@ let benefits=null,benefitsError=false;
 if(isYandex)try{benefits=createBenefits(localStorage,`kletochki-yandex-${fixedGame}-benefits-v1`);}catch{benefitsError=true;const memory=new Map();benefits=createBenefits({getItem:k=>memory.get(k)||null,setItem:(k,v)=>memory.set(k,v)},'session');}
 const analyticsCounter=Number(document.documentElement.dataset.metrica||0);
 const analyticsEnabled=isYandex&&analyticsCounter>0;
-const analytics=createAnalytics({enabled:analyticsEnabled,send:metricaSender({enabled:isYandex,counterId:analyticsCounter}),context:()=>({game,level:store[game].level,group:chapterFor(game,store[game].level).label,size:game==='nonogram'?NONOGRAMS[store.nonogram.level-1].grid.length:game==='wordsearch'?generateWordsearch(store.wordsearch.level).size:9,version:'1.4.0'})});
+const analytics=createAnalytics({enabled:analyticsEnabled,send:metricaSender({enabled:isYandex,counterId:analyticsCounter}),context:()=>({game,level:store[game].level,levelNumber:levelNumberFor(game,store[game].level),group:chapterFor(game,store[game].level).label,size:game==='nonogram'?NONOGRAMS[store.nonogram.level-1].grid.length:game==='wordsearch'?generateWordsearch(store.wordsearch.level).size:9,version:'1.4.1'})});
 const platform=createPlatform({enabled:isYandex,onAdEvent:(name,params)=>analytics.event(name,params),onState(){document.body.dataset.platformPaused=String(platform.blocked());syncGameplay();},onError(){toast('Связь с Яндексом недоступна. Рекламу можно попробовать позже.');}});
 const tapGesture=createDoubleTap();
 const clone=x=>structuredClone(x),range=n=>Array.from({length:n},(_,i)=>i);
@@ -85,9 +85,9 @@ function renderChrome(){
  $('#game-title').textContent=game==='sudoku'?'Судоку':game==='wordsearch'?'Поиск слов':'Японские';
  $('#game-subtitle').textContent=game==='sudoku'?'Девять цифр. По одной на каждое место.':game==='wordsearch'?'Слова спрятаны. Отыщи их одно за другим.':'Собери рисунок, следуя числам.';
  $('#chapter-label').textContent=`${game==='sudoku'?'СЛОЖНОСТЬ':'ФОРМАТ'} · ${chapter.label.toUpperCase()}`;
- $('#current-level').textContent=String(level).padStart(2,'0');$('#level-limit').textContent=`/ ${levelCount(game)}`;
+ $('#current-level').textContent=String(levelNumberFor(game,level)).padStart(2,'0');$('#level-limit').textContent=`/ ${levelCount(game)}`;
  const group=chapterLevels(chapter),dotStart=Math.max(0,Math.min(group.length-15,group.indexOf(level)-7)),dots=group.slice(dotStart,dotStart+15);
- $('#level-dots').setAttribute('aria-label',`${chapter.label}: уровень ${group.indexOf(level)+1} из ${group.length}`);$('#level-dots').innerHTML=dots.map(n=>`<i class="${store[game].completed[n]?'done ':''}${n===level?'current':''}" title="Уровень ${n}"></i>`).join('');
+ $('#level-dots').setAttribute('aria-label',`${chapter.label}: уровень ${group.indexOf(level)+1} из ${group.length}`);$('#level-dots').innerHTML=dots.map(n=>`<i class="${store[game].completed[n]?'done ':''}${n===level?'current':''}" title="Уровень ${levelNumberFor(game,n)}"></i>`).join('');
  const progress=group.filter(n=>store[game].completed[n]).length;
  $('#chapter-progress-fill').style.width=`${progress/group.length*100}%`;$('#chapter-progress-label').textContent=`${progress} из ${group.length} · ${chapter.label}`;
  $('#journey-copy').textContent=game==='sudoku'?'130 задач, включая 60 экспертных. Пять базовых — или сразу твоя сложность.':'От 5 × 5 до 20 × 20. Любой рисунок можно выбрать сразу.';
@@ -141,7 +141,7 @@ function highlightWordInitial(word){
 }
 function renderSudoku(){
  const s=current(),p=generateSudoku(store.sudoku.level),bad=new Set(s.board.flatMap((n,i)=>n&&n!==p.solution[i]?[i]:[])),duplicate=conflicts(s.board),problem=contradictionHint(s.board,s.auto?candidates(s.board,s.exclusions):candidates(s.board)),value=s.board[selected],peers=new Set(PEERS[selected]||[]),hintCells=new Set(activeHint?.cells||[]);
- $('#board-caption').textContent=`Уровень ${store.sudoku.level} · ${p.clues} открытых клеток`;
+ $('#board-caption').textContent=`Уровень ${levelNumberFor('sudoku',store.sudoku.level)} · ${p.clues} открытых клеток`;
  $('#board-mount').innerHTML=`<div class="sudoku-board" role="group" aria-label="Судоку, девять строк и девять столбцов">${s.board.map((v,i)=>{
   const classes=['sudoku-cell',p.puzzle[i]?'given':'',i===selected?'selected':'',peers.has(i)?'peer':'',v&&value&&v===value?'same':'',bad.has(i)?'conflict':'',hintCells.has(i)?'hint-cell':''].filter(Boolean).join(' ');
   const label=`Строка ${Math.floor(i/9)+1}, столбец ${i%9+1}: ${v?v+(p.puzzle[i]?', задано':bad.has(i)?', неверно':''):'пусто'+(s.notes[i].length?', пометки '+s.notes[i].join(', '):'')}`;
@@ -318,14 +318,14 @@ function openLevels(){
  const legacy=store.legacyCompleted[game];
  $('#levels-intro').textContent=`${game==='sudoku'?'Судоку':game==='wordsearch'?'Поиск слов':'Японские кроссворды'} · ${Object.keys(store[game].completed).length} из ${levelCount(game)} пройдено. Все уровни доступны сразу.${legacy?' Результаты прежней подборки сохранены: '+legacy+' уровней.':''}`;
  const chapters=chaptersFor(game);
- $('#levels-content').innerHTML=chapters.map(ch=>`<section class="level-chapter"><h3>${ch.label}</h3><div class="level-grid">${chapterLevels(ch).map(n=>{const done=store[game].completed[n];return `<button class="level-item ${done?'done':''} ${n===store[game].level?'current':''}" data-level="${n}" aria-label="Уровень ${n}${done?', пройден':''}">${n}</button>`;}).join('')}</div></section>`).join('');
+ $('#levels-content').innerHTML=chapters.map(ch=>`<section class="level-chapter"><h3>${ch.label}</h3><div class="level-grid">${chapterLevels(ch).map(n=>{const done=store[game].completed[n];return `<button class="level-item ${done?'done':''} ${n===store[game].level?'current':''}" data-level="${n}" data-level-number="${levelNumberFor(game,n)}" aria-label="Уровень ${levelNumberFor(game,n)}${done?', пройден':''}">${levelNumberFor(game,n)}</button>`;}).join('')}</div></section>`).join('');
  $$('[data-level]').forEach(b=>b.addEventListener('click',()=>{hideDialog('#levels-dialog');setLevel(Number(b.dataset.level));}));showDialog('#levels-dialog');
 }
 function setLevel(level){analytics.leave('level_change');store[game].level=level;analytics.levelStart();histories[game]=[];selected=-1;activeHint=null;pencil=false;tapGesture.reset();fitNonogram=false;ensureState();save();render();window.scrollTo({top:0,behavior:'instant'});if(round()&&round().status!=='playing')openAttempt();}
 function openComplete(){
  const level=store[game].level;$('#complete-title').textContent=game==='sudoku'?'Всё сошлось!':game==='wordsearch'?'Все слова нашлись!':NONOGRAMS[level-1].name;
  const count=Object.keys(store[game].completed).length;
- $('#complete-copy').textContent=count===levelCount(game)?`Все ${levelCount(game)} уровней этой игры собраны. Можно вернуться к любимым или попробовать другую игру.`:`Уровень ${level} в твоей коллекции. Пройдено ${count} из ${levelCount(game)}. Можно перейти к следующему или выбрать любой другой.`;
+ $('#complete-copy').textContent=count===levelCount(game)?`Все ${levelCount(game)} уровней этой игры собраны. Можно вернуться к любимым или попробовать другую игру.`:`Уровень ${levelNumberFor(game,level)} в твоей коллекции. Пройдено ${count} из ${levelCount(game)}. Можно перейти к следующему или выбрать любой другой.`;
  $('#next-level').innerHTML=nextLevelFor(game,level,store[game].completed)?`Следующий уровень${icon('arrow')}`:'К коллекции уровней';showDialog('#complete-dialog');
 }
 function openRules(){

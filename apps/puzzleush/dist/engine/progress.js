@@ -21,6 +21,8 @@ export const chaptersFor=game=>game==='sudoku'?SUDOKU_CHAPTERS:game==='wordsearc
 export const chapterLevels=chapter=>chapter.levels?[...chapter.levels]:span(chapter.start,chapter.end);
 export const levelOrder=game=>chaptersFor(game).flatMap(chapterLevels);
 export const levelCount=game=>levelOrder(game).length;
+// Display positions are consecutive; saved ids continue to identify the same puzzle.
+export function levelNumberFor(game,level){const index=levelOrder(game).indexOf(level);if(index<0)throw Error('Unknown level');return index+1;}
 export function nextLevelFor(game,level,completed={}){const order=levelOrder(game);return order.slice(order.indexOf(level)+1).find(n=>!completed[n])??null;}
 export function chapterFor(game,level){
  const chapters=chaptersFor(game);
