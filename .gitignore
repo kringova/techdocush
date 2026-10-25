@@ -28,6 +28,7 @@ public/
 
 # Generated from apps/puzzleush/dist by build.sh
 /static/play/
+/apps/puzzleush/**/__pycache__/
 !/apps/puzzleush/dist/
 !/apps/puzzleush/dist/**
 !/apps/corio/dist/

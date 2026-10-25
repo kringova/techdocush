@@ -5,11 +5,18 @@ import path from 'node:path';
 import {generateSudoku,candidates,emptyNotes} from '../dist/engine/sudoku.js';
 import {generateWordsearch} from '../dist/engine/wordsearch.js';
 import {NONOGRAMS} from '../dist/engine/nonogram.js';
+import {readFile} from 'node:fs/promises';
+import {createHash} from 'node:crypto';
 import {sdkFixture} from './fixtures/yandex-sdk.mjs';
 const require=createRequire(import.meta.url),{chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
 const browser=await chromium.launch({headless:true,...(process.env.BROWSER_EXECUTABLE?{executablePath:process.env.BROWSER_EXECUTABLE}:{})});
 const origin=process.env.QA_ORIGIN||'http://127.0.0.1:4337',out=path.resolve('build/yandex-media');await mkdir(out,{recursive:true});
 const fresh=g=>({version:4,activeGame:g,sudoku:{level:1,completed:{},saves:{}},nonogram:{level:1,completed:{},saves:{}},wordsearch:{level:1,completed:{},saves:{}},legacyCompleted:{sudoku:0,nonogram:0}});
+async function stillFrame(page){
+ await page.evaluate(()=>document.fonts.ready);
+ await page.waitForFunction(()=>{const t=document.querySelector('#toast');return !t||(!t.classList.contains('visible')&&getComputedStyle(t).opacity==='0');});
+ await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+}
 function fixture(g,level){
  const state=fresh(g);state[g].level=level;
  if(g==='sudoku'){
@@ -45,7 +52,8 @@ try{
   for(const [kind,width,height,scale] of [['mobile',360,640,2],['desktop',1280,720,1]])for(let i=1;i<=2;i++){
    const {page,context}=await pageFor(g,width,height,{scale,level:g==='sudoku'?(i===1?1:21):g==='wordsearch'?(i===1?1:21):(i===1?6:26)});
    if(g==='nonogram'&&i===2)await page.locator('[data-zoom="fit"]').click();
-   if(g==='wordsearch'&&i===2){await page.locator('[data-initial-word]').first().click();await page.waitForFunction(()=>getComputedStyle(document.querySelector('#toast')).opacity==='0');}
+   if(g==='wordsearch'&&i===2)await page.locator('[data-initial-word]').first().click();
+   await stillFrame(page);
    await page.screenshot({path:path.join(dir,`${kind}-${i}.png`)});await context.close();
   }
   const {page:demo,context:dc}=await pageFor(g,390,844);await demo.locator('#help-button').click();if(g==='sudoku')await demo.locator('#tutorial-next').click();await demo.screenshot({path:path.join(dir,'onboarding-preview.png')});await dc.close();
@@ -63,6 +71,10 @@ try{
   await vc.close();const raw=await videoPathPromise;
   execFileSync(process.env.FFMPEG||'ffmpeg',['-y','-i',raw,'-t','27','-vf','scale=1280:720,setsar=1','-c:v','libx264','-pix_fmt','yuv420p','-movflags','+faststart','-an',path.join(dir,'gameplay-16x9.mp4')],{stdio:'ignore'});
   await rm(path.join(dir,'raw-video'),{recursive:true,force:true});console.log(`${g}: icon, cover, 4 screenshots, onboarding preview, MP4`);
+  const release=JSON.parse(await readFile(`build/yandex/${g}/release.json`,'utf8'));
+  const names=['icon-512.png','cover-800x470.png','mobile-1.png','mobile-2.png','desktop-1.png','desktop-2.png','onboarding-preview.png','gameplay-16x9.mp4'];
+  const hashes=Object.fromEntries(await Promise.all(names.map(async n=>[n,createHash('sha256').update(await readFile(path.join(dir,n))).digest('hex')])));
+  await writeFile(path.join(dir,'media-release.json'),JSON.stringify({version:release.version,game:g,sharedHash:release.sharedHash,generatedAt:new Date().toISOString(),hashes},null,2)+'\n');
  }
  await writeFile(path.join(out,'README.txt'),'Материалы Клеточек 1.5.0. Скриншоты и видео сняты с реального интерфейса общих сборок. Ответы SDK при локальной съёмке тестовые, настоящая реклама не записана и не проверена. mobile-*.png 720×1280; desktop-*.png 1280×720; icon 512×512; cover 800×470. onboarding-preview — дополнительный предпросмотр, не скриншот геймплея для каталога.\n');
 }finally{await browser.close();}

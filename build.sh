@@ -5,6 +5,7 @@
 set -e
 
 node --test apps/puzzleush/tests/*.test.mjs
+python3 -m unittest discover -s apps/puzzleush/tests -p 'test_yandex_upload_kit.py'
 node apps/puzzleush/scripts/build-yandex.mjs
 node apps/puzzleush/scripts/sync-to-site.mjs --site-directory .
 node --test apps/corio/tests/*.test.mjs
