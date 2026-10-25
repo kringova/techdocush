@@ -1,6 +1,6 @@
-import {catFigure} from '../characters.mjs?v=0.6.0';
-import {createModeController} from '../modes.mjs?v=0.6.0';
-import {ITEMS,SHELF_LEVELS,createShelfGame,transfer,solveShelf} from './engine.mjs?v=0.6.0';
+import {catFigure} from '../characters.mjs?v=0.7.0';
+import {createModeController} from '../modes.mjs?v=0.7.0';
+import {ITEMS,SHELF_LEVELS,createShelfGame,transfer,solveShelf} from './engine.mjs?v=0.7.0';
 const $=s=>document.querySelector(s),board=$('#shelves'),win=$('#win');
 let modes=null,platformPaused=false;
 let state=createShelfGame(),selected=-1,history=[],drag=null,ghost=null,ignoreClickUntil=0;

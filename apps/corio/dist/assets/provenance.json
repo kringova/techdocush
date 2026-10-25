@@ -141,6 +141,38 @@
       "tool": "built-in image_gen",
       "reviewSet": "visual/characters/art-pass-v1.json",
       "userApproved": false
+    },
+    {
+      "file": "tunnel-kit-alpha-v1.png",
+      "sha256": "6bb5062ed42de8cc327e516c4b9f300223f1dc4a6692126f7f203a0ee968ea5b",
+      "role": "First playable visual examples, candidate for user review",
+      "tool": "built-in image_gen",
+      "reviewSet": "visual/first-screens-v1.json",
+      "userApproved": false
+    },
+    {
+      "file": "cat-walk-right-v1.png",
+      "sha256": "857791331037197c255fafc5b22a36bfba130d126698c17c7031f4c51e8eaa9b",
+      "role": "First playable visual examples, candidate for user review",
+      "tool": "built-in image_gen",
+      "reviewSet": "visual/first-screens-v1.json",
+      "userApproved": false
+    },
+    {
+      "file": "search-kitchen-integrated-v2.png",
+      "sha256": "004f2db8a75ae64be924a73efc497b83123f31781c08e0a8e4d0bc30293851f8",
+      "role": "First playable visual examples, candidate for user review",
+      "tool": "built-in image_gen",
+      "reviewSet": "visual/first-screens-v1.json",
+      "userApproved": false
+    },
+    {
+      "file": "tunnel-wall-painted-v1.png",
+      "sha256": "fd6041bc6e7bf4041247ca84b2cf95358dd4ccff6c8d29a506d5bb4560949631",
+      "role": "First playable visual examples, candidate for user review",
+      "tool": "built-in image_gen",
+      "reviewSet": "visual/first-screens-v1.json",
+      "userApproved": false
     }
   ],
   "furniture": "Original code-drawn plan-view furniture; collision geometry matches footprints",

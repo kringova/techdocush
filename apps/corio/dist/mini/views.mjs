@@ -1,6 +1,7 @@
-import {searchView} from './search-art.mjs?v=0.6.0';
-import {FOODS,PET_ACTIONS,GROOM_TOOLS,GROOM_STEPS,tunnelEdges,connectedRoute,yarnConflicts} from './engine.mjs?v=0.6.0';
-import {catFigure,litterShape,foodFigure} from '../characters.mjs?v=0.6.0';
+import {renderTunnelView} from './tunnel-art.mjs?v=0.7.0';
+import {searchView} from './search-art.mjs?v=0.7.0';
+import {FOODS,PET_ACTIONS,GROOM_TOOLS,GROOM_STEPS,tunnelEdges,connectedRoute,yarnConflicts} from './engine.mjs?v=0.7.0';
+import {catFigure,litterShape,foodFigure} from '../characters.mjs?v=0.7.0';
 const asset=file=>new URL('../assets/'+file,import.meta.url).href;
 export const CAT=asset('player-v1.png'),YARN=asset('yarn-v1.png');
 const img=(file,alt='',className='')=>`<img class="${className}" src="${asset(file)}" alt="${alt}" draggable="false">`;
@@ -16,7 +17,7 @@ export function toolsFor(id,selection,sfx){
 }
 export function renderScene(id,state,level,selected,preview){
   if(id==='search')return searchView(state,level,selected||1);
-  if(id==='tunnels')return tunnelView(state,level);
+  if(id==='tunnels')return renderTunnelView(state,level);
   if(id==='food')return`<div class="food-table"><div class="food-observer">${catFigure('cautious',{className:'food-cat'})}<span>Что сегодня на ужин?</span></div><div class="food-plate" aria-label="Продукты на тарелке">${state.remaining.map(item=>button(foodIcon(FOODS[item.type].icon)+`<span>${FOODS[item.type].name}</span>${FOODS[item.type].detail?`<small>${FOODS[item.type].detail}</small>`:''}`,`data-food="${item.id}" id="food-${item.id}" aria-pressed="${selected===item.id}" class="food-piece"`)).join('')}</div><div class="food-bins">${button(img('bowl-v1.png')+'<strong>Подходит коту</strong><small>Корм, вода, маленькое угощение</small>','data-bin="safe" class="food-bin"')}${button('<span class="away-dish" aria-hidden="true">↗</span><strong>Убрать</strong><small>Оставить за пределами миски</small>','data-bin="away" class="food-bin"')}</div><div class="sorted-items">${state.sorted.map(item=>`<span title="${FOODS[item.type].name}">${foodIcon(FOODS[item.type].icon)}</span>`).join('')}</div></div>`;
   if(id==='pet')return`<div class="pet-room painted-home">${catFigure(state.pose,{className:'pet-cat'})}${img('bowl-v1.png','','room-bowl')}${img('yarn-v1.png','','room-yarn')}<p class="pet-thought">${state.message||'Кот рядом. Чего сейчас не хватает?'}</p></div><div class="need-meters">${['Сытость','Вода','Игра','Силы'].map((name,i)=>`<div><span>${name}</span><span class="need-dots" aria-label="${state.needs[i]} из 4">${Array.from({length:4},(_,n)=>`<i class="${n<state.needs[i]?'filled':''}"></i>`).join('')}</span></div>`).join('')}</div>`;
   if(id==='grooming'){
@@ -34,17 +35,6 @@ export function renderScene(id,state,level,selected,preview){
   return'';
 }
 function spotName(kind){return{dust:'Пыль',tangle:'Свободные шерстинки',mud:'Грязное пятно',soapy:'Мокрое пятно',foam:'Пена',wet:'Мокрая шерсть'}[kind];}
-function tunnelView(state,level){
-  const W=(level.w+2)*100,H=level.h*100,route=connectedRoute(state,level),points=piece=>[(piece.x+1.5)*100,(piece.y+.5)*100];
-  const tiles=state.pieces.map((piece,index)=>{
-    const [x,y]=points(piece),edges=tunnelEdges(piece),paths=edges.map(e=>{const end=[[x,y-50],[x+50,y],[x,y+50],[x-50,y]][e];return`M${x} ${y}L${end[0]} ${end[1]}`;}).join(' '),kind=piece.kind;
-    if(kind==='shelf')return`<path d="M${x-50} ${y}h100" class="fixed-shelf"/><path d="M${x-25} ${y+10}v24m50-24v24" class="shelf-support"/><text x="${x}" y="${y-15}" class="module-label">полка</text>`;
-    if(kind==='hammock')return`<path d="M${x-50} ${y}q50 50 100 0" class="hammock"/><path d="M${x-50} ${y-12}v22m100-22v22" class="shelf-support"/><text x="${x}" y="${y-17}" class="module-label">гамак</text>`;
-    return`<path d="${paths}" class="tube-outline"/><path d="${paths}" class="tube-fill ${route.includes(index)?'connected':''}"/><g role="button" tabindex="0" data-piece="${index}" id="piece-${index}" aria-label="Повернуть трубу ${index+1}"><rect x="${x-44}" y="${y-44}" width="88" height="88" rx="12" fill="transparent"/><text x="${x+24}" y="${y+29}" class="rotate-mark">↻</text></g>`;
-  }).join('');
-  const startY=(level.start.y+.5)*100,endY=(level.end.y+.5)*100,catX=50,catY=startY;
-  return`<div class="tunnel-wall"><svg viewBox="0 0 ${W} ${H}" aria-label="Трубы, полки и гамаки на стене"><defs><pattern id="wall-dots" width="32" height="32" patternUnits="userSpaceOnUse"><circle cx="4" cy="5" r="1.2" fill="#173744" opacity=".1"/></pattern></defs><rect width="${W}" height="${H}" fill="url(#wall-dots)"/><path d="M10 ${startY+12}h90M${W-100} ${endY+12}h90" class="fixed-shelf"/>${tiles}${catFigure('standing',{id:'route-cat',x:catX-40,y:catY-58,width:80,height:60})}<path d="m${W-54} ${endY-13} 8-9 10 10-9 9Z" fill="#c69662" stroke="#173744" stroke-width="3"/></svg></div>`;
-}
 function yarnView(points,level){
   const bad=yarnConflicts(points,level.edges);
   return`<div class="yarn-board"><svg viewBox="0 0 100 100" aria-hidden="true">${level.edges.map(([a,b],i)=>`<line x1="${points[a].x}" y1="${points[a].y}" x2="${points[b].x}" y2="${points[b].y}" class="thread-outline"/><line x1="${points[a].x}" y1="${points[a].y}" x2="${points[b].x}" y2="${points[b].y}" class="thread ${bad.includes(i)?'crossed':''}"/>`).join('')}</svg>${points.map((p,node)=>button(`<img src="${YARN}" alt="" draggable="false"><span>${node+1}</span>`,`class="yarn-node" data-node="${node}" id="node-${node}" style="left:${p.x}%;top:${p.y}%" aria-label="Клубок ${node+1}. Перетащи или двигай стрелками."`)).join('')}</div>`;

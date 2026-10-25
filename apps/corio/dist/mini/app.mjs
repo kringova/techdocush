@@ -1,19 +1,23 @@
-import {GAMES,FOODS,GROOM_STEPS,createMini,miniAction,solutionFor,connectedRoute} from './engine.mjs?v=0.6.0';
-import {renderScene,toolsFor,goalText} from './views.mjs?v=0.6.0';
-import {createModeController} from '../modes.mjs?v=0.6.0';
-import {catFigure} from '../characters.mjs?v=0.6.0';
+import {tunnelWalkPoints} from './tunnel-art.mjs?v=0.7.0';
+import {setupFocusUI,fitFocusedScene} from './focus.mjs?v=0.7.0';
+import {GAMES,FOODS,GROOM_STEPS,createMini,miniAction,solutionFor,connectedRoute} from './engine.mjs?v=0.7.0';
+import {renderScene,toolsFor,goalText} from './views.mjs?v=0.7.0';
+import {createModeController} from '../modes.mjs?v=0.7.0';
+import {catFigure,setCatWalkFrame} from '../characters.mjs?v=0.7.0';
 const $=query=>document.querySelector(query),id=$('[data-game]').dataset.game,game=GAMES[id],scene=$('#scene'),tools=$('#tools'),win=$('#win');
-let attempt=0,settleTimer=null,settleEpoch=0;
+let attempt=0,settleTimer=null,settleEpoch=0,routeWalking=false;
 let state=createMini(id),history=[],selected=id==='grooming'?'wipe':id==='litter'?'scoop':id==='search'?1:null,drag=null,ignoreClickUntil=0,paused=false,platformPaused=false,sfx=true,audio=null,modes;
 const key=id==='litter'?'corio-litter-pairs-v1':'corio-'+id+'-v1';let best=Array(5).fill(null);
 try{sfx=localStorage.getItem('corio-litter-sfx-v1')!=='off';const value=JSON.parse(localStorage.getItem(key));if(Array.isArray(value))best=best.map((_,i)=>Number.isInteger(value[i])?value[i]:null);}catch{}
-const blocked=()=>paused||platformPaused||win.open||modes?.isModalOpen();
+const settingsOpen=()=>!!document.querySelector('[data-game-panel][open]');
+const blocked=()=>settingsOpen()||paused||platformPaused||win.open||modes?.isModalOpen();
 function status(text){$('#status').textContent=text;}
 function render(){
   const level=game.levels[state.index],focused=document.activeElement?.id,viewport=scene.querySelector('.search-viewport'),scroll=viewport?{x:viewport.scrollLeft,y:viewport.scrollTop}:null;
   $('#level-name').textContent=level.name;$('#level-number').textContent=`${state.index+1} / 5`;$('#moves').textContent=state.moves;$('#goal').textContent=goalText(id,state,level);$('#undo').disabled=!history.length;
   tools.innerHTML=toolsFor(id,selected,sfx);scene.innerHTML=renderScene(id,state,level,selected,drag?.type==='yarn'?drag.preview:null);
   for(const button of $('#levels').children){const index=+button.dataset.level;button.setAttribute('aria-current',String(index===state.index));button.classList.toggle('completed',best[index]!==null);button.title=best[index]!==null?'Пройдено: '+best[index]+' действий':game.levels[index].name;}
+  fitFocusedScene(id==='search'?selected:1);
   if(scroll){const viewport=scene.querySelector('.search-viewport');viewport.scrollLeft=scroll.x;viewport.scrollTop=scroll.y;}
   if(focused)document.getElementById(focused)?.focus({preventScroll:true});
 }
@@ -30,7 +34,7 @@ function scheduleSettle(){
   settleTimer=setTimeout(settle,950);
 }
 function load(index){
-  attempt++;cancelSettle();endDrag();history=[];state=createMini(id,index);selected=id==='grooming'?'wipe':id==='search'?1:null;paused=false;platformPaused=false;ignoreClickUntil=0;
+  attempt++;routeWalking=false;cancelSettle();endDrag();history=[];state=createMini(id,index);selected=id==='grooming'?'wipe':id==='search'?1:null;paused=false;platformPaused=false;ignoreClickUntil=0;
   if(win.open)win.close();if($('#pause-dialog').open)$('#pause-dialog').close();modes?.newAttempt(id==='litter'?game.levels[index].w*game.levels[index].h*2:solutionFor(id,index).length);render();status(game.rule);window.dispatchEvent(new Event('corio:resume'));
 }
 function commit(action){
@@ -44,11 +48,23 @@ function commit(action){
   return true;
 }
 function walkRoute(){
-  const level=game.levels[state.index],image=scene.querySelector('#route-cat'),route=connectedRoute(state,level),points=[{x:50,y:(level.start.y+.5)*100},...route.map(i=>({x:(state.pieces[i].x+1.5)*100,y:(state.pieces[i].y+.5)*100})),{x:(level.w+1.5)*100,y:(level.end.y+.5)*100}],turn=attempt,start=performance.now(),duration=matchMedia('(prefers-reduced-motion: reduce)').matches?0:Math.min(2200,points.length*180);
-  const frame=time=>{if(turn!==attempt||!image.isConnected)return;const progress=duration?Math.min(1,(time-start)/duration):1,at=progress*(points.length-1),a=Math.min(points.length-2,Math.floor(at)),part=at-a;image.setAttribute('x',points[a].x+(points[a+1].x-points[a].x)*part-40);image.setAttribute('y',points[a].y+(points[a+1].y-points[a].y)*part-58);if(progress<1)requestAnimationFrame(frame);else if(!win.open)win.showModal();};requestAnimationFrame(frame);
+  routeWalking=true;
+  const level=game.levels[state.index],image=scene.querySelector('#route-cat'),points=tunnelWalkPoints(state,level),turn=attempt;
+  const lengths=[0];for(let i=1;i<points.length;i++)lengths.push(lengths.at(-1)+Math.hypot(points[i].x-points[i-1].x,points[i].y-points[i-1].y));
+  const total=lengths.at(-1),duration=matchMedia('(prefers-reduced-motion: reduce)').matches?0:Math.min(6500,total*5.5);
+  let previous=performance.now(),elapsed=0;
+  const frame=time=>{
+    if(turn!==attempt||!image.isConnected)return;
+    if(!platformPaused&&!paused&&!settingsOpen()&&!document.hidden)elapsed+=Math.min(80,time-previous);previous=time;
+    const progress=duration?Math.min(1,elapsed/duration):1,distance=progress*total;let a=0;while(a<points.length-2&&lengths[a+1]<distance)a++;
+    const span=lengths[a+1]-lengths[a],part=span?(distance-lengths[a])/span:1,x=points[a].x+(points[a+1].x-points[a].x)*part,y=points[a].y+(points[a+1].y-points[a].y)*part;
+    image.setAttribute('x',x-43);image.setAttribute('y',y-63.17);setCatWalkFrame(image,Math.floor(elapsed/140),points[a+1].x<points[a].x?'left':'right');
+    if(progress<1||paused||platformPaused||settingsOpen()||document.hidden)requestAnimationFrame(frame);else{routeWalking=false;if(!win.open)win.showModal();}
+  };requestAnimationFrame(frame);
 }
-function undo(){if(paused||platformPaused||!history.length)return;cancelSettle();if(win.open)win.close();endDrag();state=history.pop();render();status('Действие отменено.');modes.changed();scheduleSettle();}
-function pause(){if(paused||platformPaused||win.open||state.won)return;paused=true;cancelSettle();endDrag();$('#pause-dialog').showModal();window.dispatchEvent(new Event('corio:pause'));if(audio)audio.suspend();}
+
+function undo(){if(paused||platformPaused||!history.length)return;routeWalking=false;cancelSettle();if(win.open)win.close();endDrag();state=history.pop();render();status('Действие отменено.');modes.changed();scheduleSettle();}
+function pause(){if(paused||platformPaused||win.open||state.won&&!routeWalking)return;paused=true;cancelSettle();endDrag();$('#pause-dialog').showModal();window.dispatchEvent(new Event('corio:pause'));if(audio)audio.suspend();}
 function resume(){paused=false;if($('#pause-dialog').open)$('#pause-dialog').close();scheduleSettle();window.dispatchEvent(new Event('corio:resume'));}
 function sandSound(type){
   if(!sfx)return;try{audio??=new(window.AudioContext||window.webkitAudioContext)();audio.resume();const duration=type==='rake'?.27:.17,buffer=audio.createBuffer(1,Math.ceil(audio.sampleRate*duration),audio.sampleRate),data=buffer.getChannelData(0);for(let i=0;i<data.length;i++){const t=i/data.length;data[i]=(Math.random()*2-1)*Math.sin(Math.PI*t)**1.5*(.7+.3*Math.sin(i*.018));}const source=audio.createBufferSource(),filter=audio.createBiquadFilter(),gain=audio.createGain();source.buffer=buffer;filter.type='lowpass';filter.frequency.value=type==='rake'?1500:1050;gain.gain.value=.065;source.connect(filter);filter.connect(gain);gain.connect(audio.destination);source.start();}catch{}
@@ -109,9 +125,11 @@ scene.addEventListener('pointercancel',()=>{endDrag();render();});
 $('#undo').addEventListener('click',undo);$('#restart').addEventListener('click',()=>load(state.index));$('#next').addEventListener('click',()=>load((state.index+1)%5));$('#again').addEventListener('click',()=>load(state.index));$('#pause').addEventListener('click',pause);$('#resume').addEventListener('click',resume);
 win.addEventListener('cancel',e=>e.preventDefault());$('#pause-dialog').addEventListener('cancel',()=>{paused=false;scheduleSettle();window.dispatchEvent(new Event('corio:resume'));});
 for(let index=0;index<5;index++){const b=document.createElement('button');b.dataset.level=index;b.textContent=index+1;b.setAttribute('aria-label',`Уровень ${index+1}: ${game.levels[index].name}`);b.addEventListener('click',()=>load(index));$('#levels').append(b);}
-document.addEventListener('keydown',event=>{if(event.ctrlKey||event.metaKey||event.altKey||modes.isModalOpen()||paused||platformPaused)return;if(event.code==='KeyZ'){event.preventDefault();undo();}if(event.code==='KeyR'&&!win.open){event.preventDefault();load(state.index);}});
+document.addEventListener('keydown',event=>{if(event.ctrlKey||event.metaKey||event.altKey||settingsOpen()||modes.isModalOpen()||paused||platformPaused)return;if(event.code==='KeyZ'){event.preventDefault();undo();}if(event.code==='KeyR'&&!win.open){event.preventDefault();load(state.index);}});
 window.addEventListener('blur',pause);document.addEventListener('visibilitychange',()=>{if(document.hidden)pause();});
 window.addEventListener('corio:platform-pause',()=>{platformPaused=true;cancelSettle();endDrag();window.dispatchEvent(new Event('corio:pause'));if(audio)audio.suspend();});window.addEventListener('corio:platform-resume',()=>{platformPaused=false;scheduleSettle();if(!paused)window.dispatchEvent(new Event('corio:resume'));});
 modes=createModeController({gameId:id,host:$('[data-modes]'),getMoves:()=>state.moves,isWon:()=>state.won,canUndo:()=>history.length>0,onUndo:undo,onRestart:()=>load(state.index),onBlock:endDrag});
-Object.defineProperty(window,'__mini',{value:()=>({...structuredClone(state),selected,paused,platformPaused,best:[...best]})});Object.defineProperty(window,'__corioModes',{value:()=>modes.state()});
-load(0);
+Object.defineProperty(window,'__mini',{value:()=>({...structuredClone(state),selected,paused,platformPaused,routeWalking,best:[...best]})});Object.defineProperty(window,'__corioModes',{value:()=>modes.state()});
+const requestedLevel=Number(new URL(location.href).searchParams.get('level'));
+load(Number.isInteger(requestedLevel)&&requestedLevel>=1&&requestedLevel<=5?requestedLevel-1:0);
+setupFocusUI();
