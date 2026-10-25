@@ -1,8 +1,9 @@
-import {foodView} from './food-view.mjs?v=0.11.0';
-import {renderTunnelView} from './tunnel-art.mjs?v=0.11.0';
-import {searchView} from './search-art.mjs?v=0.11.0';
-import {FOODS,PET_ACTIONS,GROOM_TOOLS,GROOM_STEPS,tunnelEdges,connectedRoute,yarnConflicts} from './engine.mjs?v=0.11.0';
-import {catFigure,litterShape,foodFigure} from '../characters.mjs?v=0.11.0';
+import {foodView} from './food-view.mjs?v=0.12.0';
+import {renderYarnView} from './yarn-view.mjs?v=0.12.0';
+import {renderTunnelView} from './tunnel-art.mjs?v=0.12.0';
+import {searchView} from './search-art.mjs?v=0.12.0';
+import {FOODS,PET_ACTIONS,GROOM_TOOLS,GROOM_STEPS,tunnelEdges,connectedRoute,yarnConflicts,yarnCrossings} from './engine.mjs?v=0.12.0';
+import {catFigure,litterShape,foodFigure} from '../characters.mjs?v=0.12.0';
 const asset=file=>new URL('../assets/'+file,import.meta.url).href;
 export const CAT=asset('player-v1.png'),YARN=asset('yarn-v1.png');
 const img=(file,alt='',className='')=>`<img class="${className}" src="${asset(file)}" alt="${alt}" draggable="false">`;
@@ -32,14 +33,10 @@ export function renderScene(id,state,level,selected,preview){
     const matched=state.matched.includes(cell),open=state.open.includes(cell),empty=state.empty.includes(cell),visible=matched||open||empty;
     return button(visible?(empty?'<span class="clean-sand" aria-hidden="true"></span>':litterShape(shape)):`<span class="grains" aria-hidden="true"></span><span class="sand-ridge" aria-hidden="true"></span>`,`data-cell="${cell}" id="cell-${cell}" class="sand-cell ${visible?'dug':'covered'} ${matched?'matched':''} ${open?'face-up':''}" aria-label="Ячейка ${cell+1}: ${matched?'пара найдена':empty?'пусто':open?['дуга','две гранулы','спираль','капля','зигзаг','овал'][shape]:'скрыта'}" ${visible?'disabled':''}`);
   }).join('')}</div><div class="clump-tray"><span>Найденные пары</span>${Array.from({length:level.pairs},(_,shape)=>`<span class="pair-token ${state.matched.some(cell=>level.cells[cell]===shape)?'found':''}">${litterShape(shape)}</span>`).join('')}</div></div>`;
-  if(id==='yarn')return `<div class="yarn-corner">${catFigure('stretch',{className:'yarn-cat'})}<span>Кажется, кто-то уже поиграл.</span></div>`+yarnView(preview||state.points,level);
+  if(id==='yarn')return renderYarnView(preview||state.points,level);
   return'';
 }
 function spotName(kind){return{dust:'Пыль',tangle:'Свободные шерстинки',mud:'Грязное пятно',soapy:'Мокрое пятно',foam:'Пена',wet:'Мокрая шерсть'}[kind];}
-function yarnView(points,level){
-  const bad=yarnConflicts(points,level.edges);
-  return`<div class="yarn-board"><svg viewBox="0 0 100 100" aria-hidden="true">${level.edges.map(([a,b],i)=>`<line x1="${points[a].x}" y1="${points[a].y}" x2="${points[b].x}" y2="${points[b].y}" class="thread-outline"/><line x1="${points[a].x}" y1="${points[a].y}" x2="${points[b].x}" y2="${points[b].y}" class="thread ${bad.includes(i)?'crossed':''}"/>`).join('')}</svg>${points.map((p,node)=>button(`<img src="${YARN}" alt="" draggable="false"><span>${node+1}</span>`,`class="yarn-node" data-node="${node}" id="node-${node}" style="left:${p.x}%;top:${p.y}%" aria-label="Клубок ${node+1}. Перетащи или двигай стрелками."`)).join('')}</div>`;
-}
 export function goalText(id,state,level){
   if(id==='search')return`Найдено ${state.found.length} / ${level.targets.length}`;
   if(id==='tunnels')return state.won?'Трасса соединена':'Цель: связать две площадки';
@@ -47,5 +44,7 @@ export function goalText(id,state,level){
   if(id==='pet')return`Готово ${state.needs.filter(n=>n>=3).length} / 4`;
   if(id==='grooming')return`Осталось пятнышек: ${state.spots.length}`;
   if(id==='litter')return`Пары ${state.matched.length/2} / ${level.pairs}`;
-  return`Запутанных нитей: ${yarnConflicts(state.points,level.edges).length}`;
+  if(state.won)return'Нить свободна';
+  const crossings=yarnCrossings(state.points,level.edges).length;
+  return crossings?`Пересечения нити: ${crossings}`:yarnConflicts(state.points,level.edges).length?'Убери наложение нити':'Нить свободна';
 }

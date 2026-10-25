@@ -1,6 +1,7 @@
-import {TUNNEL_LEVELS} from './tunnel-data.mjs?v=0.11.0';
-import {SEARCH_LEVELS,SEARCH_SCENES} from './search-data.mjs?v=0.11.0';
-import {FOOD_LEVELS,FOOD_PILE_ASPECT,foodIsExposed} from './food-data.mjs?v=0.11.0';
+import {TUNNEL_LEVELS} from './tunnel-data.mjs?v=0.12.0';
+import {SEARCH_LEVELS,SEARCH_SCENES} from './search-data.mjs?v=0.12.0';
+import {FOOD_LEVELS,FOOD_PILE_ASPECT,foodIsExposed} from './food-data.mjs?v=0.12.0';
+import {YARN_LEVELS,YARN_ANCHOR,YARN_POINT_SPACING} from './yarn-data.mjs?v=0.12.0';
 export {FOOD_LEVELS,FOOD_PILE_ASPECT,foodIsExposed};
 // Original short scenarios for comparing mechanics. No clocks or offline decay.
 const copy=value=>structuredClone(value);
@@ -59,27 +60,37 @@ const litterLevels=Array.from({length:5},(_,i)=>{
   for(let n=cells.length-1;n>0;n--){seed=(Math.imul(seed,1664525)+1013904223)>>>0;const at=seed%(n+1);[cells[n],cells[at]]=[cells[at],cells[n]];}
   return{name:['Две первые пары','Пустые местечки','Четыре формы','Запомнить и найти','Весь лоток'][i],w,h,pairs,cells};
 });
-const circle=(n,r=34,cx=50,cy=50)=>Array.from({length:n},(_,i)=>({x:cx+r*Math.cos(-Math.PI/2+i*Math.PI*2/n),y:cy+r*Math.sin(-Math.PI/2+i*Math.PI*2/n)}));
-const yarnLevel=(name,n,wheel=false)=>{
-  const solution=circle(n),edges=Array.from({length:n},(_,i)=>[i,(i+1)%n]);
-  if(wheel){solution.push({x:50,y:50});for(let i=0;i<n;i++)edges.push([i,n]);}
-  else if(n>4)for(let i=2;i<n-1;i++)edges.push([0,i]);
-  const order=Array.from({length:n},(_,i)=>i%2===0?i/2:Math.ceil(n/2)+(i-1)/2),points=order.map(i=>({...solution[i]}));
-  if(wheel)points.push({x:12,y:45});
-  return{name,edges,solution,points};
-};
-const yarnLevels=[yarnLevel('Первый узел',4),yarnLevel('Пять клубочков',5),yarnLevel('Нити подлиннее',6),yarnLevel('Клубок в середине',6,true),yarnLevel('Большая путаница',7,true)];
 const orient=(a,b,c)=>(b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x);
 const onSegment=(a,b,p)=>Math.abs(orient(a,b,p))<.01&&p.x>=Math.min(a.x,b.x)-.01&&p.x<=Math.max(a.x,b.x)+.01&&p.y>=Math.min(a.y,b.y)-.01&&p.y<=Math.max(a.y,b.y)+.01;
 export function yarnConflicts(points,edges){
   const bad=new Set();
+  for(let i=0;i<edges.length;i++){
+    const [a,b]=edges[i];if(Math.hypot(points[a].x-points[b].x,points[a].y-points[b].y)<.01)bad.add(i);
+  }
   for(let i=0;i<edges.length;i++)for(let j=i+1;j<edges.length;j++){
-    const [a,b]=edges[i],[c,d]=edges[j];if([a,b].some(v=>v===c||v===d))continue;
+    const [a,b]=edges[i],[c,d]=edges[j],shared=[a,b].find(v=>v===c||v===d);
+    if(shared!==undefined){
+      const p=points[shared],q=points[a===shared?b:a],r=points[c===shared?d:c];
+      // Adjacent segments may meet, but folding straight back over the same
+      // portion of thread is an overlap rather than an untangled shortcut.
+      if(onSegment(p,q,r)||onSegment(p,r,q)){bad.add(i);bad.add(j);}continue;
+    }
     const p=points[a],q=points[b],r=points[c],s=points[d];
     if(orient(p,q,r)*orient(p,q,s)<0&&orient(r,s,p)*orient(r,s,q)<0||onSegment(p,q,r)||onSegment(p,q,s)||onSegment(r,s,p)||onSegment(r,s,q)){bad.add(i);bad.add(j);}
   }
   for(let i=0;i<points.length;i++)for(let j=0;j<edges.length;j++)if(!edges[j].includes(i)&&onSegment(points[edges[j][0]],points[edges[j][1]],points[i]))bad.add(j);
   return [...bad];
+}
+export function yarnCrossings(points,edges){
+  const crossings=[];
+  for(let i=0;i<edges.length;i++)for(let j=i+1;j<edges.length;j++){
+    const [a,b]=edges[i],[c,d]=edges[j];if([a,b].some(v=>v===c||v===d))continue;
+    const p=points[a],q=points[b],r=points[c],s=points[d];
+    if(orient(p,q,r)*orient(p,q,s)>=0||orient(r,s,p)*orient(r,s,q)>=0)continue;
+    const vx=q.x-p.x,vy=q.y-p.y,wx=s.x-r.x,wy=s.y-r.y;
+    const t=((r.x-p.x)*wy-(r.y-p.y)*wx)/(vx*wy-vy*wx);
+    crossings.push({x:p.x+t*vx,y:p.y+t*vy,under:i,over:j});
+  }return crossings;
 }
 export const GAMES={
   search:{title:'Куда пропало?',levels:SEARCH_LEVELS,rule:'Найди предметы из списка. Приближай сцену кнопкой «+» и передвигай её, чтобы рассмотреть детали.'},
@@ -88,7 +99,7 @@ export const GAMES={
   pet:{title:'Вечер с котом',levels:petLevels,rule:'Помоги коту поесть, попить, поиграть и отдохнуть. Доведи все четыре показателя до трёх отметок.'},
   grooming:{title:'Чистые лапы',levels:groomingLevels,rule:'Выбери инструмент и коснись пятнышка. Следи за настроением: если кот устал, дай ему передышку.'},
   litter:{title:'Пары в лотке',levels:litterLevels,rule:'Открывай ячейки совком и ищи две одинаковые формы. Здесь есть и пустые места. Несовпавшая пара снова скроется — запоминай, где что лежит.'},
-  yarn:{title:'Распутай клубок',levels:yarnLevels,rule:'Перетаскивай клубочки, чтобы нити не пересекались. Между клубками должно оставаться место.'}
+  yarn:{title:'Распутай клубок',levels:YARN_LEVELS,rule:'Один клубок — одна нить. Тяни изгибы и свободный конец, пока нить не перестанет пересекать себя. Клубок остаётся на месте.'}
 };
 export function createMini(id,index=0){
   const level=GAMES[id]?.levels[index];if(!level)throw new RangeError('Unknown game or level');
@@ -152,9 +163,9 @@ export function miniAction(state,action){
     }
     next.won=next.matched.length===level.pairs*2;
   }else if(id==='yarn'){
-    if(action.type!=='move'||!next.points[action.node]||!Number.isFinite(action.x)||!Number.isFinite(action.y))return state;
+    if(action.type!=='move'||!Number.isInteger(action.node)||action.node===(level.anchor??YARN_ANCHOR)||!next.points[action.node]||!Number.isFinite(action.x)||!Number.isFinite(action.y))return state;
     const point={x:Math.max(8,Math.min(92,action.x)),y:Math.max(8,Math.min(92,action.y))};
-    if(next.points.some((p,i)=>i!==action.node&&Math.hypot(p.x-point.x,p.y-point.y)<9))return{...state,message:'Оставь немного места между клубочками.'};
+    if(next.points.some((p,i)=>i!==action.node&&Math.hypot(p.x-point.x,p.y-point.y)<YARN_POINT_SPACING))return{...state,message:'Оставь немного места между изгибами нити.'};
     if(Math.hypot(next.points[action.node].x-point.x,next.points[action.node].y-point.y)<.1)return state;
     next.points[action.node]=point;next.won=yarnConflicts(next.points,level.edges).length===0;
   }
@@ -183,12 +194,6 @@ export function solutionFor(id,index){
   }
   if(id==='litter')return Array.from({length:level.pairs},(_,shape)=>level.cells.flatMap((value,cell)=>value===shape?[{type:'reveal',cell}]:[])).flat();
   if(id==='yarn'){
-    // Move to known untangled geometry via a free staging area, respecting spacing.
-    let state=createMini(id,index);const path=[];
-    for(let pass=0;pass<3&&!state.won;pass++)for(let node=0;node<level.solution.length;node++){
-      const goal=level.solution[node],block=state.points.findIndex((p,i)=>i!==node&&Math.hypot(p.x-goal.x,p.y-goal.y)<10);
-      if(block>=0){const free=[{x:9,y:9},{x:91,y:9},{x:91,y:91},{x:9,y:91},{x:50,y:9}].find(p=>!state.points.some((q,i)=>i!==block&&Math.hypot(q.x-p.x,q.y-p.y)<11));if(free){const action={type:'move',node:block,...free},next=miniAction(state,action);if(next.moves>state.moves){path.push(action);state=next;}}}
-      const action={type:'move',node,...goal},next=miniAction(state,action);if(next.moves>state.moves){path.push(action);state=next;}if(state.won)break;
-    }return state.won?path:null;
+    return copy(level.solution);
   }
 }

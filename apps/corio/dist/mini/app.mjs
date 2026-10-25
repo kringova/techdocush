@@ -1,17 +1,17 @@
-import {fitFoodScene} from './food-view.mjs?v=0.11.0';
-import {createFoodFeedback} from './food-feedback.mjs?v=0.11.0';
-import {tunnelWalkPoints} from './tunnel-art.mjs?v=0.11.0';
-import {setupFocusUI,fitFocusedScene} from './focus.mjs?v=0.11.0';
-import {GAMES,FOODS,GROOM_STEPS,createMini,miniAction,solutionFor,connectedRoute} from './engine.mjs?v=0.11.0';
-import {renderScene,toolsFor,goalText} from './views.mjs?v=0.11.0';
-import {createModeController} from '../modes.mjs?v=0.11.0';
-import {catFigure,setCatWalkFrame} from '../characters.mjs?v=0.11.0';
-import {createSearchLife} from './search-life.mjs?v=0.11.0';
+import {fitFoodScene} from './food-view.mjs?v=0.12.0';
+import {createFoodFeedback} from './food-feedback.mjs?v=0.12.0';
+import {tunnelWalkPoints} from './tunnel-art.mjs?v=0.12.0';
+import {setupFocusUI,fitFocusedScene} from './focus.mjs?v=0.12.0';
+import {GAMES,FOODS,GROOM_STEPS,createMini,miniAction,solutionFor,connectedRoute} from './engine.mjs?v=0.12.0';
+import {renderScene,toolsFor,goalText} from './views.mjs?v=0.12.0';
+import {createModeController} from '../modes.mjs?v=0.12.0';
+import {catFigure,setCatWalkFrame} from '../characters.mjs?v=0.12.0';
+import {createSearchLife} from './search-life.mjs?v=0.12.0';
 const $=query=>document.querySelector(query),id=$('[data-game]').dataset.game,game=GAMES[id],scene=$('#scene'),tools=$('#tools'),win=$('#win');
 let attempt=0,settleTimer=null,settleEpoch=0,routeWalking=false,routeAnimation=null,routeFrame=null,searchLife=null,foodFeedback=null;
 let state=createMini(id),history=[],selected=id==='grooming'?'wipe':id==='litter'?'scoop':id==='search'?1:null,drag=null,ignoreClickUntil=0,paused=false,platformPaused=false,sfx=true,audio=null,modes;
 const manyLevels=id==='search'||id==='tunnels';
-const key=id==='litter'?'corio-litter-pairs-v1':id==='search'?'corio-search-50-v3':id==='food'?'corio-food-pile-v1':id==='tunnels'?'corio-tunnels-50-v1':'corio-'+id+'-v1';let best=Array(game.levels.length).fill(null);
+const key=id==='litter'?'corio-litter-pairs-v1':id==='search'?'corio-search-50-v3':id==='food'?'corio-food-pile-v1':id==='tunnels'?'corio-tunnels-50-v1':id==='yarn'?'corio-yarn-thread-v1':'corio-'+id+'-v1';let best=Array(game.levels.length).fill(null);
 try{sfx=localStorage.getItem('corio-litter-sfx-v1')!=='off';const value=JSON.parse(localStorage.getItem(key));if(Array.isArray(value))best=best.map((_,i)=>Number.isInteger(value[i])?value[i]:null);}catch{}
 const settingsOpen=()=>!!document.querySelector('[data-game-panel][open]');
 const blocked=()=>settingsOpen()||paused||platformPaused||win.open||modes?.isModalOpen();
@@ -30,7 +30,7 @@ function render(){
   if(focused)document.getElementById(focused)?.focus({preventScroll:true});
   searchLife?.afterRender();
 }
-function endDrag(){drag=null;document.querySelector('.drag-food')?.remove();}
+function endDrag(){const restorePreview=drag?.type==='yarn';drag=null;document.querySelector('.drag-food')?.remove();if(restorePreview)render();}
 function cancelSettle(){clearTimeout(settleTimer);settleTimer=null;settleEpoch++;}
 function scheduleSettle(){
   cancelSettle();if(id!=='litter'||!state.pending||paused||platformPaused)return;
@@ -51,11 +51,11 @@ function commit(action){
   if(blocked()||!modes.guard())return false;
   const previous=state,next=miniAction(state,action);if(next===state)return false;
   if(next.moves>state.moves)history.push(state);state=next;if(id==='food'&&state.sorted.some(i=>i.id===selected))selected=null;render();if(state.message)status(state.message);modes.changed();
-  if(id==='food'&&action.type==='sort'&&next.moves>previous.moves)foodFeedback?.sorted({correct:next.mistakes===previous.mistakes,mistakes:next.mistakes,message:next.message});
+  if(id==='food'&&action.type==='sort'&&next.moves>previous.moves)foodFeedback?.sorted({correct:next.mistakes===previous.mistakes,mistakes:next.mistakes,message:next.message,bin:action.bin});
   if(id==='litter')sandSound(action.type);
   if(id==='litter'&&state.pending)scheduleSettle();
   const portrait=win.querySelector('.win-cat');if(portrait)portrait.outerHTML=catFigure(id==='grooming'&&state.washed?'towel':id==='pet'?'sleep':'loaf',{className:'win-cat'});
-  if(state.won){endDrag();best[state.index]=Math.min(best[state.index]??Infinity,state.moves);try{localStorage.setItem(key,JSON.stringify(best));}catch{}$('#win-title').textContent={search:'Все вещи нашлись',tunnels:'Кот добрался!',food:'Миска разобрана',pet:'Хороший вечер',grooming:'Чисто и спокойно',litter:'Лоток в порядке',yarn:'Нитки распутаны'}[id];$('#win-copy').textContent=`${state.moves} действий. ${state.index===game.levels.length-1?'Все уровни пройдены.':'Можно попробовать следующий уровень.'}`;$('#next').textContent=state.index===game.levels.length-1?'С первой':'Дальше';if(id==='tunnels')walkRoute();else win.showModal();}
+  if(state.won){endDrag();best[state.index]=Math.min(best[state.index]??Infinity,state.moves);try{localStorage.setItem(key,JSON.stringify(best));}catch{}$('#win-title').textContent={search:'Все вещи нашлись',tunnels:'Кот добрался!',food:'Миска разобрана',pet:'Хороший вечер',grooming:'Чисто и спокойно',litter:'Лоток в порядке',yarn:'Нить распутана'}[id];$('#win-copy').textContent=`${state.moves} действий. ${state.index===game.levels.length-1?'Все уровни пройдены.':'Можно попробовать следующий уровень.'}`;$('#next').textContent=state.index===game.levels.length-1?'С первой':'Дальше';if(id==='tunnels')walkRoute();else win.showModal();}
   return true;
 }
 function cancelRouteWalk(){
@@ -157,7 +157,7 @@ scene.addEventListener('pointercancel',()=>{
   // A browser gesture may cancel a pointer even when this game has no drag.
   // Replacing the scene then would detach the cat from its running animation.
   if(!drag)return;
-  const restorePreview=drag.type==='yarn';endDrag();if(restorePreview)render();
+  endDrag();
 });
 $('#undo').addEventListener('click',undo);$('#restart').addEventListener('click',()=>load(state.index));$('#next').addEventListener('click',()=>load((state.index+1)%game.levels.length));$('#again').addEventListener('click',()=>load(state.index));$('#pause').addEventListener('click',pause);$('#resume').addEventListener('click',resume);
 win.addEventListener('cancel',e=>e.preventDefault());$('#pause-dialog').addEventListener('cancel',()=>{paused=false;syncRouteMotion();scheduleSettle();window.dispatchEvent(new Event('corio:resume'));});
@@ -181,10 +181,10 @@ if(id==='tunnels'){
   const routePanels=new MutationObserver(syncRouteMotion);
   for(const dialog of document.querySelectorAll('dialog'))routePanels.observe(dialog,{attributes:true,attributeFilter:['open']});
 }
-if(id==='food'){
-  const cancelFoodDrag=new MutationObserver(()=>{if(settingsOpen()){
+if(id==='food'||id==='yarn'){
+  const cancelSceneDrag=new MutationObserver(()=>{if(settingsOpen()){
     if(drag&&scene.hasPointerCapture(drag.pointer))scene.releasePointerCapture(drag.pointer);
     endDrag();
   }});
-  for(const dialog of document.querySelectorAll('[data-game-panel]'))cancelFoodDrag.observe(dialog,{attributes:true,attributeFilter:['open']});
+  for(const dialog of document.querySelectorAll('[data-game-panel]'))cancelSceneDrag.observe(dialog,{attributes:true,attributeFilter:['open']});
 }

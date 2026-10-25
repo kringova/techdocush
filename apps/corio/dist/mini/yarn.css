@@ -1,0 +1,19 @@
+.focus-game .app[data-game=yarn] .stage-area{display:grid;place-items:center;container-type:size}
+.focus-game .app[data-game=yarn] .scene{width:min(100%,calc(100cqh - 34px),560px);height:auto;flex:none;margin-inline:auto;background:#b8b397;border-color:#173744;overflow:hidden}
+.thread-board{position:relative;aspect-ratio:1;background:radial-gradient(ellipse at 15% 8%,#ead9ad66,transparent 72%),repeating-linear-gradient(0deg,#f4ead41c 0 1px,transparent 1px 4px),repeating-linear-gradient(90deg,#1737440a 0 1px,transparent 1px 5px),#b8b397;box-shadow:inset 0 0 0 5px #7d795f,inset 0 0 0 7px #17374435;touch-action:none}
+.thread-board>.thread-drawing{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+.thread-drawing path{fill:none;stroke-linecap:round;stroke-linejoin:round}
+.thread-ink{stroke:#153c4d;stroke-width:.8775}
+.thread-fibre{stroke:#e4c48e;stroke-width:.507}
+.thread-grain{stroke:#f4ead4;stroke-width:.0975;stroke-dasharray:.3 1.1;opacity:.65}
+.thread-gap{stroke:#b8b397;stroke-width:1.7225}
+/* The original PNG's drawn tail tip, rather than the ball centre, meets point0. */
+.thread-ball{position:absolute;width:16%;height:16%;object-fit:contain;transform:translate(-91.6%,-83%);pointer-events:none;filter:drop-shadow(1px 2px 0 #17374445)}
+.thread-handle{position:absolute;transform:translate(-50%,-50%);width:clamp(30px,9%,44px);height:auto;aspect-ratio:1;padding:0;border:0;border-radius:50%;background:transparent;cursor:grab;touch-action:none;display:grid;place-items:center}
+.thread-handle>span{width:30%;height:30%;border:1.5px solid #153c4d;background:#f4ead455;border-radius:50%;opacity:.48;pointer-events:none}
+.thread-handle:hover>span,.thread-handle:focus-visible>span,.thread-handle:active>span{opacity:1;background:#f4ead4}
+.thread-handle:active{cursor:grabbing}.thread-handle:focus-visible{outline:2px solid #153c4d;outline-offset:0}
+.thread-end>span{width:24%;height:24%;background:#d99852;opacity:.9;border-radius:2px;transform:rotate(45deg)}
+.thread-note{font-size:10px;line-height:1.45;text-align:center;margin:0;padding:9px 8px 10px;color:#e8dcc4;background:#36534f}
+@media(hover:none){.thread-handle>span{opacity:.8}}
+@media(max-width:760px){.thread-note{font-size:9px}}

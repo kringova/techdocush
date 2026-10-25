@@ -3,6 +3,7 @@
 .shelf-cat-detail{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .shelf{position:absolute;width:33%;height:29%;left:4%;top:5%;cursor:pointer;border-radius:9px;outline-offset:4px;touch-action:none}
 .shelf:nth-child(even){left:63%}.shelf:nth-child(n+3){top:43%}
+#shelves[data-rows="3"] .shelf{top:2%;height:22%;min-height:44px}#shelves[data-rows="3"] .shelf:nth-child(n+3){top:27%}#shelves[data-rows="3"] .shelf:nth-child(n+5){top:52%}
 .shelf-wood{display:block;position:absolute;bottom:0;left:0;width:100%;height:auto;aspect-ratio:5/1;pointer-events:none;overflow:hidden}
 .shelf-label{position:absolute;left:2%;top:0;font:10px/1.4 system-ui;color:#203e46;background:#f0e2c780;border-radius:3px;padding:1px 5px;pointer-events:none}
 .shelf.complete .shelf-label::after{content:' ✓';color:#254b35}
@@ -21,3 +22,5 @@
 .game-shell[data-game=shelves] .goal{margin-top:0}
 @media(max-width:650px){.shelf-label{font-size:8px;padding:0 3px}.empty-mark{font-size:9px;border-radius:5px}.slot.front{min-width:39px;margin-inline:-4px}.shelf.selected{outline-offset:2px}.slots{height:calc(var(--shelf-width)*.34)}.slot.front .shelf-item{transform:scale(1.08)}}
 @media(max-width:350px){.slot.front{min-width:35px;margin-inline:-4px}.shelf-label{font-size:7px}.empty-mark{font-size:8px}}
+.game-shell[data-game=shelves] .all-levels{font:11px/1.4 system-ui;color:#e8dcc4;background:transparent;border:1px solid #9cafa060;border-radius:6px;padding:7px 10px;margin-top:12px;cursor:pointer}.levels-dialog{width:min(520px,calc(100% - 28px))}.levels-dialog>p{font:12px/1.7 system-ui;margin:15px 0;color:#bec8b5}#level-grid{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:7px}#level-grid button{font:12px/1 system-ui;width:100%;aspect-ratio:1;margin:0;padding:0;background:transparent;color:#e8dcc4;border:1px solid #9cafa060;border-radius:6px;min-height:32px}#level-grid button.completed{box-shadow:inset 0 -3px #a8b58b}#level-grid button[aria-current=true]{background:#dccba1;color:#173744;border-color:#dccba1}
+@media(max-width:650px){.game-shell[data-game=shelves] .all-levels{grid-column:1/-1;grid-row:4;margin:0;justify-self:end;padding:5px 9px;font-size:9px}.game-shell[data-game=shelves] .side{row-gap:5px}.levels-dialog{padding:18px}#level-grid{grid-template-columns:repeat(8,minmax(0,1fr));gap:6px}}
