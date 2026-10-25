@@ -1,6 +1,7 @@
 import copy
 import importlib.util
 import json
+from html.parser import HTMLParser
 from pathlib import Path
 import struct
 import tempfile
@@ -15,6 +16,21 @@ spec.loader.exec_module(kit)
 
 
 class UploadKitChecks(unittest.TestCase):
+    def test_copy_fields_follow_observed_console_order(self):
+        class Inputs(HTMLParser):
+            def __init__(self):
+                super().__init__()
+                self.ids = []
+            def handle_starttag(self, tag, attrs):
+                if tag == "textarea":
+                    self.ids.append(dict(attrs)["id"])
+        catalog = (ROOT / "docs/yandex-catalog.md").read_text()
+        games = [{"game": name, "folder": name, "archive": "game.zip", "fields": kit.catalog_fields(catalog, heading)} for name, heading in kit.GAME_NAMES.items()]
+        parser = Inputs()
+        parser.feed(kit.html_page(games, "1.5.0", "2026-10-25"))
+        order = ["keywords", "developer-comment", "title", "seo", "about", "short-description", "how-to-play"]
+        self.assertEqual(parser.ids, [f"{game}-{key}" for game in kit.GAME_NAMES for key in order])
+
     def test_current_catalog_fields_fit_actual_console_limits(self):
         catalog = (ROOT / "docs/yandex-catalog.md").read_text()
         for heading in kit.GAME_NAMES.values():

@@ -22,13 +22,13 @@ TAGS = {
     "wordsearch": ["Поиск слов", "Слова", "Логические", "Для одного игрока"],
 }
 FIELDS = [
+    ("keywords", "Ключевые слова", 1, 100),
+    ("developer-comment", "Комментарий разработчика", 1, 2048),
     ("title", "Название", 1, 50),
     ("seo", "Описание для SEO", 50, 160),
     ("about", "Об игре", 100, 1000),
     ("short-description", "Короткое описание", 1, 70),
     ("how-to-play", "Как играть", 100, 1000),
-    ("keywords", "Ключевые слова", 1, 100),
-    ("developer-comment", "Комментарий разработчика", 1, 2048),
 ]
 MEDIA = {
     "icon-512.png": "Иконка",
@@ -63,7 +63,7 @@ GUIDE = """КЛЕТОЧКИ — ПОЛНЫЙ КОМПЛЕКТ ДЛЯ ЯНДЕК�
 2. Для японских кроссвордов и поиска слов создать по отдельной карточке.
 3. Взять параметры из страницы/answers.txt, вставить тексты. Теги выбирать только из существующего списка.
 4. Загрузить ZIP, иконку, обложку и обязательное горизонтальное видео в соответствующие поля.
-5. В «Скриншотах» выбрать «Десктопные» и загрузить desktop-1/2; затем «Мобильные» → «Портретная» и mobile-1/2.
+5. В «Скриншотах» выбрать «Десктопные» и файлы из screenshots-desktop-16x9; затем «Мобильные» → «Портретная» и файлы из screenshots-mobile-9x16. Мобильные9:16 не загружаются в альбомное поле16:9.
 6. Вертикальное видео, GIF, рекламные видео, maskable-иконка и обложка на витрину необязательны; оставить пустыми.
 7. Выключить AI-описания. В описании удалить английскую вкладку, оставить русский. Нажать «Сохранить».
 8. Открыть тестовый запуск с debug-панелью, проверить настоящий SDK, рекламу и сохранения; на iPhone — управление и поворот.
@@ -189,24 +189,60 @@ def validate_archive(file, release, game):
                 raise ValueError(f"ZIP SHA256 не совпал: {name}")
 
 
+def media_path(name):
+    if name.startswith("desktop-"):
+        return "screenshots-desktop-16x9/" + name
+    if name.startswith("mobile-"):
+        return "screenshots-mobile-9x16/" + name
+    return "media/" + name
+
+
+def ordered_answers(game, version):
+    fields, settings = game["fields"], dict(COMMON)
+    pairs = [("Версия", version), *COMMON[:5],
+             ("Теги — выбрать существующие, остальные пропустить", ", ".join(TAGS[game["game"]])),
+             ("Ключевые слова", fields["keywords"]),
+             *COMMON[5:7], ("Комментарий разработчика", fields["developer-comment"]),
+             ("Описание и продвижение", settings["Описание и продвижение"])]
+    pairs += [(label, fields[key]) for key, label, _, _ in FIELDS if key not in ("keywords", "developer-comment")]
+    return pairs
+
+
 def html_page(games, version, checked_at):
     esc = html.escape
     sections = []
     for game in games:
         folder, fields = game["folder"], game["fields"]
-        settings = [("Версия", version), *COMMON, ("Теги — только если есть в списке", ", ".join(TAGS[game["game"]]))]
-        rows = "".join(f"<tr><th>{esc(k)}</th><td>{esc(v)}</td></tr>" for k, v in settings)
-        cards = []
-        for key, label, _, maximum in FIELDS:
+        def rows(values):
+            return "<table>" + "".join(f"<tr><th>{esc(k)}</th><td>{esc(v)}</td></tr>" for k, v in values) + "</table>"
+        def card(key):
+            _, label, _, maximum = next(f for f in FIELDS if f[0] == key)
             value = fields[key]
             field_id = f"{game['game']}-{key}"
-            cards.append(f'<div class="field"><label for="{field_id}">{esc(label)} <small>{len(value)}/{maximum}</small></label><textarea id="{field_id}" readonly rows="{max(2, min(8, len(value)//80+1))}">{esc(value)}</textarea><button data-copy="{field_id}">Скопировать</button></div>')
-        links = f'<tr><th>Архив игры — ZIP не распаковывать</th><td><a href="{folder}/{game["archive"]}" download>{game["archive"]}</a></td></tr>'
-        links += "".join(f'<tr><th>{esc(label)}</th><td><a href="{folder}/media/{name}" download>{name}</a></td></tr>' for name, label in MEDIA.items())
-        previews = "".join(f'<a href="{folder}/media/{name}"><img loading="lazy" src="{folder}/media/{name}" alt="{esc(label)}"></a>' for name, label in MEDIA.items() if name.startswith(("desktop-", "mobile-")))
-        sections.append(f'<section id="{game["game"]}"><h2>{esc(fields["title"])}</h2><h3>Общее</h3><table>{rows}</table><h3>Тексты по полям</h3>{"".join(cards)}<h3>Какие файлы загружать</h3><table>{links}</table><p>Вертикальное видео, рекламные видео, GIF, maskable-иконку и обложку на витрину можно оставить пустыми. Обучение в extras не загружать вместо скриншотов геймплея.</p><div class="previews">{previews}</div><p><a href="{folder}/answers.txt">Все ответы одним текстом</a></p></section>')
+            return f'<div class="field" data-console-field="{key}"><label for="{field_id}">{esc(label)} <small>{len(value)}/{maximum}</small></label><textarea id="{field_id}" readonly rows="{max(2, min(8, len(value)//80+1))}">{esc(value)}</textarea><button data-copy="{field_id}">Скопировать</button></div>'
+        def file_card(name, label):
+            return f'<div class="file-field"><strong>{esc(label)}</strong><p><a href="{folder}/{media_path(name)}" download>{name}</a></p></div>'
+        def screenshots(kind):
+            desktop = kind == "desktop"
+            ratio, platform, orientation = ("16:9", "Десктопные", "Альбомная") if desktop else ("9:16", "Мобильные", "Портретная")
+            names = [f"{kind}-1.png", f"{kind}-2.png"]
+            links = "".join(f'<li><a href="{folder}/{media_path(n)}" download>{n}</a></li>' for n in names)
+            previews = "".join(f'<img loading="lazy" src="{folder}/{media_path(n)}" alt="{platform}, {ratio}">' for n in names)
+            return f'<div class="screenshot-group" data-ratio="{ratio}"><h4>{platform} — {ratio}</h4><p>В Яндексе: <b>«{platform}» → «{orientation}»</b>. Загрузить только эти два файла:</p><ul>{links}</ul><div class="previews">{previews}</div></div>'
+        basic = [("Версия", version), *COMMON[:5], ("Теги", ", ".join(TAGS[game["game"]]) + ". Выбрать существующие; если таких нет — пропустить.")]
+        descriptions = "".join(card(key) for key, _, _, _ in FIELDS if key not in ("keywords", "developer-comment"))
+        sections.append(f'''<section id="{game['game']}"><h2>{esc(fields['title'])}</h2>
+<p class="archive"><a href="{folder}/{game['archive']}" download>Архив игры: {game['archive']}</a> — ZIP не распаковывать.</p>
+<h3>Общее</h3>{rows(basic)}{card('keywords')}{rows(COMMON[5:7])}{card('developer-comment')}
+<h3>Описание и продвижение</h3><p>Вкладка <b>«Русский»</b>. «Английский» удалить крестиком.</p>{descriptions}
+<h3>Иконка и обложка</h3>{file_card('icon-512.png', 'Иконка — PNG 512×512')}{file_card('cover-800x470.png', 'Обложка — PNG 800×470')}
+<h3>Видео геймплея</h3><p><b>Вертикальное видео:</b> оставить пустым, необязательно.</p>{file_card('gameplay-16x9.mp4', 'Горизонтальное видео геймплея — обязательно, MP4 16:9')}
+<h3>Скриншоты</h3>{screenshots('desktop')}{screenshots('mobile')}
+<h3>Рекламные видео</h3><p>Оставить пустым. Обязательное горизонтальное видео уже указано выше, в «Видео геймплея».</p>
+<p class="note"><b>Внизу формы:</b> «Хочу подключить AI-описания» — выключить. Затем «Сохранить».</p>
+<details><summary>Дополнительные разделы и все ответы</summary><p>Maskable-иконку, обложку на витрину и GIF можно оставить пустыми. Sticky-баннеры выключены; вход и покупки не требуются. extras/onboarding-preview.png не загружать вместо скриншота геймплея.</p><a href="{folder}/answers.txt">Все ответы одним текстом</a></details></section>''')
     return f'''<!doctype html><html lang="ru"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Клеточки — загрузка в Яндекс {esc(version)}</title>
-<style>body{{margin:0;background:#f5f3ed;color:#303b31;font:16px/1.6 system-ui,sans-serif}}main{{max-width:1000px;margin:auto;padding:28px 18px}}h1{{line-height:1.25}}section{{margin:36px 0;padding:24px;background:#fff;border-radius:16px}}table{{border-collapse:collapse;width:100%}}th,td{{text-align:left;vertical-align:top;border-bottom:1px solid #ddd;padding:10px;overflow-wrap:anywhere}}th{{width:42%}}a{{color:#3c5c45}}nav{{display:flex;gap:18px;flex-wrap:wrap}}textarea{{box-sizing:border-box;width:100%;padding:12px;font:inherit;background:#f8f8f2;border:1px solid #bbc6b1;border-radius:6px}}label{{display:block;font-weight:600}}small{{color:#68755e;font-weight:400}}button{{margin:6px 0 18px;padding:9px 16px;cursor:pointer;background:#4b5c43;color:white;border:0;border-radius:6px;font:inherit}}.previews{{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}}.previews img{{max-width:210px;max-height:310px;border:1px solid #ddd}}.note{{padding:16px;background:#e6ecdf;border-radius:10px}}@media(max-width:600px){{section{{padding:14px}}th,td{{display:block;width:auto}}th{{border-bottom:0;padding-bottom:0}}}}</style>
+<style>body{{margin:0;background:#f5f3ed;color:#303b31;font:16px/1.6 system-ui,sans-serif}}main{{max-width:1000px;margin:auto;padding:28px 18px}}h1{{line-height:1.25}}section{{margin:36px 0;padding:24px;background:#fff;border-radius:16px}}table{{border-collapse:collapse;width:100%}}th,td{{text-align:left;vertical-align:top;border-bottom:1px solid #ddd;padding:10px;overflow-wrap:anywhere}}th{{width:42%}}a{{color:#3c5c45}}nav{{display:flex;gap:18px;flex-wrap:wrap}}textarea{{box-sizing:border-box;width:100%;padding:12px;font:inherit;background:#f8f8f2;border:1px solid #bbc6b1;border-radius:6px}}label{{display:block;font-weight:600}}small{{color:#68755e;font-weight:400}}button{{margin:6px 0 18px;padding:9px 16px;cursor:pointer;background:#4b5c43;color:white;border:0;border-radius:6px;font:inherit}}.previews{{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}}.previews img{{max-width:210px;max-height:310px;border:1px solid #ddd}}.note{{padding:16px;background:#e6ecdf;border-radius:10px}}.field{{margin-top:20px}}.screenshot-group,.file-field{{padding:16px;border:1px solid #bbc6b1;border-radius:8px;margin:14px 0}}h3{{margin-top:36px}}h4{{margin:0}}@media(max-width:600px){{section{{padding:14px}}th,td{{display:block;width:auto}}th{{border-bottom:0;padding-bottom:0}}}}</style>
 <main><h1>Клеточки — всё для загрузки в Яндекс</h1><p>Игровая версия {esc(version)}. Выбери игру, копируй значения и загружай указанные файлы. Каждая игра — отдельная карточка.</p><nav><a href="#sudoku">Судоку</a><a href="#nonogram">Японские</a><a href="#wordsearch">Поиск слов</a><a href="START-HERE.txt">Порядок действий</a><a href="CHECK-BEFORE-MODERATION.txt">Перед модерацией</a></nav><p class="note">Большой ZIP комплекта сначала распаковать. В поле «Архив» нужен игровой ZIP из папки выбранной игры. Десктоп, Android и iOS — целевые платформы; настоящий запуск на телефонах и рекламу проверить перед модерацией. Эта локальная страница никуда не отправляет данные.</p>{''.join(sections)}<p>Требования сверены 25.10.2026: <a href="{SOURCES[0]}">официальная форма Яндекса</a>. Для следующего выпуска агент проверяет их заново.</p></main>
 <script>document.querySelectorAll('[data-copy]').forEach(button=>button.addEventListener('click',async()=>{{const area=document.getElementById(button.dataset.copy);let ok=false;try{{await navigator.clipboard.writeText(area.value);ok=true;}}catch{{area.focus();area.select();ok=document.execCommand('copy');}}button.textContent=ok?'Скопировано':'Нажми Ctrl/Cmd+C';setTimeout(()=>button.textContent='Скопировать',1800);}}));</script></html>'''.replace('25.10.2026:', checked_at + ':')
 
@@ -262,15 +298,17 @@ def build(output, ffprobe, checked_at):
             (folder / "extras").mkdir()
             shutil.copy2(ROOT / "build/yandex" / game["archive"], folder / game["archive"])
             for name in MEDIA:
-                shutil.copy2(ROOT / f"build/yandex-media/{game['game']}" / name, folder / "media" / name)
+                target = folder / media_path(name)
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(ROOT / f"build/yandex-media/{game['game']}" / name, target)
             shutil.copy2(ROOT / f"build/yandex-media/{game['game']}/onboarding-preview.png", folder / "extras/onboarding-preview.png")
-            answers = [f"{game['fields']['title']} — версия {version}", "", *[f"{k}: {v}" for k, v in COMMON],
-                       "Теги — выбрать существующие: " + ", ".join(TAGS[game["game"]])]
+            answers = [f"{game['fields']['title']} — версия {version}"]
+            for label, value in ordered_answers(game, version):
+                answers += ["", label.upper(), value]
             for n, (key, label, _, _) in enumerate(FIELDS, 1):
                 value = game["fields"][key]
                 (folder / "fields" / f"{n:02}-{key}.txt").write_text(value + "\n")
-                answers += ["", label.upper(), value]
-            answers += ["", "ФАЙЛЫ ДЛЯ ЗАГРУЗКИ", "Архив: " + game["archive"], *[f"{label}: media/{name}" for name, label in MEDIA.items()]]
+            answers += ["", "ФАЙЛЫ ДЛЯ ЗАГРУЗКИ", "Архив: " + game["archive"], *[f"{label}: {media_path(name)}" for name, label in MEDIA.items()], "", "ХОЧУ ПОДКЛЮЧИТЬ AI-ОПИСАНИЯ", "Выключено"]
             (folder / "answers.txt").write_text("\n".join(answers) + "\n")
             (folder / "form.json").write_text(json.dumps({"version": version, "settings": COMMON, "tagSuggestions": TAGS[game["game"]], "fields": game["fields"]}, ensure_ascii=False, indent=2) + "\n")
         manifest = {"version": version, "preparedAt": datetime.now(timezone.utc).isoformat(), "requirementsCheckedAt": checked_at,
