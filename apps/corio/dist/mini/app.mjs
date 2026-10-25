@@ -1,12 +1,12 @@
-import {fitFoodScene} from './food-view.mjs?v=0.12.0';
-import {createFoodFeedback} from './food-feedback.mjs?v=0.12.0';
-import {tunnelWalkPoints} from './tunnel-art.mjs?v=0.12.0';
-import {setupFocusUI,fitFocusedScene} from './focus.mjs?v=0.12.0';
-import {GAMES,FOODS,GROOM_STEPS,createMini,miniAction,solutionFor,connectedRoute} from './engine.mjs?v=0.12.0';
-import {renderScene,toolsFor,goalText} from './views.mjs?v=0.12.0';
-import {createModeController} from '../modes.mjs?v=0.12.0';
-import {catFigure,setCatWalkFrame} from '../characters.mjs?v=0.12.0';
-import {createSearchLife} from './search-life.mjs?v=0.12.0';
+import {fitFoodScene,renderFoodInfo} from './food-view.mjs?v=0.13.0';
+import {createFoodFeedback} from './food-feedback.mjs?v=0.13.0';
+import {tunnelWalkPoints} from './tunnel-art.mjs?v=0.13.0';
+import {setupFocusUI,fitFocusedScene} from './focus.mjs?v=0.13.0';
+import {GAMES,FOODS,GROOM_STEPS,createMini,miniAction,solutionFor,connectedRoute} from './engine.mjs?v=0.13.0';
+import {renderScene,toolsFor,goalText} from './views.mjs?v=0.13.0';
+import {createModeController} from '../modes.mjs?v=0.13.0';
+import {catFigure,setCatWalkFrame} from '../characters.mjs?v=0.13.0';
+import {createSearchLife} from './search-life.mjs?v=0.13.0';
 const $=query=>document.querySelector(query),id=$('[data-game]').dataset.game,game=GAMES[id],scene=$('#scene'),tools=$('#tools'),win=$('#win');
 let attempt=0,settleTimer=null,settleEpoch=0,routeWalking=false,routeAnimation=null,routeFrame=null,searchLife=null,foodFeedback=null;
 let state=createMini(id),history=[],selected=id==='grooming'?'wipe':id==='litter'?'scoop':id==='search'?1:null,drag=null,ignoreClickUntil=0,paused=false,platformPaused=false,sfx=true,audio=null,modes;
@@ -25,12 +25,25 @@ function render(){
   }
   tools.innerHTML=toolsFor(id,selected,sfx);scene.innerHTML=renderScene(id,state,level,selected,drag?.type==='yarn'?drag.preview:null);
   for(const button of document.querySelectorAll('[data-level]')){const index=+button.dataset.level;button.setAttribute('aria-current',String(index===state.index));button.classList.toggle('completed',best[index]!==null);button.title=best[index]!==null?'Пройдено: '+best[index]+' действий':game.levels[index].name;}
-  fitFocusedScene(id==='search'?selected:1);if(id==='food'){fitFoodScene(scene);foodFeedback?.afterRender();}
+  fitFocusedScene(id==='search'?selected:1);if(id==='food'){$('#food-info').innerHTML=renderFoodInfo(state,selected);fitFoodScene(scene);foodFeedback?.afterRender();}
   if(scroll){const viewport=scene.querySelector('.search-viewport');viewport.scrollLeft=scroll.x;viewport.scrollTop=scroll.y;}
   if(focused)document.getElementById(focused)?.focus({preventScroll:true});
   searchLife?.afterRender();
 }
-function endDrag(){const restorePreview=drag?.type==='yarn';drag=null;document.querySelector('.drag-food')?.remove();if(restorePreview)render();}
+function restoreFoodDrag(current){
+  if(current?.type!=='food'||!current.active)return;
+  const item=current.element;
+  item.setAttribute('class',current.originalClass);
+  if(current.originalStyle===null)item.removeAttribute('style');else item.setAttribute('style',current.originalStyle);
+  if(current.parent?.isConnected)current.parent.insertBefore(item,current.nextSibling?.parentNode===current.parent?current.nextSibling:null);
+  else item.remove();
+}
+function endDrag(){
+  const current=drag,restorePreview=current?.type==='yarn';drag=null;
+  restoreFoodDrag(current);
+  if(current&&scene.hasPointerCapture(current.pointer))try{scene.releasePointerCapture(current.pointer);}catch{}
+  document.querySelector('.drag-food')?.remove();if(current?.type==='food')$('#food-info').innerHTML=renderFoodInfo(state,selected);if(restorePreview)render();
+}
 function cancelSettle(){clearTimeout(settleTimer);settleTimer=null;settleEpoch++;}
 function scheduleSettle(){
   cancelSettle();if(id!=='litter'||!state.pending||paused||platformPaused)return;
@@ -100,7 +113,7 @@ function sandSound(type){
   if(!sfx)return;try{audio??=new(window.AudioContext||window.webkitAudioContext)();audio.resume();const duration=type==='rake'?.27:.17,buffer=audio.createBuffer(1,Math.ceil(audio.sampleRate*duration),audio.sampleRate),data=buffer.getChannelData(0);for(let i=0;i<data.length;i++){const t=i/data.length;data[i]=(Math.random()*2-1)*Math.sin(Math.PI*t)**1.5*(.7+.3*Math.sin(i*.018));}const source=audio.createBufferSource(),filter=audio.createBiquadFilter(),gain=audio.createGain();source.buffer=buffer;filter.type='lowpass';filter.frequency.value=type==='rake'?1500:1050;gain.gain.value=.065;source.connect(filter);filter.connect(gain);gain.connect(audio.destination);source.start();}catch{}
 }
 scene.addEventListener('click',event=>{
-  if(blocked()||performance.now()<ignoreClickUntil&&!(id==='food'&&event.target.closest('[data-bin]')))return;
+  if(drag||blocked()||performance.now()<ignoreClickUntil&&!(id==='food'&&event.target.closest('[data-bin]')))return;
   const food=event.target.closest('[data-food]'),bin=event.target.closest('[data-bin]'),piece=event.target.closest('[data-piece]'),spot=event.target.closest('[data-spot]'),cell=event.target.closest('[data-cell]');
   if(id==='search'){if(event.target.closest('[data-cat-react]')){searchLife.callCat();return;}const find=event.target.closest('[data-find]');if(find||event.target.closest('.search-viewport svg'))commit({type:'find',item:find?.dataset.find||null});return;}
   if(food&&food.dataset.exposed!=='true'){status('Сначала убери то, что лежит сверху.');return;}
@@ -111,7 +124,7 @@ scene.addEventListener('click',event=>{
   if(cell)commit({type:'reveal',cell:+cell.dataset.cell});
 });
 scene.addEventListener('keydown',event=>{
-  if(blocked())return;const node=event.target.closest('[data-node]'),piece=event.target.closest('[data-piece]');
+  if(drag||blocked())return;const node=event.target.closest('[data-node]'),piece=event.target.closest('[data-piece]');
   if(event.target.closest('[data-cat-react]')&&['Enter',' '].includes(event.key)){event.preventDefault();searchLife.callCat();return;}
   const find=event.target.closest('[data-find]');if(find&&['Enter',' '].includes(event.key)){event.preventDefault();commit({type:'find',item:find.dataset.find});}
   if(piece&&['Enter',' '].includes(event.key)){event.preventDefault();commit({type:'turn',piece:+piece.dataset.piece});}
@@ -132,22 +145,34 @@ function brushAt(event){
   if(cell)commit({type:selected,cell:index});if(spot)commit({type:'clean',spot:index,tool:selected});
 }
 scene.addEventListener('pointerdown',event=>{
-  if(event.button!==0||blocked()||state.won)return;const node=event.target.closest('[data-node]'),food=event.target.closest('[data-food]');
+  if(drag||event.isPrimary===false||event.button!==0||blocked()||state.won)return;
+  // Chrome may adjust a touch target toward a neighbouring button. Resolve
+  // food from the real pointer pixel rather than that adjusted event target.
+  const pixelTarget=id==='food'?(document.elementFromPoint(event.clientX,event.clientY)||event.target):event.target;
+  const node=event.target.closest('[data-node]'),food=pixelTarget.closest('[data-food]');
+  if(id==='food'&&food&&food.dataset.exposed!=='true'){ignoreClickUntil=performance.now()+350;status('Сначала убери то, что лежит сверху.');return;}
   if(node){event.preventDefault();const at=pointFor(event),index=+node.dataset.node;drag={type:'yarn',pointer:event.pointerId,node:index,start:at,original:{...state.points[index]},preview:structuredClone(state.points)};scene.setPointerCapture(event.pointerId);}
   else if(food&&food.dataset.exposed==='true'){drag={type:'food',pointer:event.pointerId,item:+food.dataset.food,x:event.clientX,y:event.clientY,element:food,active:false};scene.setPointerCapture(event.pointerId);}
   else if(id==='grooming'&&event.target.closest('[data-spot]')){event.preventDefault();drag={type:'brush',pointer:event.pointerId,visited:new Set()};scene.setPointerCapture(event.pointerId);brushAt(event);}
 });
 scene.addEventListener('pointermove',event=>{
-  if(!drag||blocked())return;
+  if(!drag||event.pointerId!==drag.pointer||blocked())return;
   if(drag.type==='yarn'){event.preventDefault();const at=pointFor(event);drag.preview[drag.node]={x:Math.max(8,Math.min(92,drag.original.x+at.x-drag.start.x)),y:Math.max(8,Math.min(92,drag.original.y+at.y-drag.start.y))};render();}
   if(drag.type==='brush')brushAt(event);
   if(drag?.type==='food'){
-    if(!drag.active&&Math.hypot(event.clientX-drag.x,event.clientY-drag.y)>8){drag.active=true;const r=drag.element.getBoundingClientRect(),ghost=drag.element.cloneNode(true);ghost.removeAttribute('id');ghost.removeAttribute('style');ghost.classList.add('drag-food');ghost.style.width=Math.max(48,r.width)+'px';ghost.style.height=Math.max(40,r.height)+'px';document.body.append(ghost);}
-    const ghost=document.querySelector('.drag-food');if(ghost){event.preventDefault();ghost.style.left=event.clientX+'px';ghost.style.top=event.clientY+'px';}
+    if(!drag.active&&Math.hypot(event.clientX-drag.x,event.clientY-drag.y)>8){
+      const item=drag.element,r=item.getBoundingClientRect(),css=getComputedStyle(item),width=parseFloat(css.width),height=parseFloat(css.height),rotation=item.style.transform;
+      Object.assign(drag,{active:true,parent:item.parentNode,nextSibling:item.nextSibling,originalStyle:item.getAttribute('style'),originalClass:item.getAttribute('class'),offsetX:drag.x-r.x-r.width/2,offsetY:drag.y-r.y-r.height/2});
+      item.removeAttribute('style');item.classList.add('drag-food');
+      Object.assign(item.style,{position:'fixed',pointerEvents:'none',width:width+'px',height:height+'px',transform:'translate(-50%,-50%) '+rotation});
+      document.body.append(item);
+      $('#food-info').innerHTML=renderFoodInfo(state,drag.item);
+    }
+    if(drag.active){event.preventDefault();drag.element.style.left=(event.clientX-drag.offsetX)+'px';drag.element.style.top=(event.clientY-drag.offsetY)+'px';}
   }
 });
 scene.addEventListener('pointerup',event=>{
-  if(!drag)return;const current=drag;drag=null;
+  if(!drag||event.pointerId!==drag.pointer)return;const current=drag;restoreFoodDrag(current);drag=null;
   if(current.type==='yarn'){ignoreClickUntil=performance.now()+200;const p=current.preview[current.node];commit({type:'move',node:current.node,...p});render();}
   if(current.type==='food'){ignoreClickUntil=performance.now()+200;if(current.active){selected=current.item;const bin=document.elementFromPoint(event.clientX,event.clientY)?.closest('[data-bin]');if(bin)commit({type:'sort',item:current.item,bin:bin.dataset.bin});else{render();status('Выбери зону для продукта.');}}else{selected=current.item;render();status('Теперь выбери подходящую зону внизу.');}}
   if(current.type==='brush')ignoreClickUntil=performance.now()+200;

@@ -1,9 +1,9 @@
-import {foodView} from './food-view.mjs?v=0.12.0';
-import {renderYarnView} from './yarn-view.mjs?v=0.12.0';
-import {renderTunnelView} from './tunnel-art.mjs?v=0.12.0';
-import {searchView} from './search-art.mjs?v=0.12.0';
-import {FOODS,PET_ACTIONS,GROOM_TOOLS,GROOM_STEPS,tunnelEdges,connectedRoute,yarnConflicts,yarnCrossings} from './engine.mjs?v=0.12.0';
-import {catFigure,litterShape,foodFigure} from '../characters.mjs?v=0.12.0';
+import {foodView} from './food-view.mjs?v=0.13.0';
+import {renderYarnView} from './yarn-view.mjs?v=0.13.0';
+import {renderTunnelView} from './tunnel-art.mjs?v=0.13.0';
+import {searchView} from './search-art.mjs?v=0.13.0';
+import {FOODS,PET_ACTIONS,GROOM_TOOLS,GROOM_STEPS,tunnelEdges,connectedRoute,yarnConflicts,yarnCrossings} from './engine.mjs?v=0.13.0';
+import {catFigure,litterShape,foodFigure} from '../characters.mjs?v=0.13.0';
 const asset=file=>new URL('../assets/'+file,import.meta.url).href;
 export const CAT=asset('player-v1.png'),YARN=asset('yarn-v1.png');
 const img=(file,alt='',className='')=>`<img class="${className}" src="${asset(file)}" alt="${alt}" draggable="false">`;

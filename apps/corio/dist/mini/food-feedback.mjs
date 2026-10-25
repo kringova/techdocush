@@ -7,13 +7,13 @@ export function foodCatPortrait(mood='neutral'){
   if(!frames[mood]&&mood!=='celebrate')mood='neutral';
   const happy=mood==='pleased'||mood==='celebrate',crop=happy?[50,0,1200,1254]:frames[mood],clip='food-cat-frame-'+(++serial);
   const blush=mood==='celebrate'?'<g class="food-blush" fill="#e6989e" opacity=".52"><ellipse cx="285" cy="610" rx="86" ry="43" transform="rotate(-12 285 610)"/><ellipse cx="815" cy="670" rx="86" ry="43" transform="rotate(12 815 670)"/></g>':'';
-  return `<svg class="food-cat-face" data-food-cat-portrait data-mood="${mood}" viewBox="${crop.join(' ')}" role="img" aria-label="${descriptions[mood]}" preserveAspectRatio="xMidYMax meet" overflow="hidden"><defs><clipPath id="${clip}"><rect x="${crop[0]}" y="${crop[1]}" width="${crop[2]}" height="${crop[3]}"/></clipPath></defs><image href="${happy?pleasedAtlas:atlas}" width="1254" height="1254" clip-path="url(#${clip})"/>${blush}</svg>`;
+  return `<svg class="food-cat-face" data-food-cat-portrait data-mood="${mood}" viewBox="${crop.join(' ')}" role="img" aria-label="${descriptions[mood]}" preserveAspectRatio="xMidYMax meet" overflow="hidden"><defs><clipPath id="${clip}"><rect x="${crop[0]}" y="${crop[1]}" width="${crop[2]}" height="${crop[3]}"/></clipPath></defs><g data-food-mirror transform="translate(${crop[0]*2+crop[2]} 0) scale(-1 1)"><image href="${happy?pleasedAtlas:atlas}" width="1254" height="1254" clip-path="url(#${clip})"/>${blush}</g></svg>`;
 }
 
 // One timeout for a current reaction, no idle frame loop. The remaining duration
 // is held while the game is paused, hidden or covered by a settings panel.
-export function createFoodFeedback({scene,isBlocked=()=>false}){
-  let mood='neutral',mistakes=0,goodFeeds=0,feedHistory=[],retchShown=false,message='Выбери продукт сверху',timer=null,startedAt=0,remaining=0,disposed=false,animations=[];
+export function createFoodFeedback({scene,isBlocked=()=>false,statusHost=document.getElementById('status')}){
+  let mood='neutral',mistakes=0,goodFeeds=0,badFeeds=0,feedHistory=[],retchShown=false,message='Выбери продукт сверху',timer=null,startedAt=0,remaining=0,disposed=false,animations=[];
   const reduced=matchMedia('(prefers-reduced-motion: reduce)');
   const blocked=()=>document.hidden||isBlocked();
   const cancelAnimations=()=>{for(const animation of animations)animation.cancel();animations=[];};
@@ -21,11 +21,11 @@ export function createFoodFeedback({scene,isBlocked=()=>false}){
   function clearReaction(){stopClock();cancelAnimations();remaining=0;mood='neutral';}
   function paint(){
     if(disposed)return;
-    const portrait=scene.querySelector('[data-food-cat]'),note=scene.querySelector('[data-food-message]'),table=scene.querySelector('.pile-game');
+    const portrait=scene.querySelector('[data-food-cat]'),note=statusHost,table=scene.querySelector('.pile-game');
     cancelAnimations();
     if(portrait){portrait.innerHTML=foodCatPortrait(mood);portrait.dataset.reaction=mood;}
     if(note){note.textContent=message;note.dataset.reaction=mood;}
-    if(table){table.dataset.foodReaction=mood;table.dataset.foodMistakes=mistakes;table.dataset.foodGoodFeeds=goodFeeds;table.dataset.foodRetchShown=String(retchShown);}
+    if(table){table.dataset.foodReaction=mood;table.dataset.foodMistakes=mistakes;table.dataset.foodGoodFeeds=goodFeeds;table.dataset.foodBadFeeds=badFeeds;table.dataset.foodRetchShown=String(retchShown);}
     if(mood==='retch'&&portrait&&!reduced.matches){
       const elapsed=Math.max(0,1800-remaining+(timer!==null?performance.now()-startedAt:0));
       const face=portrait.querySelector('.food-cat-face');
@@ -52,21 +52,22 @@ export function createFoodFeedback({scene,isBlocked=()=>false}){
   }
   function react(next,duration){clearReaction();mood=next;remaining=duration;paint();schedule();}
   function afterRender(){paint();sync();}
-  function newLevel(){clearReaction();mistakes=0;goodFeeds=0;feedHistory=[];retchShown=false;message='Выбери продукт сверху';paint();}
+  function newLevel(){clearReaction();mistakes=0;goodFeeds=0;badFeeds=0;feedHistory=[];retchShown=false;message='Выбери продукт сверху';paint();}
   function sorted({correct,mistakes:count,message:text,bin}){
-    feedHistory.push(goodFeeds);
+    feedHistory.push({goodFeeds,badFeeds});
     if(!correct)goodFeeds=0;else if(bin==='safe')goodFeeds++;
+    if(!correct&&bin==='safe')badFeeds++;
     mistakes=count;if(text)message=text;
     if(goodFeeds===3){goodFeeds=0;react('celebrate',2200);return;}
     if(mood==='retch'&&remaining>0){paint();sync();return;}
-    if(!correct&&mistakes>=3&&!retchShown){retchShown=true;react('retch',1800);}
+    if(!correct&&bin==='safe'&&badFeeds>=3&&!retchShown){retchShown=true;react('retch',1800);}
     else react(correct?'pleased':'displeased',correct?1100:1400);
   }
-  function undo(count){clearReaction();mistakes=count;goodFeeds=feedHistory.length?feedHistory.pop():0;message='Действие отменено. Можно выбрать другой продукт.';paint();}
-  function setMessage(text){message=String(text||'Выбери продукт сверху');const note=scene.querySelector('[data-food-message]');if(note)note.textContent=message;}
+  function undo(count){clearReaction();mistakes=count;const previous=feedHistory.pop()||{goodFeeds:0,badFeeds:0};goodFeeds=previous.goodFeeds;badFeeds=previous.badFeeds;message='Действие отменено. Можно выбрать другой продукт.';paint();}
+  function setMessage(text){message=String(text||'Выбери продукт сверху');if(statusHost)statusHost.textContent=message;}
   const observer=new MutationObserver(sync);
   for(const dialog of document.querySelectorAll('dialog'))observer.observe(dialog,{attributes:true,attributeFilter:['open']});
   for(const type of['corio:pause','corio:resume','corio:platform-pause','corio:platform-resume','blur','focus'])window.addEventListener(type,sync);
   document.addEventListener('visibilitychange',sync);reduced.addEventListener('change',afterRender);
-  return {afterRender,newLevel,sorted,undo,message:setMessage,state:()=>({mood,mistakes,goodFeeds,historyDepth:feedHistory.length,retchShown,remaining:Math.max(0,remaining-(timer!==null?performance.now()-startedAt:0)),timerActive:timer!==null,animationCount:animations.length}),dispose(){disposed=true;clearReaction();observer.disconnect();for(const type of['corio:pause','corio:resume','corio:platform-pause','corio:platform-resume','blur','focus'])window.removeEventListener(type,sync);document.removeEventListener('visibilitychange',sync);reduced.removeEventListener('change',afterRender);}};
+  return {afterRender,newLevel,sorted,undo,message:setMessage,state:()=>({mood,mistakes,goodFeeds,badFeeds,historyDepth:feedHistory.length,retchShown,remaining:Math.max(0,remaining-(timer!==null?performance.now()-startedAt:0)),timerActive:timer!==null,animationCount:animations.length}),dispose(){disposed=true;clearReaction();observer.disconnect();for(const type of['corio:pause','corio:resume','corio:platform-pause','corio:platform-resume','blur','focus'])window.removeEventListener(type,sync);document.removeEventListener('visibilitychange',sync);reduced.removeEventListener('change',afterRender);}};
 }

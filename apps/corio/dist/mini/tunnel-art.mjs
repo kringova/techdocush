@@ -1,5 +1,5 @@
-import {tunnelEdges,connectedRoute} from './engine.mjs?v=0.12.0';
-import {catWalkFrame} from '../characters.mjs?v=0.12.0';
+import {tunnelEdges,connectedRoute} from './engine.mjs?v=0.13.0';
+import {catWalkFrame} from '../characters.mjs?v=0.13.0';
 const asset=file=>new URL('../assets/'+file,import.meta.url).href;
 const KIT={"straight-h":{"crop":[16,171,488,211],"ends":{"L":[66,276],"R":[454,276]}},"straight-v":{"crop":[578,13,202,430],"ends":{"U":[679,58],"D":[679,399]}},"elbow-lu":{"crop":[876,72,357,339],"ends":{"L":[925,312],"U":[1145,114]}},"elbow-ur":{"crop":[56,483,374,353],"ends":{"U":[156,527],"R":[384,737]}},"elbow-rd":{"crop":[472,542,360,329],"ends":{"R":[783,639],"D":[568,825]}},"elbow-dl":{"crop":[873,543,358,331],"ends":{"D":[1134,826],"L":[920,640]}},"shelf":{"crop":[9,966,469,204],"ends":{"L":[40,995],"R":[448,995]}},"hammock":{"crop":[474,928,449,246],"ends":{"L":[518,982],"R":[884,982]}},"treat-bowl":{"crop":[956,1003,286,183],"ends":{}}};
 let serial=0;
