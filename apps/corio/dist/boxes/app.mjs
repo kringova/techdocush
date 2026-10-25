@@ -1,5 +1,5 @@
-import {createModeController} from '../modes.mjs?v=0.7.0';
-import {SIZE,LEVELS,createGame,move,covered,unlocked,findPath} from './game-engine.mjs?v=0.7.0';
+import {createModeController} from '../modes.mjs?v=0.7.1';
+import {SIZE,LEVELS,createGame,move,covered,unlocked,findPath} from './game-engine.mjs?v=0.7.1';
 
 const $=selector=>document.querySelector(selector);
 const canvas=$('#board'),ctx=canvas.getContext('2d'),overlay=$('#overlay');

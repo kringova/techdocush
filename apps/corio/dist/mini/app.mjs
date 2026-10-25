@@ -1,9 +1,9 @@
-import {tunnelWalkPoints} from './tunnel-art.mjs?v=0.7.0';
-import {setupFocusUI,fitFocusedScene} from './focus.mjs?v=0.7.0';
-import {GAMES,FOODS,GROOM_STEPS,createMini,miniAction,solutionFor,connectedRoute} from './engine.mjs?v=0.7.0';
-import {renderScene,toolsFor,goalText} from './views.mjs?v=0.7.0';
-import {createModeController} from '../modes.mjs?v=0.7.0';
-import {catFigure,setCatWalkFrame} from '../characters.mjs?v=0.7.0';
+import {tunnelWalkPoints} from './tunnel-art.mjs?v=0.7.1';
+import {setupFocusUI,fitFocusedScene} from './focus.mjs?v=0.7.1';
+import {GAMES,FOODS,GROOM_STEPS,createMini,miniAction,solutionFor,connectedRoute} from './engine.mjs?v=0.7.1';
+import {renderScene,toolsFor,goalText} from './views.mjs?v=0.7.1';
+import {createModeController} from '../modes.mjs?v=0.7.1';
+import {catFigure,setCatWalkFrame} from '../characters.mjs?v=0.7.1';
 const $=query=>document.querySelector(query),id=$('[data-game]').dataset.game,game=GAMES[id],scene=$('#scene'),tools=$('#tools'),win=$('#win');
 let attempt=0,settleTimer=null,settleEpoch=0,routeWalking=false;
 let state=createMini(id),history=[],selected=id==='grooming'?'wipe':id==='litter'?'scoop':id==='search'?1:null,drag=null,ignoreClickUntil=0,paused=false,platformPaused=false,sfx=true,audio=null,modes;
@@ -52,10 +52,12 @@ function walkRoute(){
   const level=game.levels[state.index],image=scene.querySelector('#route-cat'),points=tunnelWalkPoints(state,level),turn=attempt;
   const lengths=[0];for(let i=1;i<points.length;i++)lengths.push(lengths.at(-1)+Math.hypot(points[i].x-points[i-1].x,points[i].y-points[i-1].y));
   const total=lengths.at(-1),duration=matchMedia('(prefers-reduced-motion: reduce)').matches?0:Math.min(6500,total*5.5);
-  let previous=performance.now(),elapsed=0;
+  // Start on the first animation timestamp. A callback's timestamp may precede
+  // the performance.now() sampled while the current browser frame is running.
+  let previous=null,elapsed=0;
   const frame=time=>{
     if(turn!==attempt||!image.isConnected)return;
-    if(!platformPaused&&!paused&&!settingsOpen()&&!document.hidden)elapsed+=Math.min(80,time-previous);previous=time;
+    if(previous!==null&&!platformPaused&&!paused&&!settingsOpen()&&!document.hidden)elapsed+=Math.max(0,Math.min(80,time-previous));previous=time;
     const progress=duration?Math.min(1,elapsed/duration):1,distance=progress*total;let a=0;while(a<points.length-2&&lengths[a+1]<distance)a++;
     const span=lengths[a+1]-lengths[a],part=span?(distance-lengths[a])/span:1,x=points[a].x+(points[a+1].x-points[a].x)*part,y=points[a].y+(points[a+1].y-points[a].y)*part;
     image.setAttribute('x',x-43);image.setAttribute('y',y-63.17);setCatWalkFrame(image,Math.floor(elapsed/140),points[a+1].x<points[a].x?'left':'right');
@@ -121,7 +123,12 @@ scene.addEventListener('pointerup',event=>{
   if(current.type==='brush')ignoreClickUntil=performance.now()+200;
   document.querySelector('.drag-food')?.remove();try{scene.releasePointerCapture(event.pointerId);}catch{}
 });
-scene.addEventListener('pointercancel',()=>{endDrag();render();});
+scene.addEventListener('pointercancel',()=>{
+  // A browser gesture may cancel a pointer even when this game has no drag.
+  // Replacing the scene then would detach the cat from its running animation.
+  if(!drag)return;
+  const restorePreview=drag.type==='yarn';endDrag();if(restorePreview)render();
+});
 $('#undo').addEventListener('click',undo);$('#restart').addEventListener('click',()=>load(state.index));$('#next').addEventListener('click',()=>load((state.index+1)%5));$('#again').addEventListener('click',()=>load(state.index));$('#pause').addEventListener('click',pause);$('#resume').addEventListener('click',resume);
 win.addEventListener('cancel',e=>e.preventDefault());$('#pause-dialog').addEventListener('cancel',()=>{paused=false;scheduleSettle();window.dispatchEvent(new Event('corio:resume'));});
 for(let index=0;index<5;index++){const b=document.createElement('button');b.dataset.level=index;b.textContent=index+1;b.setAttribute('aria-label',`Уровень ${index+1}: ${game.levels[index].name}`);b.addEventListener('click',()=>load(index));$('#levels').append(b);}

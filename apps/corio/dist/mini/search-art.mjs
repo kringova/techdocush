@@ -1,6 +1,6 @@
-import {SEARCH_SCENES} from './search-data.mjs?v=0.7.0';
-import {catFigure} from '../characters.mjs?v=0.7.0';
-import {PAINTED_SCENES} from './search-painted.mjs?v=0.7.0';
+import {SEARCH_SCENES} from './search-data.mjs?v=0.7.1';
+import {catFigure} from '../characters.mjs?v=0.7.1';
+import {PAINTED_SCENES} from './search-painted.mjs?v=0.7.1';
 const asset=file=>new URL('../assets/'+file,import.meta.url).href;
 export function searchView(state,level,zoom=1){
   const objects=SEARCH_SCENES[level.scene],art=PAINTED_SCENES[level.scene];
