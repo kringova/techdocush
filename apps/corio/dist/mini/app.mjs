@@ -1,14 +1,15 @@
-import {tunnelWalkPoints} from './tunnel-art.mjs?v=0.9.1';
-import {setupFocusUI,fitFocusedScene} from './focus.mjs?v=0.9.1';
-import {GAMES,FOODS,GROOM_STEPS,createMini,miniAction,solutionFor,connectedRoute} from './engine.mjs?v=0.9.1';
-import {renderScene,toolsFor,goalText} from './views.mjs?v=0.9.1';
-import {createModeController} from '../modes.mjs?v=0.9.1';
-import {catFigure,setCatWalkFrame} from '../characters.mjs?v=0.9.1';
-import {createSearchLife} from './search-life.mjs?v=0.9.1';
+import {fitFoodScene} from './food-view.mjs?v=0.10.0';
+import {tunnelWalkPoints} from './tunnel-art.mjs?v=0.10.0';
+import {setupFocusUI,fitFocusedScene} from './focus.mjs?v=0.10.0';
+import {GAMES,FOODS,GROOM_STEPS,createMini,miniAction,solutionFor,connectedRoute} from './engine.mjs?v=0.10.0';
+import {renderScene,toolsFor,goalText} from './views.mjs?v=0.10.0';
+import {createModeController} from '../modes.mjs?v=0.10.0';
+import {catFigure,setCatWalkFrame} from '../characters.mjs?v=0.10.0';
+import {createSearchLife} from './search-life.mjs?v=0.10.0';
 const $=query=>document.querySelector(query),id=$('[data-game]').dataset.game,game=GAMES[id],scene=$('#scene'),tools=$('#tools'),win=$('#win');
 let attempt=0,settleTimer=null,settleEpoch=0,routeWalking=false,searchLife=null;
 let state=createMini(id),history=[],selected=id==='grooming'?'wipe':id==='litter'?'scoop':id==='search'?1:null,drag=null,ignoreClickUntil=0,paused=false,platformPaused=false,sfx=true,audio=null,modes;
-const key=id==='litter'?'corio-litter-pairs-v1':id==='search'?'corio-search-50-v3':'corio-'+id+'-v1';let best=Array(game.levels.length).fill(null);
+const key=id==='litter'?'corio-litter-pairs-v1':id==='search'?'corio-search-50-v3':id==='food'?'corio-food-pile-v1':'corio-'+id+'-v1';let best=Array(game.levels.length).fill(null);
 try{sfx=localStorage.getItem('corio-litter-sfx-v1')!=='off';const value=JSON.parse(localStorage.getItem(key));if(Array.isArray(value))best=best.map((_,i)=>Number.isInteger(value[i])?value[i]:null);}catch{}
 const settingsOpen=()=>!!document.querySelector('[data-game-panel][open]');
 const blocked=()=>settingsOpen()||paused||platformPaused||win.open||modes?.isModalOpen();
@@ -22,7 +23,7 @@ function render(){
   }
   tools.innerHTML=toolsFor(id,selected,sfx);scene.innerHTML=renderScene(id,state,level,selected,drag?.type==='yarn'?drag.preview:null);
   for(const button of document.querySelectorAll('[data-level]')){const index=+button.dataset.level;button.setAttribute('aria-current',String(index===state.index));button.classList.toggle('completed',best[index]!==null);button.title=best[index]!==null?'Пройдено: '+best[index]+' действий':game.levels[index].name;}
-  fitFocusedScene(id==='search'?selected:1);
+  fitFocusedScene(id==='search'?selected:1);if(id==='food')fitFoodScene(scene);
   if(scroll){const viewport=scene.querySelector('.search-viewport');viewport.scrollLeft=scroll.x;viewport.scrollTop=scroll.y;}
   if(focused)document.getElementById(focused)?.focus({preventScroll:true});
   searchLife?.afterRender();
@@ -79,9 +80,10 @@ function sandSound(type){
   if(!sfx)return;try{audio??=new(window.AudioContext||window.webkitAudioContext)();audio.resume();const duration=type==='rake'?.27:.17,buffer=audio.createBuffer(1,Math.ceil(audio.sampleRate*duration),audio.sampleRate),data=buffer.getChannelData(0);for(let i=0;i<data.length;i++){const t=i/data.length;data[i]=(Math.random()*2-1)*Math.sin(Math.PI*t)**1.5*(.7+.3*Math.sin(i*.018));}const source=audio.createBufferSource(),filter=audio.createBiquadFilter(),gain=audio.createGain();source.buffer=buffer;filter.type='lowpass';filter.frequency.value=type==='rake'?1500:1050;gain.gain.value=.065;source.connect(filter);filter.connect(gain);gain.connect(audio.destination);source.start();}catch{}
 }
 scene.addEventListener('click',event=>{
-  if(blocked()||performance.now()<ignoreClickUntil)return;
+  if(blocked()||performance.now()<ignoreClickUntil&&!(id==='food'&&event.target.closest('[data-bin]')))return;
   const food=event.target.closest('[data-food]'),bin=event.target.closest('[data-bin]'),piece=event.target.closest('[data-piece]'),spot=event.target.closest('[data-spot]'),cell=event.target.closest('[data-cell]');
   if(id==='search'){if(event.target.closest('[data-cat-react]')){searchLife.callCat();return;}const find=event.target.closest('[data-find]');if(find||event.target.closest('.search-viewport svg'))commit({type:'find',item:find?.dataset.find||null});return;}
+  if(food&&food.dataset.exposed!=='true'){status('Сначала убери то, что лежит сверху.');return;}
   if(food){selected=+food.dataset.food;render();status(`${FOODS[state.remaining.find(i=>i.id===selected).type].name}: выбери зону внизу.`);}
   if(bin){if(selected===null)status('Сначала выбери продукт на тарелке.');else commit({type:'sort',item:selected,bin:bin.dataset.bin});}
   if(piece)commit({type:'turn',piece:+piece.dataset.piece});
@@ -112,7 +114,7 @@ function brushAt(event){
 scene.addEventListener('pointerdown',event=>{
   if(event.button!==0||blocked()||state.won)return;const node=event.target.closest('[data-node]'),food=event.target.closest('[data-food]');
   if(node){event.preventDefault();const at=pointFor(event),index=+node.dataset.node;drag={type:'yarn',pointer:event.pointerId,node:index,start:at,original:{...state.points[index]},preview:structuredClone(state.points)};scene.setPointerCapture(event.pointerId);}
-  else if(food){drag={type:'food',pointer:event.pointerId,item:+food.dataset.food,x:event.clientX,y:event.clientY,element:food,active:false};scene.setPointerCapture(event.pointerId);}
+  else if(food&&food.dataset.exposed==='true'){drag={type:'food',pointer:event.pointerId,item:+food.dataset.food,x:event.clientX,y:event.clientY,element:food,active:false};scene.setPointerCapture(event.pointerId);}
   else if(id==='grooming'&&event.target.closest('[data-spot]')){event.preventDefault();drag={type:'brush',pointer:event.pointerId,visited:new Set()};scene.setPointerCapture(event.pointerId);brushAt(event);}
 });
 scene.addEventListener('pointermove',event=>{
@@ -120,14 +122,14 @@ scene.addEventListener('pointermove',event=>{
   if(drag.type==='yarn'){event.preventDefault();const at=pointFor(event);drag.preview[drag.node]={x:Math.max(8,Math.min(92,drag.original.x+at.x-drag.start.x)),y:Math.max(8,Math.min(92,drag.original.y+at.y-drag.start.y))};render();}
   if(drag.type==='brush')brushAt(event);
   if(drag?.type==='food'){
-    if(!drag.active&&Math.hypot(event.clientX-drag.x,event.clientY-drag.y)>8){drag.active=true;const ghost=drag.element.cloneNode(true);ghost.removeAttribute('id');ghost.classList.add('drag-food');document.body.append(ghost);}
+    if(!drag.active&&Math.hypot(event.clientX-drag.x,event.clientY-drag.y)>8){drag.active=true;const r=drag.element.getBoundingClientRect(),ghost=drag.element.cloneNode(true);ghost.removeAttribute('id');ghost.removeAttribute('style');ghost.classList.add('drag-food');ghost.style.width=Math.max(48,r.width)+'px';ghost.style.height=Math.max(40,r.height)+'px';document.body.append(ghost);}
     const ghost=document.querySelector('.drag-food');if(ghost){event.preventDefault();ghost.style.left=event.clientX+'px';ghost.style.top=event.clientY+'px';}
   }
 });
 scene.addEventListener('pointerup',event=>{
   if(!drag)return;const current=drag;drag=null;
   if(current.type==='yarn'){ignoreClickUntil=performance.now()+200;const p=current.preview[current.node];commit({type:'move',node:current.node,...p});render();}
-  if(current.type==='food'){ignoreClickUntil=performance.now()+200;if(current.active){const bin=document.elementFromPoint(event.clientX,event.clientY)?.closest('[data-bin]');if(bin)commit({type:'sort',item:current.item,bin:bin.dataset.bin});}else{selected=current.item;render();status('Теперь выбери подходящую зону внизу.');}}
+  if(current.type==='food'){ignoreClickUntil=performance.now()+200;if(current.active){selected=current.item;const bin=document.elementFromPoint(event.clientX,event.clientY)?.closest('[data-bin]');if(bin)commit({type:'sort',item:current.item,bin:bin.dataset.bin});else{render();status('Выбери зону для продукта.');}}else{selected=current.item;render();status('Теперь выбери подходящую зону внизу.');}}
   if(current.type==='brush')ignoreClickUntil=performance.now()+200;
   document.querySelector('.drag-food')?.remove();try{scene.releasePointerCapture(event.pointerId);}catch{}
 });
@@ -153,4 +155,11 @@ const requestedLevel=Number(new URL(location.href).searchParams.get('level'));
 let savedLevel=0;if(id==='search')try{const index=Number(localStorage.getItem('corio-search-current-v1'));if(Number.isInteger(index)&&index>=0&&index<game.levels.length)savedLevel=index;}catch{}
 if(id==='search')searchLife=createSearchLife({scene,isBlocked:blocked});
 load(Number.isInteger(requestedLevel)&&requestedLevel>=1&&requestedLevel<=game.levels.length?requestedLevel-1:savedLevel);
-setupFocusUI();
+setupFocusUI();if(id==='food')new ResizeObserver(()=>fitFoodScene(scene)).observe(scene);
+if(id==='food'){
+  const cancelFoodDrag=new MutationObserver(()=>{if(settingsOpen()){
+    if(drag&&scene.hasPointerCapture(drag.pointer))scene.releasePointerCapture(drag.pointer);
+    endDrag();
+  }});
+  for(const dialog of document.querySelectorAll('[data-game-panel]'))cancelFoodDrag.observe(dialog,{attributes:true,attributeFilter:['open']});
+}

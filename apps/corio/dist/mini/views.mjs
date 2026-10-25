@@ -1,7 +1,8 @@
-import {renderTunnelView} from './tunnel-art.mjs?v=0.9.1';
-import {searchView} from './search-art.mjs?v=0.9.1';
-import {FOODS,PET_ACTIONS,GROOM_TOOLS,GROOM_STEPS,tunnelEdges,connectedRoute,yarnConflicts} from './engine.mjs?v=0.9.1';
-import {catFigure,litterShape,foodFigure} from '../characters.mjs?v=0.9.1';
+import {foodView} from './food-view.mjs?v=0.10.0';
+import {renderTunnelView} from './tunnel-art.mjs?v=0.10.0';
+import {searchView} from './search-art.mjs?v=0.10.0';
+import {FOODS,PET_ACTIONS,GROOM_TOOLS,GROOM_STEPS,tunnelEdges,connectedRoute,yarnConflicts} from './engine.mjs?v=0.10.0';
+import {catFigure,litterShape,foodFigure} from '../characters.mjs?v=0.10.0';
 const asset=file=>new URL('../assets/'+file,import.meta.url).href;
 export const CAT=asset('player-v1.png'),YARN=asset('yarn-v1.png');
 const img=(file,alt='',className='')=>`<img class="${className}" src="${asset(file)}" alt="${alt}" draggable="false">`;
@@ -18,7 +19,7 @@ export function toolsFor(id,selection,sfx){
 export function renderScene(id,state,level,selected,preview){
   if(id==='search')return searchView(state,level,selected||1);
   if(id==='tunnels')return renderTunnelView(state,level);
-  if(id==='food')return`<div class="food-table"><div class="food-observer">${catFigure('cautious',{className:'food-cat'})}<span>Что сегодня на ужин?</span></div><div class="food-plate" aria-label="Продукты на тарелке">${state.remaining.map(item=>button(foodIcon(FOODS[item.type].icon)+`<span>${FOODS[item.type].name}</span>${FOODS[item.type].detail?`<small>${FOODS[item.type].detail}</small>`:''}`,`data-food="${item.id}" id="food-${item.id}" aria-pressed="${selected===item.id}" class="food-piece"`)).join('')}</div><div class="food-bins">${button(img('bowl-v1.png')+'<strong>Подходит коту</strong><small>Корм, вода, маленькое угощение</small>','data-bin="safe" class="food-bin"')}${button('<span class="away-dish" aria-hidden="true">↗</span><strong>Убрать</strong><small>Оставить за пределами миски</small>','data-bin="away" class="food-bin"')}</div><div class="sorted-items">${state.sorted.map(item=>`<span title="${FOODS[item.type].name}">${foodIcon(FOODS[item.type].icon)}</span>`).join('')}</div></div>`;
+  if(id==='food')return foodView(state,level,selected);
   if(id==='pet')return`<div class="pet-room painted-home">${catFigure(state.pose,{className:'pet-cat'})}${img('bowl-v1.png','','room-bowl')}${img('yarn-v1.png','','room-yarn')}<p class="pet-thought">${state.message||'Кот рядом. Чего сейчас не хватает?'}</p></div><div class="need-meters">${['Сытость','Вода','Игра','Силы'].map((name,i)=>`<div><span>${name}</span><span class="need-dots" aria-label="${state.needs[i]} из 4">${Array.from({length:4},(_,n)=>`<i class="${n<state.needs[i]?'filled':''}"></i>`).join('')}</span></div>`).join('')}</div>`;
   if(id==='grooming'){
     const damp=state.spots.some(s=>['soapy','foam','wet'].includes(s.kind)),pose=state.won&&state.washed?'towel':damp?'wet':'standing';

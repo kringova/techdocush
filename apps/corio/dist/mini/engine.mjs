@@ -1,4 +1,6 @@
-import {SEARCH_LEVELS,SEARCH_SCENES} from './search-data.mjs?v=0.9.1';
+import {SEARCH_LEVELS,SEARCH_SCENES} from './search-data.mjs?v=0.10.0';
+import {FOOD_LEVELS,FOOD_PILE_ASPECT,foodIsExposed} from './food-data.mjs?v=0.10.0';
+export {FOOD_LEVELS,FOOD_PILE_ASPECT,foodIsExposed};
 // Original short scenarios for comparing mechanics. No clocks or offline decay.
 const copy=value=>structuredClone(value);
 export const FOODS={
@@ -15,13 +17,6 @@ export const FOODS={
   raw:{name:'Сырое мясо',safe:false,why:'Может содержать опасные бактерии.',icon:'raw'},
   candy:{name:'Конфета',safe:false,why:'Выбираем кошачьи лакомства, а обычную конфету убираем.',icon:'candy'}
 };
-const foodLevels=[
-  {name:'Первая миска',items:['dry','chocolate','water','candy']},
-  {name:'Маленькое угощение',items:['treat','onion','wet','bone','dry','chocolate']},
-  {name:'После кухни',items:['raw','chicken','garlic','water','coffee','wet']},
-  {name:'Всё на тарелке',items:['bone','treat','candy','onion','chicken','dry','raw','water']},
-  {name:'Ужин готов',items:['coffee','wet','garlic','treat','raw','chicken','chocolate','water','bone','candy']}
-];
 const dir=(a,b)=>b.x>a.x?1:b.x<a.x?3:b.y>a.y?2:0;
 const delta=[[0,-1],[1,0],[0,1],[-1,0]];
 const pathLevel=(name,w,h,points,fixed=[])=>{
@@ -101,7 +96,7 @@ export function yarnConflicts(points,edges){
 export const GAMES={
   search:{title:'Куда пропало?',levels:SEARCH_LEVELS,rule:'Найди предметы из списка. Приближай сцену кнопкой «+» и передвигай её, чтобы рассмотреть детали.'},
   tunnels:{title:'Настенная трасса',levels:tunnelLevels,rule:'Поворачивай трубы. Соедини левую площадку с лакомством справа. Полки и гамаки закреплены.'},
-  food:{title:'Что в миске?',levels:foodLevels,rule:'Выбери продукт на тарелке, затем отправь его в подходящую зону. Воду ставим в отдельную поилку.'},
+  food:{title:'Что в миске?',levels:FOOD_LEVELS,rule:'Выбери открытый продукт в миске, затем отправь его в подходящую зону. Убирай верхние предметы, чтобы открывать нижние.'},
   pet:{title:'Вечер с котом',levels:petLevels,rule:'Помоги коту поесть, попить, поиграть и отдохнуть. Доведи все четыре показателя до трёх отметок.'},
   grooming:{title:'Чистые лапы',levels:groomingLevels,rule:'Выбери инструмент и коснись пятнышка. Следи за настроением: если кот устал, дай ему передышку.'},
   litter:{title:'Пары в лотке',levels:litterLevels,rule:'Открывай ячейки совком и ищи две одинаковые формы. Здесь есть и пустые места. Несовпавшая пара снова скроется — запоминай, где что лежит.'},
@@ -128,7 +123,7 @@ export function miniAction(state,action){
     const piece=next.pieces[action.piece];if(action.type!=='turn'||!piece||piece.fixed)return state;piece.turn=(piece.turn+1)%4;
     next.won=connectedRoute(next,level).length>0;
   }else if(id==='food'){
-    const at=next.remaining.findIndex(item=>item.id===action.item);if(action.type!=='sort'||at<0||!['safe','away'].includes(action.bin))return state;
+    const at=next.remaining.findIndex(item=>item.id===action.item);if(action.type!=='sort'||at<0||!['safe','away'].includes(action.bin)||!foodIsExposed(state.remaining,level,action.item))return state;
     const item=next.remaining[at],food=FOODS[item.type];
     if(food.safe!==(action.bin==='safe')){next.mistakes++;next.message=food.why+' Попробуй другую зону.';}
     else{next.remaining.splice(at,1);next.sorted.push(item);next.message=food.why;}
@@ -181,7 +176,16 @@ export function solutionFor(id,index){
   const level=GAMES[id].levels[index];
   if(id==='search')return level.targets.map(item=>({type:'find',item}));
   if(id==='tunnels')return level.pieces.flatMap((p,piece)=>Array.from({length:p.fixed?0:(4-p.turn)%4},()=>({type:'turn',piece})));
-  if(id==='food')return level.items.map((type,item)=>({type:'sort',item,bin:FOODS[type].safe?'safe':'away'}));
+  if(id==='food'){
+    const remaining=level.items.map((type,id)=>({type,id})),actions=[];
+    while(remaining.length){
+      const at=remaining.findIndex(item=>foodIsExposed(remaining,level,item.id));
+      if(at<0)throw new Error('Food pile has no exposed item');
+      const [item]=remaining.splice(at,1);
+      actions.push({type:'sort',item:item.id,bin:FOODS[item.type].safe?'safe':'away'});
+    }
+    return actions;
+  }
   if(id==='pet'){
     const initial=createMini(id,index),queue=[{state:initial,path:[]}],seen=new Set();
     for(let cursor=0;cursor<queue.length;cursor++){const {state,path}=queue[cursor];if(state.won)return path;const key=state.needs.join(',');if(seen.has(key))continue;seen.add(key);for(const type of Object.keys(PET_ACTIONS)){const next=miniAction(state,{type});if(next.moves>state.moves)queue.push({state:next,path:[...path,{type}]});}}return null;
