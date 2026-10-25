@@ -65,7 +65,7 @@ GUIDE = """КЛЕТОЧКИ — ПОЛНЫЙ КОМПЛЕКТ ДЛЯ ЯНДЕК�
 2. Для японских кроссвордов и поиска слов создать по отдельной карточке.
 3. Взять параметры из страницы/answers.txt, вставить тексты. Теги выбирать только из существующего списка.
 4. Загрузить ZIP, иконку, обложку и обязательное горизонтальное видео в соответствующие поля.
-5. В «Скриншотах» выбрать «Десктопные» и файлы из screenshots-desktop-16x9; затем «Мобильные» → «Портретная» и файлы из screenshots-mobile-9x16. Мобильные9:16 не загружаются в альбомное поле16:9.
+5. Все иконки, обложки, видео и скриншоты трёх игр находятся в одной общей папке media. Выбрать файлы с началом имени sudoku-, nonogram- или wordsearch-. Для «Десктопные → Альбомная» — desktop-16x9; для «Мобильные → Портретная» — mobile-9x16. Мобильные9:16 не загружаются в альбомное поле16:9.
 6. Вертикальное видео, GIF, рекламные видео, maskable-иконка и обложка на витрину необязательны; оставить пустыми.
 7. Выключить AI-описания. В описании удалить английскую вкладку, оставить русский. Нажать «Сохранить».
 8. В разделе «Реклама» включить штатный sticky-баннер: справа на десктопе, снизу на телефоне. Автоматический показ платформой; опцию управления баннером через API не включать.
@@ -195,12 +195,17 @@ def validate_archive(file, release, game):
                 raise ValueError(f"ZIP SHA256 не совпал: {name}")
 
 
-def media_path(name):
-    if name.startswith("desktop-"):
-        return "screenshots-desktop-16x9/" + name
-    if name.startswith("mobile-"):
-        return "screenshots-mobile-9x16/" + name
-    return "media/" + name
+def media_path(name, game):
+    names = {
+        "icon-512.png": "01-icon-512.png",
+        "cover-800x470.png": "02-cover-800x470.png",
+        "gameplay-16x9.mp4": "03-gameplay-16x9.mp4",
+        "desktop-1.png": "04-desktop-16x9-1.png",
+        "desktop-2.png": "05-desktop-16x9-2.png",
+        "mobile-1.png": "06-mobile-9x16-1.png",
+        "mobile-2.png": "07-mobile-9x16-2.png",
+    }
+    return f"media/{game}-{names[name]}"
 
 
 def ordered_answers(game, version):
@@ -227,13 +232,13 @@ def html_page(games, version, checked_at):
             field_id = f"{game['game']}-{key}"
             return f'<div class="field" data-console-field="{key}"><label for="{field_id}">{esc(label)} <small>{len(value)}/{maximum}</small></label><textarea id="{field_id}" readonly rows="{max(2, min(8, len(value)//80+1))}">{esc(value)}</textarea><button data-copy="{field_id}">Скопировать</button></div>'
         def file_card(name, label):
-            return f'<div class="file-field"><strong>{esc(label)}</strong><p><a href="{folder}/{media_path(name)}" download>{name}</a></p></div>'
+            return f'<div class="file-field"><strong>{esc(label)}</strong><p><a href="{media_path(name, game["game"])}" download>{Path(media_path(name, game["game"])).name}</a></p></div>'
         def screenshots(kind):
             desktop = kind == "desktop"
             ratio, platform, orientation = ("16:9", "Десктопные", "Альбомная") if desktop else ("9:16", "Мобильные", "Портретная")
             names = [f"{kind}-1.png", f"{kind}-2.png"]
-            links = "".join(f'<li><a href="{folder}/{media_path(n)}" download>{n}</a></li>' for n in names)
-            previews = "".join(f'<img loading="lazy" src="{folder}/{media_path(n)}" alt="{platform}, {ratio}">' for n in names)
+            links = "".join(f'<li><a href="{media_path(n, game["game"])}" download>{Path(media_path(n, game["game"])).name}</a></li>' for n in names)
+            previews = "".join(f'<img loading="lazy" src="{media_path(n, game["game"])}" alt="{platform}, {ratio}">' for n in names)
             return f'<div class="screenshot-group" data-ratio="{ratio}"><h4>{platform} — {ratio}</h4><p>В Яндексе: <b>«{platform}» → «{orientation}»</b>. Загрузить только эти два файла:</p><ul>{links}</ul><div class="previews">{previews}</div></div>'
         basic = [("Версия", version), *COMMON[:5], ("Теги", ", ".join(TAGS[game["game"]]) + ". Выбрать существующие; если таких нет — пропустить.")]
         descriptions = "".join(card(key) for key, _, _, _ in FIELDS if key not in ("keywords", "developer-comment"))
@@ -250,7 +255,7 @@ def html_page(games, version, checked_at):
 <details><summary>Дополнительные разделы и все ответы</summary><p>Maskable-иконку, обложку на витрину и GIF можно оставить пустыми. Вход и покупки не требуются. extras/onboarding-preview.png не загружать вместо скриншота геймплея.</p><a href="{folder}/answers.txt">Все ответы одним текстом</a></details></section>''')
     return f'''<!doctype html><html lang="ru"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Клеточки — загрузка в Яндекс {esc(version)}</title>
 <style>body{{margin:0;background:#f5f3ed;color:#303b31;font:16px/1.6 system-ui,sans-serif}}main{{max-width:1000px;margin:auto;padding:28px 18px}}h1{{line-height:1.25}}section{{margin:36px 0;padding:24px;background:#fff;border-radius:16px}}table{{border-collapse:collapse;width:100%}}th,td{{text-align:left;vertical-align:top;border-bottom:1px solid #ddd;padding:10px;overflow-wrap:anywhere}}th{{width:42%}}a{{color:#3c5c45}}nav{{display:flex;gap:18px;flex-wrap:wrap;align-items:center}}.console-link{{display:inline-block;padding:10px 16px;border-radius:8px;background:#4b5c43;color:#fff;text-decoration:none;font-weight:600}}textarea{{box-sizing:border-box;width:100%;padding:12px;font:inherit;background:#f8f8f2;border:1px solid #bbc6b1;border-radius:6px}}label{{display:block;font-weight:600}}small{{color:#68755e;font-weight:400}}button{{margin:6px 0 18px;padding:9px 16px;cursor:pointer;background:#4b5c43;color:white;border:0;border-radius:6px;font:inherit}}.previews{{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}}.previews img{{max-width:210px;max-height:310px;border:1px solid #ddd}}.note{{padding:16px;background:#e6ecdf;border-radius:10px}}.field{{margin-top:20px}}.screenshot-group,.file-field{{padding:16px;border:1px solid #bbc6b1;border-radius:8px;margin:14px 0}}h3{{margin-top:36px}}h4{{margin:0}}@media(max-width:600px){{section{{padding:14px}}th,td{{display:block;width:auto}}th{{border-bottom:0;padding-bottom:0}}}}</style>
-<main><h1>Клеточки — всё для загрузки в Яндекс</h1><p>Игровая версия {esc(version)}. Выбери игру, копируй значения и загружай указанные файлы. Каждая игра — отдельная карточка.</p><nav><a class="console-link" href="https://games.yandex.ru/console/" target="_blank" rel="noopener noreferrer">Открыть кабинет Яндекс Игр ↗</a><a href="#sudoku">Судоку</a><a href="#nonogram">Японские</a><a href="#wordsearch">Поиск слов</a><a href="START-HERE.txt">Порядок действий</a><a href="CHECK-BEFORE-MODERATION.txt">Перед модерацией</a></nav><p class="note">Большой ZIP комплекта сначала распаковать. В поле «Архив» нужен игровой ZIP из папки выбранной игры. Десктоп, Android и iOS — целевые платформы; настоящий запуск на телефонах и рекламу проверить перед модерацией. Эта локальная страница никуда не отправляет данные.</p>{''.join(sections)}<p>Требования сверены 25.10.2026: <a href="{SOURCES[0]}">официальная форма Яндекса</a>. Для следующего выпуска агент проверяет их заново.</p></main>
+<main><h1>Клеточки — всё для загрузки в Яндекс</h1><p>Игровая версия {esc(version)}. Выбери игру, копируй значения и загружай указанные файлы. Каждая игра — отдельная карточка.</p><nav><a class="console-link" href="https://games.yandex.ru/console/" target="_blank" rel="noopener noreferrer">Открыть кабинет Яндекс Игр ↗</a><a href="#sudoku">Судоку</a><a href="#nonogram">Японские</a><a href="#wordsearch">Поиск слов</a><a href="media/" target="_blank">Все картинки и видео — одна папка</a><a href="START-HERE.txt">Порядок действий</a><a href="CHECK-BEFORE-MODERATION.txt">Перед модерацией</a></nav><p class="note">Все картинки и видео трёх игр лежат в одной папке <b>media</b>. Начало имени указывает игру: <b>sudoku</b>, <b>nonogram</b> или <b>wordsearch</b>; дальше — назначение и пропорции. Большой ZIP комплекта сначала распаковать. В поле «Архив» нужен игровой ZIP из папки выбранной игры. Десктоп, Android и iOS — целевые платформы; настоящий запуск на телефонах и рекламу проверить перед модерацией. Эта локальная страница никуда не отправляет данные.</p>{''.join(sections)}<p>Требования сверены 25.10.2026: <a href="{SOURCES[0]}">официальная форма Яндекса</a>. Для следующего выпуска агент проверяет их заново.</p></main>
 <script>document.querySelectorAll('[data-copy]').forEach(button=>button.addEventListener('click',async()=>{{const area=document.getElementById(button.dataset.copy);let ok=false;try{{await navigator.clipboard.writeText(area.value);ok=true;}}catch{{area.focus();area.select();ok=document.execCommand('copy');}}button.textContent=ok?'Скопировано':'Нажми Ctrl/Cmd+C';setTimeout(()=>button.textContent='Скопировать',1800);}}));</script></html>'''.replace('25.10.2026:', checked_at + ':')
 
 
@@ -301,11 +306,10 @@ def build(output, ffprobe, checked_at):
         for game in games:
             folder = staging / game["folder"]
             (folder / "fields").mkdir(parents=True)
-            (folder / "media").mkdir()
             (folder / "extras").mkdir()
             shutil.copy2(ROOT / "build/yandex" / game["archive"], folder / game["archive"])
             for name in MEDIA:
-                target = folder / media_path(name)
+                target = staging / media_path(name, game["game"])
                 target.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(ROOT / f"build/yandex-media/{game['game']}" / name, target)
             shutil.copy2(ROOT / f"build/yandex-media/{game['game']}/onboarding-preview.png", folder / "extras/onboarding-preview.png")
@@ -315,7 +319,7 @@ def build(output, ffprobe, checked_at):
             for n, (key, label, _, _) in enumerate(FIELDS, 1):
                 value = game["fields"][key]
                 (folder / "fields" / f"{n:02}-{key}.txt").write_text(value + "\n")
-            answers += ["", "ФАЙЛЫ ДЛЯ ЗАГРУЗКИ", "Архив: " + game["archive"], *[f"{label}: {media_path(name)}" for name, label in MEDIA.items()], "", "ХОЧУ ПОДКЛЮЧИТЬ AI-ОПИСАНИЯ", "Выключено", "", "ПОСЛЕ СОХРАНЕНИЯ — РАЗДЕЛ РЕКЛАМА", dict(COMMON)["Sticky-баннеры"], "Управление баннером через API: выключено"]
+            answers += ["", "ФАЙЛЫ ДЛЯ ЗАГРУЗКИ", "Архив: " + game["archive"], *[f"{label}: ../{media_path(name, game["game"])}" for name, label in MEDIA.items()], "", "ХОЧУ ПОДКЛЮЧИТЬ AI-ОПИСАНИЯ", "Выключено", "", "ПОСЛЕ СОХРАНЕНИЯ — РАЗДЕЛ РЕКЛАМА", dict(COMMON)["Sticky-баннеры"], "Управление баннером через API: выключено"]
             (folder / "answers.txt").write_text("\n".join(answers) + "\n")
             (folder / "form.json").write_text(json.dumps({"version": version, "settings": COMMON, "tagSuggestions": TAGS[game["game"]], "fields": game["fields"]}, ensure_ascii=False, indent=2) + "\n")
         manifest = {"version": version, "preparedAt": datetime.now(timezone.utc).isoformat(), "requirementsCheckedAt": checked_at,
