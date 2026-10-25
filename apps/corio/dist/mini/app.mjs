@@ -1,20 +1,20 @@
-import {fitFoodScene,renderFoodInfo} from './food-view.mjs?v=0.15.0';
-import {createFoodFeedback} from './food-feedback.mjs?v=0.15.0';
-import {tunnelWalkPoints} from './tunnel-art.mjs?v=0.15.0';
-import {setupFocusUI,fitFocusedScene} from './focus.mjs?v=0.15.0';
-import {GAMES,FOODS,GROOM_STEPS,createMini,miniAction,solutionFor,connectedRoute} from './engine.mjs?v=0.15.0';
-import {renderScene,toolsFor,goalText} from './views.mjs?v=0.15.0';
-import {createModeController} from '../modes.mjs?v=0.15.0';
-import {catFigure,setCatWalkFrame} from '../characters.mjs?v=0.15.0';
-import {createSearchLife} from './search-life.mjs?v=0.15.0';
+import {fitFoodScene,renderFoodInfo} from './food-view.mjs?v=0.16.0';
+import {createFoodFeedback} from './food-feedback.mjs?v=0.16.0';
+import {tunnelWalkPoints} from './tunnel-art.mjs?v=0.16.0';
+import {setupFocusUI,fitFocusedScene} from './focus.mjs?v=0.16.0';
+import {GAMES,FOODS,GROOM_STEPS,createMini,miniAction,solutionFor,connectedRoute} from './engine.mjs?v=0.16.0';
+import {renderScene,toolsFor,goalText} from './views.mjs?v=0.16.0';
+import {createModeController} from '../modes.mjs?v=0.16.0';
+import {catFigure,setCatWalkFrame} from '../characters.mjs?v=0.16.0';
+import {createSearchLife} from './search-life.mjs?v=0.16.0';
 const $=query=>document.querySelector(query),id=$('[data-game]').dataset.game,game=GAMES[id],scene=$('#scene'),tools=$('#tools'),win=$('#win');
 // Keep the live note/status nodes across scene renders; feedback owns this host.
 const foodNote=id==='food'?$('#food-note'):null;
 let attempt=0,settleTimer=null,settleEpoch=0,routeWalking=false,routeAnimation=null,routeFrame=null,searchLife=null,foodFeedback=null;
 let state=createMini(id),history=[],selected=id==='grooming'?'wipe':id==='litter'?'scoop':id==='search'?1:null,drag=null,ignoreClickUntil=0,paused=false,platformPaused=false,sfx=true,audio=null,modes;
-const manyLevels=id==='search'||id==='tunnels';
-const key=id==='litter'?'corio-litter-pairs-v1':id==='search'?'corio-search-50-v3':id==='food'?'corio-food-pile-v1':id==='tunnels'?'corio-tunnels-50-v2':id==='yarn'?'corio-yarn-thread-v1':'corio-'+id+'-v1';let best=Array(game.levels.length).fill(null);
-const currentLevelKey=id==='tunnels'?'corio-tunnels-v2-current-v1':'corio-'+id+'-current-v1';
+const manyLevels=id==='search'||id==='tunnels'||id==='food';
+const key=id==='litter'?'corio-litter-pairs-v1':id==='search'?'corio-search-50-v3':id==='food'?'corio-food-50-v1':id==='tunnels'?'corio-tunnels-50-v2':id==='yarn'?'corio-yarn-thread-v1':'corio-'+id+'-v1';let best=Array(game.levels.length).fill(null);
+const currentLevelKey=id==='tunnels'?'corio-tunnels-v2-current-v1':id==='food'?'corio-food-50-current-v1':'corio-'+id+'-current-v1';
 try{sfx=localStorage.getItem('corio-litter-sfx-v1')!=='off';const value=JSON.parse(localStorage.getItem(key));if(Array.isArray(value))best=best.map((_,i)=>Number.isInteger(value[i])?value[i]:null);}catch{}
 const settingsOpen=()=>!!document.querySelector('[data-game-panel][open]');
 const blocked=()=>settingsOpen()||paused||platformPaused||win.open||modes?.isModalOpen();

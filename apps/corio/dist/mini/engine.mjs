@@ -1,9 +1,9 @@
-import {tunnelEdges,traceTunnelRoute,connectedRoute} from './tunnel-route.mjs?v=0.15.0';
+import {tunnelEdges,traceTunnelRoute,connectedRoute} from './tunnel-route.mjs?v=0.16.0';
 export {tunnelEdges,traceTunnelRoute,connectedRoute};
-import {TUNNEL_LEVELS} from './tunnel-data.mjs?v=0.15.0';
-import {SEARCH_LEVELS,SEARCH_SCENES} from './search-data.mjs?v=0.15.0';
-import {FOOD_LEVELS,FOOD_PILE_ASPECT,foodIsExposed} from './food-data.mjs?v=0.15.0';
-import {YARN_LEVELS,YARN_ANCHOR,YARN_POINT_SPACING} from './yarn-data.mjs?v=0.15.0';
+import {TUNNEL_LEVELS} from './tunnel-data.mjs?v=0.16.0';
+import {SEARCH_LEVELS,SEARCH_SCENES} from './search-data.mjs?v=0.16.0';
+import {FOOD_LEVELS,FOOD_PILE_ASPECT,foodIsExposed} from './food-data.mjs?v=0.16.0';
+import {YARN_LEVELS,YARN_ANCHOR,YARN_POINT_SPACING} from './yarn-data.mjs?v=0.16.0';
 export {FOOD_LEVELS,FOOD_PILE_ASPECT,foodIsExposed};
 // Original short scenarios for comparing mechanics. No clocks or offline decay.
 const copy=value=>structuredClone(value);
@@ -163,6 +163,7 @@ export function solutionFor(id,index){
   if(id==='search')return level.targets.map(item=>({type:'find',item}));
   if(id==='tunnels')return copy(level.solution);
   if(id==='food'){
+    if(level.clearOrder)return level.clearOrder.map(item=>({type:'sort',item,bin:FOODS[level.items[item]].safe?'safe':'away'}));
     const remaining=level.items.map((type,id)=>({type,id})),actions=[];
     while(remaining.length){
       const at=remaining.findIndex(item=>foodIsExposed(remaining,level,item.id));

@@ -5,7 +5,7 @@ import {foodFigure} from '../dist/characters.mjs';
 import {SEARCH_SCENES} from '../dist/mini/search-data.mjs';
 import {SEARCH_SLOTS,searchSlotsFor,placeSearchObject} from '../dist/mini/search-layout.mjs';
 for(const[id,game]of Object.entries(GAMES))test(`${id}: all scenarios finish through valid actions without mutating old states`,()=>{
-  const count=['search','tunnels'].includes(id)?50:5;assert.equal(game.levels.length,count);const definitions=new Set();
+  const count=['search','tunnels','food'].includes(id)?50:5;assert.equal(game.levels.length,count);const definitions=new Set();
   for(let index=0;index<count;index++){
     definitions.add(JSON.stringify(game.levels[index]));let state=createMini(id,index);assert.equal(state.won,false);
     if(id==='yarn')assert.ok(yarnConflicts(state.points,game.levels[index].edges).length>0);
@@ -43,13 +43,15 @@ test('wall route needs reciprocal joints; fixed shelves cannot turn',()=>{
   let state=createMini('tunnels');const level=GAMES.tunnels.levels[0];assert.deepEqual(connectedRoute(state,level),[]);assert.equal(miniAction(state,{type:'turn',piece:0}),state);
   state=miniAction(state,{type:'turn',piece:1});assert.equal(state.won,true);assert.equal(connectedRoute(state,level).length,3);
 });
-test('food has five fixed dense bowls with repeated solids and increasing layers and variety',()=>{
+test('food has fifty fixed dense bowls with repeated solids and staged layers and variety',()=>{
   assert.equal(GAMES.food.levels,FOOD_LEVELS);assert.equal(FOOD_PILE_ASPECT,1.35);
   const allowed=['dry','treat','chicken','wet','raw','bone','candy','chocolate','onion','garlic'];
   for(const [index,level]of FOOD_LEVELS.entries()){
-    assert.equal(level.items.length,[24,36,48,60,72][index]);
-    assert.equal(new Set(level.items).size,[6,8,10,10,10][index]);
-    assert.equal(level.layers,index+2);assert.equal(new Set(level.placements.map(p=>p.layer)).size,index+2);
+    const band=Math.floor(index/10),within=index%10;
+    assert.equal(level.items.length,24+band*12+[0,0,2,4,4,6,8,8,10,12][within]);
+    assert.equal(new Set(level.items).size,band===0?6:band===1?8:band===2&&within<3?9:10);
+    const layers=band===0?(within<4?2:3):band+2+(within>=5?1:0);
+    assert.equal(level.layers,layers);assert.equal(new Set(level.placements.map(p=>p.layer)).size,layers);
     assert.equal(level.placements.length,level.items.length);assert.equal(new Set(level.placements.map(p=>p.z)).size,level.items.length);
     for(const type of new Set(level.items)){assert.ok(allowed.includes(type));assert.ok(level.items.filter(t=>t===type).length>=4,'Every included type repeats at least four times');}
     assert.ok(level.items.some(type=>FOODS[type].safe));assert.ok(level.items.some(type=>!FOODS[type].safe));
