@@ -1,3 +1,4 @@
+import {FOOD_VARIETY_CROPS,FOOD_VARIETY_SIZE} from './mini/food-variety-crops.mjs?v=0.17.0';
 const asset=file=>new URL('./assets/'+file,import.meta.url).href;
 let serial=0;
 function croppedImage(file,view,size){
@@ -19,7 +20,7 @@ const shapes=[[129,140,310,291],[616,215,310,198],[1126,156,298,267],[122,643,30
 export function litterShape(index){return`<svg class="litter-shape" viewBox="${shapes[index].join(' ')}" aria-hidden="true">${croppedImage('litter-pairs-atlas-v1.png',shapes[index],[1536,1024])}</svg>`;}
 
 const foodCrops={"dry":[18,101,361,248],"wet":[433,18,299,339],"treat":[803,120,303,221],"water":[1156,111,359,233],"chicken":[17,393,378,274],"chocolate":[414,394,339,256],"onion":[810,340,284,348],"garlic":[1198,368,296,312],"coffee":[32,690,334,276],"bone":[392,695,375,266],"raw":[776,701,376,279],"candy":[1177,708,343,252]};
-export function foodFigure(kind){const crop=foodCrops[kind];return`<svg class="food-figure" viewBox="${crop.join(' ')}" aria-hidden="true">${croppedImage('food-atlas-v1.png',crop,[1536,1024])}</svg>`;}
+export function foodFigure(kind){const extra=FOOD_VARIETY_CROPS[kind],crop=extra||foodCrops[kind];return`<svg class="food-figure" viewBox="${crop.join(' ')}" aria-hidden="true">${croppedImage(extra?'food-variety-alpha-v1.png':'food-atlas-v1.png',crop,extra?FOOD_VARIETY_SIZE:[1536,1024])}</svg>`;}
 
 const walkCrops=[[38,134,550,420],[666,140,550,420],[50,718,550,420],[671,718,550,420]];
 export function catWalkFrame(frame=0,{id,x,y,width=86,height=65.67}={}){

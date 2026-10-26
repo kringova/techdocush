@@ -13,7 +13,7 @@ export function foodCatPortrait(mood='neutral'){
 // One timeout for a current reaction, no idle frame loop. The remaining duration
 // is held while the game is paused, hidden or covered by a settings panel.
 export function createFoodFeedback({scene,isBlocked=()=>false,statusHost=document.getElementById('status')}){
-  let mood='neutral',mistakes=0,goodFeeds=0,badFeeds=0,feedHistory=[],retchShown=false,message='Выбери продукт сверху',timer=null,startedAt=0,remaining=0,disposed=false,animations=[];
+  let mood='neutral',mistakes=0,goodFeeds=0,badFeeds=0,feedHistory=[],retchShown=false,message='',timer=null,startedAt=0,remaining=0,disposed=false,animations=[];
   const reduced=matchMedia('(prefers-reduced-motion: reduce)');
   const blocked=()=>document.hidden||isBlocked();
   const cancelAnimations=()=>{for(const animation of animations)animation.cancel();animations=[];};
@@ -52,19 +52,19 @@ export function createFoodFeedback({scene,isBlocked=()=>false,statusHost=documen
   }
   function react(next,duration){clearReaction();mood=next;remaining=duration;paint();schedule();}
   function afterRender(){paint();sync();}
-  function newLevel(){clearReaction();mistakes=0;goodFeeds=0;badFeeds=0;feedHistory=[];retchShown=false;message='Выбери продукт сверху';paint();}
+  function newLevel(){clearReaction();mistakes=0;goodFeeds=0;badFeeds=0;feedHistory=[];retchShown=false;message='';paint();}
   function sorted({correct,mistakes:count,message:text,bin}){
     feedHistory.push({goodFeeds,badFeeds});
     if(!correct)goodFeeds=0;else if(bin==='safe')goodFeeds++;
     if(!correct&&bin==='safe')badFeeds++;
-    mistakes=count;if(text)message=text;
+    mistakes=count;if(text!==undefined)message=String(text??'');
     if(goodFeeds===3){goodFeeds=0;react('celebrate',2200);return;}
     if(mood==='retch'&&remaining>0){paint();sync();return;}
     if(!correct&&bin==='safe'&&badFeeds>=3&&!retchShown){retchShown=true;react('retch',1800);}
     else react(correct?'pleased':'displeased',correct?1100:1400);
   }
-  function undo(count){clearReaction();mistakes=count;const previous=feedHistory.pop()||{goodFeeds:0,badFeeds:0};goodFeeds=previous.goodFeeds;badFeeds=previous.badFeeds;message='Действие отменено. Можно выбрать другой продукт.';paint();}
-  function setMessage(text){message=String(text||'Выбери продукт сверху');if(statusHost)statusHost.textContent=message;}
+  function undo(count){clearReaction();mistakes=count;const previous=feedHistory.pop()||{goodFeeds:0,badFeeds:0};goodFeeds=previous.goodFeeds;badFeeds=previous.badFeeds;message='';paint();}
+  function setMessage(text){message=String(text??'');if(statusHost)statusHost.textContent=message;}
   const observer=new MutationObserver(sync);
   for(const dialog of document.querySelectorAll('dialog'))observer.observe(dialog,{attributes:true,attributeFilter:['open']});
   for(const type of['corio:pause','corio:resume','corio:platform-pause','corio:platform-resume','blur','focus'])window.addEventListener(type,sync);

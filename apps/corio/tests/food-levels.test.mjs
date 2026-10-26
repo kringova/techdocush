@@ -4,8 +4,11 @@ import {readFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import {FOOD_LEVELS,FOOD_PILE_ASPECT,foodIsExposed} from '../dist/mini/food-data.mjs';
 import {FOOD_CROP_SIZES} from '../dist/mini/food-geometry.mjs';
+import {FOOD_VARIETY_CROPS} from '../dist/mini/food-variety-crops.mjs';
 import {FOODS,createMini,miniAction,solutionFor} from '../dist/mini/engine.mjs';
 const baseline=JSON.parse(await readFile(new URL('./fixtures/food-first-015.json',import.meta.url),'utf8'));
+const taxonomyBaseline=JSON.parse(await readFile(new URL('./fixtures/food-taxonomy-016.json',import.meta.url),'utf8'));
+const newTreats=['treatStick','treatPillow','treatJerky','treatPaste'],newUnsafe=['coffeeBeans','leek','dough','tea','grapes'];
 const sha=source=>createHash('sha256').update(source).digest('hex');
 const core=level=>({name:level.name,items:level.items,placements:level.placements,layers:level.layers});
 const recipe=level=>JSON.stringify([level.spec.family,level.spec.layerPlan,level.layers,level.items.length,level.spec.counts,level.spec.layerSizes]);
@@ -23,10 +26,11 @@ function oracleFor(level){
  };
 }
 
-test('FOOD50 preserves the exact first prototype, unchanged food categories and unchanged exposure rules',async()=>{
+test('FOOD50 preserves the exact first prototype, legacy name/category/icon and unchanged exposure rules',async()=>{
  assert.equal(baseline.sourceTag,'corio-source-015-20261025');assert.deepEqual(core(FOOD_LEVELS[0]),baseline.level);assert.equal(sha(JSON.stringify(core(FOOD_LEVELS[0]))),baseline.firstCoreSha);
  const geometry=await readFile(new URL('../dist/mini/food-geometry.mjs',import.meta.url),'utf8');assert.equal(sha(geometry.slice(geometry.indexOf('// Samples stay inside the footprint:'))),baseline.geometryRulesSha);
- const engine=await readFile(new URL('../dist/mini/engine.mjs',import.meta.url),'utf8'),start=engine.indexOf('export const FOODS='),end=engine.indexOf('\n};',start)+3;assert.equal(sha(engine.slice(start,end)),baseline.foodsDeclarationSha);
+ assert.equal(taxonomyBaseline.sourceTag,'corio-source-016-20261026');assert.equal(sha(JSON.stringify(core(FOOD_LEVELS[0]))),taxonomyBaseline.firstCoreSha);
+ for(const[id,old]of Object.entries(taxonomyBaseline.foods))assert.deepEqual({name:FOODS[id].name,safe:FOODS[id].safe,icon:FOODS[id].icon},old,'Existing name/category/icon must remain unchanged: '+id);
  assert.equal(FOOD_PILE_ASPECT,1.35);assert.equal(FOODS.water.safe,true);assert.equal(FOODS.coffee.safe,false);
 });
 
@@ -36,14 +40,25 @@ test('50 recipes differ in real composition or layer layout and follow the five 
  assert.equal(new Set(FOOD_LEVELS.map(spatial)).size,50,'Actual coarse layer geometry differs, independent of labels, ids, types and seeds');
  const families=new Set();let previous=0,total=0;
  for(const[index,l]of FOOD_LEVELS.entries()){
-  const band=Math.floor(index/10),within=index%10,n=24+12*band+[0,0,2,4,4,6,8,8,10,12][within];assert.equal(l.id,'food-50-v1-'+(index+1));assert.equal(l.items.length,n);assert.ok(n>=previous&&n-previous<=4||index===0);previous=n;total+=n;
+  const band=Math.floor(index/10),within=index%10,n=24+12*band+[0,0,2,4,4,6,8,8,10,12][within];assert.equal(l.id,'food-50-v2-'+(index+1));assert.equal(l.items.length,n);assert.ok(n>=previous&&n-previous<=4||index===0);previous=n;total+=n;
   const layers=band===0?(within<4?2:3):band+2+(within>=5?1:0);assert.equal(l.layers,layers);assert.equal(new Set(l.placements.map(p=>p.layer)).size,layers);assert.ok(l.idea.length>20);
   const allowed=Object.keys(FOOD_CROP_SIZES);for(const type of l.items)assert.ok(allowed.includes(type));assert.ok(!l.items.includes('water')&&!l.items.includes('coffee'));
-  const types=new Set(l.items);assert.equal(types.size,band===0?6:band===1?8:band===2&&within<3?9:10);
+  const types=new Set(l.items);assert.equal(types.size,Math.min(19,Math.floor(n/4)));
   for(const type of types)assert.ok(l.items.filter(t=>t===type).length>=4);assert.ok(l.items.some(t=>FOODS[t].safe)&&l.items.some(t=>!FOODS[t].safe));
   const counts=Object.fromEntries([...types].map(t=>[t,l.items.filter(x=>x===t).length]));assert.deepEqual(counts,l.spec.counts);assert.equal(l.spec.safeCount,l.items.filter(t=>FOODS[t].safe).length);assert.equal(l.spec.awayCount,n-l.spec.safeCount);assert.deepEqual(l.spec.layerSizes,Array.from({length:l.layers},(_,layer)=>l.placements.filter(p=>p.layer===layer).length));families.add(l.spec.family);
  }
  assert.equal(total,2670);assert.equal(families.size,10);
+});
+
+test('all nineteen pile types appear; new cat treats and unsuitable foods rotate in the first ten',()=>{
+ const oldPile=['dry','treat','chicken','wet','raw','bone','candy','chocolate','onion','garlic'],allowed=[...oldPile,...newTreats,...newUnsafe];
+ assert.equal(new Set(allowed).size,19);assert.deepEqual([...new Set(FOOD_LEVELS.flatMap(l=>l.items))].sort(),allowed.sort());
+ for(const type of newTreats){assert.equal(FOODS[type].safe,true);assert.match(FOODS[type].name,/кош/i,'Treat name must explicitly describe a cat treat');}
+ for(const type of newUnsafe)assert.equal(FOODS[type].safe,false);
+ for(const type of[...newTreats,...newUnsafe])assert.ok(FOOD_LEVELS.slice(1,10).some(l=>l.items.includes(type)),'New type absent from early rotation: '+type);
+ for(const l of FOOD_LEVELS.slice(1)){assert.ok(l.items.some(type=>newTreats.includes(type)));assert.ok(l.items.some(type=>newUnsafe.includes(type)));assert.ok(new Set(l.items.filter(type=>oldPile.includes(type))).size>=4,'Do not replace the entire original set');}
+ assert.equal(new Set(FOOD_LEVELS.at(-1).items).size,19);
+ assert.equal(Object.keys(FOOD_VARIETY_CROPS).length,9);for(const[type,crop]of Object.entries(FOOD_VARIETY_CROPS))assert.deepEqual(FOOD_CROP_SIZES[type],crop.slice(2),'Exposure box must match the actual native supplementary crop');
 });
 
 test('every item keeps its native aspect, readable width and complete rotated bounds inside the bowl',()=>{
@@ -64,7 +79,7 @@ test('all 2670 reference sorts are exposed; an independent oracle checks every r
    let hidden;
    for(const item of state.remaining){const actual=foodIsExposed(state.remaining,l,item.id);assert.equal(actual,oracle(state.remaining,item.id),'Exposure disagreement at '+l.id+'/'+item.id);if(!actual)hidden=item;checked++;}
    if(hidden){assert.equal(miniAction(state,{type:'sort',item:hidden.id,bin:FOODS[hidden.type].safe?'safe':'away'}),state);hiddenNoops++;}
-   assert.equal(foodIsExposed(state.remaining,l,id),true);const before=JSON.stringify(state),next=miniAction(state,{type:'sort',item:id,bin:FOODS[l.items[id]].safe?'safe':'away'});assert.equal(next.moves,state.moves+1);assert.equal(next.mistakes,0);assert.equal(JSON.stringify(state),before);assert.deepEqual([...next.remaining,...next.sorted].sort((a,b)=>a.id-b.id),inventory);state=next;
+   assert.equal(foodIsExposed(state.remaining,l,id),true);const before=JSON.stringify(state),next=miniAction(state,{type:'sort',item:id,bin:FOODS[l.items[id]].safe?'safe':'away'});assert.equal(next.moves,state.moves+1);assert.equal(next.mistakes,0);assert.equal(next.message,'','A correct sort must not add a status message');assert.equal(JSON.stringify(state),before);assert.deepEqual([...next.remaining,...next.sorted].sort((a,b)=>a.id-b.id),inventory);state=next;
   }
   assert.equal(state.won,true);assert.equal(state.moves,l.minMoves);assert.equal(state.remaining.length,0);assert.equal(state.sorted.length,l.items.length);
  }
@@ -75,7 +90,7 @@ test('every surface offers safe and away choices; three safe feeds are reachable
  for(const[index,l]of FOOD_LEVELS.entries()){
   const r=remaining(l),surface=r.filter(i=>foodIsExposed(r,l,i.id));assert.ok(surface.length>1);assert.ok(surface.some(i=>FOODS[i.type].safe));assert.ok(surface.some(i=>!FOODS[i.type].safe));assert.ok(surface.length<r.length,'At least one lower object is covered');
   assert.ok(l.clearOrder.slice(0,5).filter(id=>FOODS[l.items[id]].safe).length>=3);
-  for(const category of[true,false]){const item=surface.find(i=>FOODS[i.type].safe===category),state=createMini('food',index),snapshot=JSON.stringify(state),wrong=miniAction(state,{type:'sort',item:item.id,bin:category?'away':'safe'});assert.equal(wrong.moves,1);assert.equal(wrong.mistakes,1);assert.deepEqual(wrong.remaining,state.remaining);assert.deepEqual(wrong.sorted,[]);assert.equal(wrong.won,false);assert.equal(JSON.stringify(state),snapshot);}
+  for(const category of[true,false]){const item=surface.find(i=>FOODS[i.type].safe===category),state=createMini('food',index),snapshot=JSON.stringify(state),wrong=miniAction(state,{type:'sort',item:item.id,bin:category?'away':'safe'});assert.equal(wrong.moves,1);assert.equal(wrong.mistakes,1);assert.equal(wrong.message,FOODS[item.type].why,'Wrong sort shows only the product explanation');assert.deepEqual(wrong.remaining,state.remaining);assert.deepEqual(wrong.sorted,[]);assert.equal(wrong.won,false);assert.equal(JSON.stringify(state),snapshot);}
   assert.deepEqual(createMini('food',index),createMini('food',index));assert.deepEqual(solutionFor('food',index),solutionFor('food',index));assert.equal(solutionFor('food',index).length,l.minMoves);
  }
 });

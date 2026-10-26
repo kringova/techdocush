@@ -1,0 +1,66 @@
+{
+  "sourceTag": "corio-source-016-20261026",
+  "firstCoreSha": "892b00db2846e8af3b1cd3e4e6c82c6420f017b7e88ef02d4c0ab3cb00722338",
+  "foods": {
+    "dry": {
+      "name": "Кошачий корм",
+      "safe": true,
+      "icon": "kibble"
+    },
+    "wet": {
+      "name": "Влажный корм",
+      "safe": true,
+      "icon": "can"
+    },
+    "treat": {
+      "name": "Кошачье лакомство",
+      "safe": true,
+      "icon": "treat"
+    },
+    "water": {
+      "name": "Питьевая вода",
+      "safe": true,
+      "icon": "water"
+    },
+    "chicken": {
+      "name": "Готовая курица",
+      "safe": true,
+      "icon": "chicken"
+    },
+    "chocolate": {
+      "name": "Тёмный шоколад",
+      "safe": false,
+      "icon": "chocolate"
+    },
+    "onion": {
+      "name": "Лук",
+      "safe": false,
+      "icon": "onion"
+    },
+    "garlic": {
+      "name": "Чеснок",
+      "safe": false,
+      "icon": "garlic"
+    },
+    "coffee": {
+      "name": "Кофе",
+      "safe": false,
+      "icon": "coffee"
+    },
+    "bone": {
+      "name": "Кость",
+      "safe": false,
+      "icon": "bone"
+    },
+    "raw": {
+      "name": "Сырое мясо",
+      "safe": false,
+      "icon": "raw"
+    },
+    "candy": {
+      "name": "Конфета",
+      "safe": false,
+      "icon": "candy"
+    }
+  }
+}

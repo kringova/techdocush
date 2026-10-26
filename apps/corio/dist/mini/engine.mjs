@@ -1,25 +1,34 @@
-import {tunnelEdges,traceTunnelRoute,connectedRoute} from './tunnel-route.mjs?v=0.16.0';
+import {tunnelEdges,traceTunnelRoute,connectedRoute} from './tunnel-route.mjs?v=0.17.0';
 export {tunnelEdges,traceTunnelRoute,connectedRoute};
-import {TUNNEL_LEVELS} from './tunnel-data.mjs?v=0.16.0';
-import {SEARCH_LEVELS,SEARCH_SCENES} from './search-data.mjs?v=0.16.0';
-import {FOOD_LEVELS,FOOD_PILE_ASPECT,foodIsExposed} from './food-data.mjs?v=0.16.0';
-import {YARN_LEVELS,YARN_ANCHOR,YARN_POINT_SPACING} from './yarn-data.mjs?v=0.16.0';
+import {TUNNEL_LEVELS} from './tunnel-data.mjs?v=0.17.0';
+import {SEARCH_LEVELS,SEARCH_SCENES} from './search-data.mjs?v=0.17.0';
+import {FOOD_LEVELS,FOOD_PILE_ASPECT,foodIsExposed} from './food-data.mjs?v=0.17.0';
+import {YARN_LEVELS,YARN_ANCHOR,YARN_POINT_SPACING} from './yarn-data.mjs?v=0.17.0';
 export {FOOD_LEVELS,FOOD_PILE_ASPECT,foodIsExposed};
 // Original short scenarios for comparing mechanics. No clocks or offline decay.
 const copy=value=>structuredClone(value);
 export const FOODS={
-  dry:{name:'Кошачий корм',safe:true,why:'Полнорационный кошачий корм — основа питания.',icon:'kibble'},
-  wet:{name:'Влажный корм',safe:true,why:'Полнорационный корм для кошек подходит для обычного кормления.',icon:'can'},
-  treat:{name:'Кошачье лакомство',safe:true,why:'Лакомство дают понемногу.',icon:'treat'},
+  dry:{name:'Кошачий корм',safe:true,why:'Это корм для кошек. Его отправляют коту.',icon:'kibble'},
+  wet:{name:'Влажный корм',safe:true,why:'Это корм для кошек. Его отправляют коту.',icon:'can'},
+  treat:{name:'Кошачье лакомство',safe:true,why:'Это лакомство для кошек. Его отправляют коту.',icon:'treat'},
   water:{name:'Питьевая вода',safe:true,why:'Свежая вода нужна всегда. Ей место в отдельной поилке.',icon:'water'},
-  chicken:{name:'Готовая курица',detail:'Без соли, приправ и костей',safe:true,why:'Только полностью приготовленная, без соли и приправ, маленьким кусочком.',icon:'chicken'},
+  chicken:{name:'Готовая курица',detail:'Без соли, приправ и костей',safe:true,why:'Эта курица полностью приготовлена, без соли, приправ и костей. Её можно отправить коту.',icon:'chicken'},
   chocolate:{name:'Тёмный шоколад',safe:false,why:'Шоколад опасен для кошек.',icon:'chocolate'},
   onion:{name:'Лук',safe:false,why:'Лук может повреждать клетки крови.',icon:'onion'},
   garlic:{name:'Чеснок',safe:false,why:'Чеснок опасен для кошек.',icon:'garlic'},
   coffee:{name:'Кофе',safe:false,why:'Кофеин опасен для кота.',icon:'coffee'},
   bone:{name:'Кость',safe:false,why:'Костью можно подавиться или травмироваться.',icon:'bone'},
   raw:{name:'Сырое мясо',safe:false,why:'Может содержать опасные бактерии.',icon:'raw'},
-  candy:{name:'Конфета',safe:false,why:'Выбираем кошачьи лакомства, а обычную конфету убираем.',icon:'candy'}
+  candy:{name:'Конфета',safe:false,why:'Обычная конфета не подходит для кошачьей миски.',icon:'candy'},
+  coffeeBeans:{name:'Кофейные зёрна',safe:false,why:'Кофеин опасен для кошек.',icon:'coffeeBeans'},
+  leek:{name:'Лук-порей',safe:false,why:'Порей, как лук и чеснок, может повреждать клетки крови кошки.',icon:'leek'},
+  dough:{name:'Сырое дрожжевое тесто',safe:false,why:'Тесто может разбухать в желудке, а при брожении образуется алкоголь.',icon:'dough'},
+  tea:{name:'Чёрный чай',safe:false,why:'В чёрном чае есть кофеин, опасный для кошек.',icon:'tea'},
+  grapes:{name:'Виноград',safe:false,why:'Кошкам не дают виноград. Его убираем из миски.',icon:'grapes'},
+  treatStick:{name:'Кошачье лакомство: палочка',safe:true,why:'Это лакомство для кошек. Его отправляют коту.',icon:'treatStick'},
+  treatPillow:{name:'Кошачье лакомство: подушечки',safe:true,why:'Это лакомство для кошек. Его отправляют коту.',icon:'treatPillow'},
+  treatJerky:{name:'Кошачье лакомство: сушёные кусочки',safe:true,why:'Это лакомство для кошек. Его отправляют коту.',icon:'treatJerky'},
+  treatPaste:{name:'Кошачье лакомство: пюре',safe:true,why:'Это лакомство для кошек. Его отправляют коту.',icon:'treatPaste'}
 };
 const petLevels=[
   {name:'Вода и ужин',needs:[1,1,4,4]},
@@ -111,8 +120,8 @@ export function miniAction(state,action){
   }else if(id==='food'){
     const at=next.remaining.findIndex(item=>item.id===action.item);if(action.type!=='sort'||at<0||!['safe','away'].includes(action.bin)||!foodIsExposed(state.remaining,level,action.item))return state;
     const item=next.remaining[at],food=FOODS[item.type];
-    if(food.safe!==(action.bin==='safe')){next.mistakes++;next.message=food.why+' Попробуй другую зону.';}
-    else{next.remaining.splice(at,1);next.sorted.push(item);next.message=food.why;}
+    if(food.safe!==(action.bin==='safe')){next.mistakes++;next.message=food.why;}
+    else{next.remaining.splice(at,1);next.sorted.push(item);next.message='';}
     next.won=!next.remaining.length;
   }else if(id==='pet'){
     const choice=PET_ACTIONS[action.type];if(!choice)return state;

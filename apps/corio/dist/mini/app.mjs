@@ -1,24 +1,31 @@
-import {fitFoodScene,renderFoodInfo} from './food-view.mjs?v=0.16.0';
-import {createFoodFeedback} from './food-feedback.mjs?v=0.16.0';
-import {tunnelWalkPoints} from './tunnel-art.mjs?v=0.16.0';
-import {setupFocusUI,fitFocusedScene} from './focus.mjs?v=0.16.0';
-import {GAMES,FOODS,GROOM_STEPS,createMini,miniAction,solutionFor,connectedRoute} from './engine.mjs?v=0.16.0';
-import {renderScene,toolsFor,goalText} from './views.mjs?v=0.16.0';
-import {createModeController} from '../modes.mjs?v=0.16.0';
-import {catFigure,setCatWalkFrame} from '../characters.mjs?v=0.16.0';
-import {createSearchLife} from './search-life.mjs?v=0.16.0';
+import {fitFoodScene,renderFoodInfo} from './food-view.mjs?v=0.17.0';
+import {createFoodFeedback} from './food-feedback.mjs?v=0.17.0';
+import {tunnelWalkPoints} from './tunnel-art.mjs?v=0.17.0';
+import {setupFocusUI,fitFocusedScene} from './focus.mjs?v=0.17.0';
+import {GAMES,FOODS,GROOM_STEPS,createMini,miniAction,solutionFor,connectedRoute} from './engine.mjs?v=0.17.0';
+import {renderScene,toolsFor,goalText} from './views.mjs?v=0.17.0';
+import {createModeController} from '../modes.mjs?v=0.17.0';
+import {catFigure,setCatWalkFrame} from '../characters.mjs?v=0.17.0';
+import {createSearchLife} from './search-life.mjs?v=0.17.0';
 const $=query=>document.querySelector(query),id=$('[data-game]').dataset.game,game=GAMES[id],scene=$('#scene'),tools=$('#tools'),win=$('#win');
 // Keep the live note/status nodes across scene renders; feedback owns this host.
 const foodNote=id==='food'?$('#food-note'):null;
+let foodCaptionHistory=[];
 let attempt=0,settleTimer=null,settleEpoch=0,routeWalking=false,routeAnimation=null,routeFrame=null,searchLife=null,foodFeedback=null;
 let state=createMini(id),history=[],selected=id==='grooming'?'wipe':id==='litter'?'scoop':id==='search'?1:null,drag=null,ignoreClickUntil=0,paused=false,platformPaused=false,sfx=true,audio=null,modes;
 const manyLevels=id==='search'||id==='tunnels'||id==='food';
-const key=id==='litter'?'corio-litter-pairs-v1':id==='search'?'corio-search-50-v3':id==='food'?'corio-food-50-v1':id==='tunnels'?'corio-tunnels-50-v2':id==='yarn'?'corio-yarn-thread-v1':'corio-'+id+'-v1';let best=Array(game.levels.length).fill(null);
-const currentLevelKey=id==='tunnels'?'corio-tunnels-v2-current-v1':id==='food'?'corio-food-50-current-v1':'corio-'+id+'-current-v1';
+const key=id==='litter'?'corio-litter-pairs-v1':id==='search'?'corio-search-50-v3':id==='food'?'corio-food-50-v2':id==='tunnels'?'corio-tunnels-50-v2':id==='yarn'?'corio-yarn-thread-v1':'corio-'+id+'-v1';let best=Array(game.levels.length).fill(null);
+const currentLevelKey=id==='tunnels'?'corio-tunnels-v2-current-v1':id==='food'?'corio-food-50-v2-current-v1':'corio-'+id+'-current-v1';
 try{sfx=localStorage.getItem('corio-litter-sfx-v1')!=='off';const value=JSON.parse(localStorage.getItem(key));if(Array.isArray(value))best=best.map((_,i)=>Number.isInteger(value[i])?value[i]:null);}catch{}
 const settingsOpen=()=>!!document.querySelector('[data-game-panel][open]');
 const blocked=()=>settingsOpen()||paused||platformPaused||win.open||modes?.isModalOpen();
-function status(text){$('#status').textContent=text;if(id==='food')foodFeedback?.message(text);}
+function status(text){
+  const message=String(text??''),host=$('#status');host.textContent=message;
+  if(id==='food'){host.hidden=!message;foodNote.dataset.hasError=String(Boolean(message));foodFeedback?.message(message);fitFoodScene(scene);}
+}
+function selectFood(item){
+  if(selected!==item)status('');selected=item;render();
+}
 function render(){
   const level=game.levels[state.index],focused=document.activeElement?.id,viewport=scene.querySelector('.search-viewport'),scroll=viewport?{x:viewport.scrollLeft,y:viewport.scrollTop}:null;
   $('#level-name').textContent=level.name;$('#level-number').textContent=`${state.index+1} / ${game.levels.length}`;$('#moves').textContent=state.moves;$('#goal').textContent=goalText(id,state,level);$('#undo').disabled=!history.length;
@@ -59,15 +66,19 @@ function scheduleSettle(){
   settleTimer=setTimeout(settle,950);
 }
 function load(index){
-  searchLife?.newLevel();foodFeedback?.newLevel();attempt++;cancelRouteWalk();cancelSettle();endDrag();history=[];state=createMini(id,index);selected=id==='grooming'?'wipe':id==='search'?1:null;paused=false;platformPaused=false;ignoreClickUntil=0;
-  if(win.open)win.close();if($('#pause-dialog').open)$('#pause-dialog').close();modes?.newAttempt(id==='litter'?game.levels[index].w*game.levels[index].h*2:solutionFor(id,index).length);render();status(id==='food'?'Возьми продукт сверху. Отправь его коту или в мусор.':id==='tunnels'?tunnelInstruction(game.levels[index]):game.rule);window.dispatchEvent(new Event('corio:resume'));
+  searchLife?.newLevel();foodFeedback?.newLevel();attempt++;cancelRouteWalk();cancelSettle();endDrag();history=[];foodCaptionHistory=[];state=createMini(id,index);selected=id==='grooming'?'wipe':id==='search'?1:null;paused=false;platformPaused=false;ignoreClickUntil=0;
+  if(win.open)win.close();if($('#pause-dialog').open)$('#pause-dialog').close();modes?.newAttempt(id==='litter'?game.levels[index].w*game.levels[index].h*2:solutionFor(id,index).length);render();status(id==='food'?'':id==='tunnels'?tunnelInstruction(game.levels[index]):game.rule);window.dispatchEvent(new Event('corio:resume'));
   if(manyLevels)try{localStorage.setItem(currentLevelKey,String(index));}catch{}
 }
 function commit(action){
   if(blocked()||!modes.guard())return false;
   const previous=state,next=miniAction(state,action);if(next===state)return false;
-  if(next.moves>state.moves)history.push(state);state=next;if(id==='food'&&state.sorted.some(i=>i.id===selected))selected=null;render();if(state.message)status(state.message);modes.changed();
-  if(id==='food'&&action.type==='sort'&&next.moves>previous.moves)foodFeedback?.sorted({correct:next.mistakes===previous.mistakes,mistakes:next.mistakes,message:next.message,bin:action.bin});
+  const foodSort=id==='food'&&action.type==='sort'&&next.moves>previous.moves;
+  const foodError=foodSort&&next.mistakes>previous.mistakes?FOODS[previous.remaining.find(item=>item.id===action.item).type].why:'';
+  if(next.moves>state.moves){history.push(state);if(id==='food')foodCaptionHistory.push({selected,message:$('#status').textContent});}
+  state=next;if(id==='food'&&state.sorted.some(item=>item.id===selected))selected=null;render();
+  if(id==='food')status(foodError);else if(state.message)status(state.message);modes.changed();
+  if(foodSort)foodFeedback?.sorted({correct:next.mistakes===previous.mistakes,mistakes:next.mistakes,message:foodError,bin:action.bin});
   if(id==='litter')sandSound(action.type);
   if(id==='litter'&&state.pending)scheduleSettle();
   const portrait=win.querySelector('.win-cat');if(portrait)portrait.outerHTML=catFigure(id==='grooming'&&state.washed?'towel':id==='pet'?'sleep':'loaf',{className:'win-cat'});
@@ -121,7 +132,11 @@ function advanceRoute(time){
     if(progress<1)syncRouteMotion();else{cancelRouteWalk();if(!win.open)win.showModal();}
 }
 
-function undo(){if(paused||platformPaused||!history.length)return;cancelRouteWalk();cancelSettle();if(win.open)win.close();endDrag();state=history.pop();render();if(id==='food')foodFeedback?.undo(state.mistakes);status('Действие отменено.');modes.changed();scheduleSettle();}
+function undo(){
+  if(paused||platformPaused||!history.length)return;cancelRouteWalk();cancelSettle();if(win.open)win.close();endDrag();state=history.pop();
+  const caption=id==='food'?foodCaptionHistory.pop():null;if(caption)selected=caption.selected;render();
+  if(id==='food'){foodFeedback?.undo(state.mistakes);status(caption?.message||'');}else status('Действие отменено.');modes.changed();scheduleSettle();
+}
 function pause(){if(paused||platformPaused||win.open||state.won&&!routeWalking)return;paused=true;syncRouteMotion();cancelSettle();endDrag();$('#pause-dialog').showModal();window.dispatchEvent(new Event('corio:pause'));if(audio)audio.suspend();}
 function resume(){paused=false;if($('#pause-dialog').open)$('#pause-dialog').close();syncRouteMotion();scheduleSettle();window.dispatchEvent(new Event('corio:resume'));}
 function sandSound(type){
@@ -132,9 +147,9 @@ scene.addEventListener('click',event=>{
   if(event.target.closest('[data-crossing]')){status('Здесь два отдельных тоннеля: слева направо и сверху вниз. Повернуть между ними нельзя.');return;}
   const food=event.target.closest('[data-food]'),bin=event.target.closest('[data-bin]'),piece=event.target.closest('[data-piece]'),spot=event.target.closest('[data-spot]'),cell=event.target.closest('[data-cell]');
   if(id==='search'){if(event.target.closest('[data-cat-react]')){searchLife.callCat();return;}const find=event.target.closest('[data-find]');if(find||event.target.closest('.search-viewport svg'))commit({type:'find',item:find?.dataset.find||null});return;}
-  if(food&&food.dataset.exposed!=='true'){status('Сначала убери то, что лежит сверху.');return;}
-  if(food){selected=+food.dataset.food;render();status(FOODS[state.remaining.find(i=>i.id===selected).type].why);}
-  if(bin){if(selected===null)status('Сначала выбери продукт на тарелке.');else commit({type:'sort',item:selected,bin:bin.dataset.bin});}
+  if(food&&food.dataset.exposed!=='true')return;
+  if(food)selectFood(+food.dataset.food);
+  if(bin){if(selected!==null)commit({type:'sort',item:selected,bin:bin.dataset.bin});}
   if(piece)commit({type:'turn',piece:+piece.dataset.piece});
   if(spot)commit({type:'clean',spot:+spot.dataset.spot,tool:selected});
   if(cell)commit({type:'reveal',cell:+cell.dataset.cell});
@@ -167,13 +182,14 @@ scene.addEventListener('pointerdown',event=>{
   // food from the real pointer pixel rather than that adjusted event target.
   const pixelTarget=id==='food'?(document.elementFromPoint(event.clientX,event.clientY)||event.target):event.target;
   const node=event.target.closest('[data-node]'),food=pixelTarget.closest('[data-food]');
-  if(id==='food'&&food&&food.dataset.exposed!=='true'){ignoreClickUntil=performance.now()+350;status('Сначала убери то, что лежит сверху.');return;}
+  if(id==='food'&&food&&food.dataset.exposed!=='true'){ignoreClickUntil=performance.now()+350;return;}
   if(node){event.preventDefault();const at=pointFor(event),index=+node.dataset.node;drag={type:'yarn',pointer:event.pointerId,node:index,start:at,original:{...state.points[index]},preview:structuredClone(state.points)};scene.setPointerCapture(event.pointerId);}
   else if(food&&food.dataset.exposed==='true'){drag={type:'food',pointer:event.pointerId,item:+food.dataset.food,x:event.clientX,y:event.clientY,element:food,active:false,noteMessage:$('#status').textContent};scene.setPointerCapture(event.pointerId);}
   else if(id==='grooming'&&event.target.closest('[data-spot]')){event.preventDefault();drag={type:'brush',pointer:event.pointerId,visited:new Set()};scene.setPointerCapture(event.pointerId);brushAt(event);}
 });
 scene.addEventListener('pointermove',event=>{
   if(!drag||event.pointerId!==drag.pointer||blocked())return;
+  if(drag.type==='food'&&event.pointerType==='mouse'&&event.buttons===0){endDrag();return;}
   if(drag.type==='yarn'){event.preventDefault();const at=pointFor(event);drag.preview[drag.node]={x:Math.max(8,Math.min(92,drag.original.x+at.x-drag.start.x)),y:Math.max(8,Math.min(92,drag.original.y+at.y-drag.start.y))};render();}
   if(drag.type==='brush')brushAt(event);
   if(drag?.type==='food'){
@@ -184,7 +200,7 @@ scene.addEventListener('pointermove',event=>{
       Object.assign(item.style,{position:'fixed',pointerEvents:'none',width:width+'px',height:height+'px',transform:'translate(-50%,-50%) '+rotation});
       document.body.append(item);
       $('#food-info').innerHTML=renderFoodInfo(state,drag.item);
-      status(FOODS[state.remaining.find(i=>i.id===drag.item).type].why);
+      status('');
     }
     if(drag.active){event.preventDefault();drag.element.style.left=(event.clientX-drag.offsetX)+'px';drag.element.style.top=(event.clientY-drag.offsetY)+'px';}
   }
@@ -192,10 +208,11 @@ scene.addEventListener('pointermove',event=>{
 scene.addEventListener('pointerup',event=>{
   if(!drag||event.pointerId!==drag.pointer)return;const current=drag;restoreFoodDrag(current);drag=null;
   if(current.type==='yarn'){ignoreClickUntil=performance.now()+200;const p=current.preview[current.node];commit({type:'move',node:current.node,...p});render();}
-  if(current.type==='food'){ignoreClickUntil=performance.now()+200;if(current.active){selected=current.item;const bin=document.elementFromPoint(event.clientX,event.clientY)?.closest('[data-bin]');if(bin)commit({type:'sort',item:current.item,bin:bin.dataset.bin});else{render();status('Выбери зону для продукта.');}}else{selected=current.item;render();status(FOODS[state.remaining.find(i=>i.id===selected).type].why);}}
+  if(current.type==='food'){ignoreClickUntil=performance.now()+200;if(current.active){status(selected===current.item?current.noteMessage:'');selected=current.item;const bin=document.elementFromPoint(event.clientX,event.clientY)?.closest('[data-bin]');if(bin)commit({type:'sort',item:current.item,bin:bin.dataset.bin});else{status('');render();}}else selectFood(current.item);}
   if(current.type==='brush')ignoreClickUntil=performance.now()+200;
   document.querySelector('.drag-food')?.remove();try{scene.releasePointerCapture(event.pointerId);}catch{}
 });
+scene.addEventListener('lostpointercapture',event=>{if(drag?.type==='food'&&drag.pointer===event.pointerId)endDrag();});
 scene.addEventListener('pointercancel',()=>{
   // A browser gesture may cancel a pointer even when this game has no drag.
   // Replacing the scene then would detach the cat from its running animation.

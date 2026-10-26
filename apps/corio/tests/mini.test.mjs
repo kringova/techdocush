@@ -45,11 +45,11 @@ test('wall route needs reciprocal joints; fixed shelves cannot turn',()=>{
 });
 test('food has fifty fixed dense bowls with repeated solids and staged layers and variety',()=>{
   assert.equal(GAMES.food.levels,FOOD_LEVELS);assert.equal(FOOD_PILE_ASPECT,1.35);
-  const allowed=['dry','treat','chicken','wet','raw','bone','candy','chocolate','onion','garlic'];
+  const allowed=['dry','treat','chicken','wet','raw','bone','candy','chocolate','onion','garlic','coffeeBeans','leek','dough','tea','grapes','treatStick','treatPillow','treatJerky','treatPaste'];
   for(const [index,level]of FOOD_LEVELS.entries()){
     const band=Math.floor(index/10),within=index%10;
     assert.equal(level.items.length,24+band*12+[0,0,2,4,4,6,8,8,10,12][within]);
-    assert.equal(new Set(level.items).size,band===0?6:band===1?8:band===2&&within<3?9:10);
+    assert.equal(new Set(level.items).size,Math.min(19,Math.floor(level.items.length/4)));
     const layers=band===0?(within<4?2:3):band+2+(within>=5?1:0);
     assert.equal(level.layers,layers);assert.equal(new Set(level.placements.map(p=>p.layer)).size,layers);
     assert.equal(level.placements.length,level.items.length);assert.equal(new Set(level.placements.map(p=>p.z)).size,level.items.length);

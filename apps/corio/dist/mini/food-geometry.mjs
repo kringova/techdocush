@@ -1,6 +1,6 @@
 // Unchanged physical ellipse/probe rules from food prototype015.
 export const FOOD_PILE_ASPECT=1.35;
-export const FOOD_CROP_SIZES={dry:[361,248],treat:[303,221],chicken:[378,274],wet:[299,339],raw:[376,279],bone:[375,266],candy:[343,252],chocolate:[339,256],onion:[284,348],garlic:[296,312]};
+export const FOOD_CROP_SIZES={dry:[361,248],treat:[303,221],chicken:[378,274],wet:[299,339],raw:[376,279],bone:[375,266],candy:[343,252],chocolate:[339,256],onion:[284,348],garlic:[296,312],coffeeBeans:[430,255],leek:[470,313],dough:[430,301],tea:[457,317],grapes:[461,317],treatStick:[452,269],treatPillow:[469,292],treatJerky:[475,284],treatPaste:[476,262]};
 // Samples stay inside the footprint: a narrow visible outline alone does not
 // make an otherwise covered item selectable. Three uncovered samples are a
 // noticeable patch; the centre is not mandatory, and several items can qualify.
