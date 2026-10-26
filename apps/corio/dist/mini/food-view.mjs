@@ -1,7 +1,7 @@
-import {FOODS} from './engine.mjs?v=0.17.1';
-import {FOOD_PILE_ASPECT,foodIsExposed} from './food-data.mjs?v=0.17.1';
-import {foodFigure} from '../characters.mjs?v=0.17.1';
-import {foodCatPortrait} from './food-feedback.mjs?v=0.17.1';
+import {FOODS} from './engine.mjs?v=0.18.0';
+import {FOOD_PILE_ASPECT,foodIsExposed} from './food-data.mjs?v=0.18.0';
+import {foodFigure} from '../characters.mjs?v=0.18.0';
+import {foodCatPortrait} from './food-feedback.mjs?v=0.18.0';
 const bowl=new URL('../assets/food-pile-bowl-alpha-v1.png',import.meta.url).href;
 const crop=[35,113,1184,1036],mouth={x:627,y:558,ry:480};
 const rx=mouth.ry*FOOD_PILE_ASPECT;

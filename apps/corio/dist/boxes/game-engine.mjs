@@ -1,4 +1,4 @@
-import {GENERATED_LEVELS} from './levels.generated.mjs?v=0.17.1';
+import {GENERATED_LEVELS} from './levels.generated.mjs?v=0.18.0';
 export const SIZE=7;
 const room=(name,start,exit,props,boxes,targets)=>({name,start,exit,props,boxes,targets,size:7});
 const at=(x,y)=>({x,y});

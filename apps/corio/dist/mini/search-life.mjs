@@ -1,4 +1,4 @@
-import {createCatIdle} from './cat-idle.mjs?v=0.17.1';
+import {createCatIdle} from './cat-idle.mjs?v=0.18.0';
 const asset=file=>new URL('../assets/'+file,import.meta.url).href;
 export function createSearchLife({scene,isBlocked}){
   let focused=document.hasFocus(),voice=true,audio=null,voiceStarts=0,voiceError=false;

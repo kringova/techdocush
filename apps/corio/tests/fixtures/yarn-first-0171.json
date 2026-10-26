@@ -1,0 +1,77 @@
+{
+  "sourceTag": "corio-source-0171-20261026",
+  "sourceFile": "games/corio/mini/yarn-data.mjs",
+  "sourceSha": "4830d8116a13f9b16821b7805df9c47488da67d1c261f4398ff6eaa063468af1",
+  "level": {
+    "name": "Первая петля",
+    "anchor": 0,
+    "points": [
+      {
+        "x": 14,
+        "y": 80
+      },
+      {
+        "x": 28,
+        "y": 30
+      },
+      {
+        "x": 75,
+        "y": 72
+      },
+      {
+        "x": 29,
+        "y": 72
+      },
+      {
+        "x": 72,
+        "y": 30
+      },
+      {
+        "x": 86,
+        "y": 65
+      }
+    ],
+    "edges": [
+      [
+        0,
+        1
+      ],
+      [
+        1,
+        2
+      ],
+      [
+        2,
+        3
+      ],
+      [
+        3,
+        4
+      ],
+      [
+        4,
+        5
+      ]
+    ],
+    "solution": [
+      {
+        "type": "move",
+        "node": 1,
+        "x": 12,
+        "y": 55
+      },
+      {
+        "type": "move",
+        "node": 2,
+        "x": 18,
+        "y": 30
+      }
+    ],
+    "metrics": {
+      "initialCrossings": 1,
+      "bends": 4,
+      "referenceMoves": 2,
+      "optimal": false
+    }
+  }
+}

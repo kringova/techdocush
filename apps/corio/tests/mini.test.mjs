@@ -5,7 +5,7 @@ import {foodFigure} from '../dist/characters.mjs';
 import {SEARCH_SCENES} from '../dist/mini/search-data.mjs';
 import {SEARCH_SLOTS,searchSlotsFor,placeSearchObject} from '../dist/mini/search-layout.mjs';
 for(const[id,game]of Object.entries(GAMES))test(`${id}: all scenarios finish through valid actions without mutating old states`,()=>{
-  const count=['search','tunnels','food'].includes(id)?50:5;assert.equal(game.levels.length,count);const definitions=new Set();
+  const count=['search','tunnels','food','yarn'].includes(id)?50:5;assert.equal(game.levels.length,count);const definitions=new Set();
   for(let index=0;index<count;index++){
     definitions.add(JSON.stringify(game.levels[index]));let state=createMini(id,index);assert.equal(state.won,false);
     if(id==='yarn')assert.ok(yarnConflicts(state.points,game.levels[index].edges).length>0);

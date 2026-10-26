@@ -1,4 +1,4 @@
-import {FOOD_VARIETY_CROPS,FOOD_VARIETY_SIZE} from './mini/food-variety-crops.mjs?v=0.17.1';
+import {FOOD_VARIETY_CROPS,FOOD_VARIETY_SIZE} from './mini/food-variety-crops.mjs?v=0.18.0';
 const asset=file=>new URL('./assets/'+file,import.meta.url).href;
 let serial=0;
 function croppedImage(file,view,size){

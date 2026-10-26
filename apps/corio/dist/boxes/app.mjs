@@ -1,6 +1,6 @@
-import {createModeController} from '../modes.mjs?v=0.17.1';
-import {SIZE,LEVELS,createGame,move,covered,unlocked,findPath} from './game-engine.mjs?v=0.17.1';
-import {paintRoom,roomArtReady,decodeRoomArt} from './room-art.mjs?v=0.17.1';
+import {createModeController} from '../modes.mjs?v=0.18.0';
+import {SIZE,LEVELS,createGame,move,covered,unlocked,findPath} from './game-engine.mjs?v=0.18.0';
+import {paintRoom,roomArtReady,decodeRoomArt} from './room-art.mjs?v=0.18.0';
 
 const $=selector=>document.querySelector(selector);
 const canvas=$('#board'),ctx=canvas.getContext('2d'),overlay=$('#overlay');
