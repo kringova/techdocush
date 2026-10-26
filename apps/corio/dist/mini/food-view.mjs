@@ -1,7 +1,7 @@
-import {FOODS} from './engine.mjs?v=0.17.0';
-import {FOOD_PILE_ASPECT,foodIsExposed} from './food-data.mjs?v=0.17.0';
-import {foodFigure} from '../characters.mjs?v=0.17.0';
-import {foodCatPortrait} from './food-feedback.mjs?v=0.17.0';
+import {FOODS} from './engine.mjs?v=0.17.1';
+import {FOOD_PILE_ASPECT,foodIsExposed} from './food-data.mjs?v=0.17.1';
+import {foodFigure} from '../characters.mjs?v=0.17.1';
+import {foodCatPortrait} from './food-feedback.mjs?v=0.17.1';
 const bowl=new URL('../assets/food-pile-bowl-alpha-v1.png',import.meta.url).href;
 const crop=[35,113,1184,1036],mouth={x:627,y:558,ry:480};
 const rx=mouth.ry*FOOD_PILE_ASPECT;
@@ -11,13 +11,13 @@ const trashAsset=new URL('../assets/food-trash-painted-alpha-v1.png',import.meta
 const trash=`<svg viewBox="0 0 1254 1254" aria-hidden="true"><image href="${trashAsset}" width="1254" height="1254"/></svg>`;
 export function renderFoodInfo(state,selected){
   const chosen=state.remaining.find(item=>item.id===selected)||state.sorted.at(-1),food=chosen?FOODS[chosen.type]:null;
-  return food?`<strong>${food.name}</strong>`:'<strong>Выбери продукт</strong>';
+  return food?`<strong>${food.displayName||food.name}</strong>`:'<strong>Выбери продукт</strong>';
 }
 export function foodView(state,level,selected){
   const chosen=state.remaining.find(item=>item.id===selected);
   const pieces=state.remaining.map(item=>{
     const p=level.placements[item.id],food=FOODS[item.type],exposed=foodIsExposed(state.remaining,level,item.id);
-    return `<button id="food-${item.id}" class="food-piece pile-piece" data-food="${item.id}" data-exposed="${exposed}" aria-label="${food.name}${exposed?'':', под другими продуктами'}" aria-disabled="${!exposed}" aria-pressed="${selected===item.id}" tabindex="${exposed?0:-1}" style="left:${p.x}%;top:${p.y}%;width:${p.width}%;height:${p.height}%;transform:rotate(${p.angle}deg);z-index:${p.z}">${foodFigure(item.type)}<svg class="food-hit" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><ellipse cx="50" cy="50" rx="50" ry="50" fill="transparent"/></svg></button>`;
+    return `<button id="food-${item.id}" class="food-piece pile-piece" data-food="${item.id}" data-exposed="${exposed}" aria-label="${food.displayName||food.name}${exposed?'':', под другими продуктами'}" aria-disabled="${!exposed}" aria-pressed="${selected===item.id}" tabindex="${exposed?0:-1}" style="left:${p.x}%;top:${p.y}%;width:${p.width}%;height:${p.height}%;transform:rotate(${p.angle}deg);z-index:${p.z}">${foodFigure(item.type)}<svg class="food-hit" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><ellipse cx="50" cy="50" rx="50" ry="50" fill="transparent"/></svg></button>`;
   }).join('');
   return `<div class="food-table pile-game"><div class="food-play-area"><div class="food-pile-stage" style="aspect-ratio:${crop[2]}/${crop[3]}"><svg class="pile-bowl" viewBox="${crop.join(' ')}" aria-hidden="true"><image href="${bowl}" width="1254" height="1254"/></svg><div class="food-pile" role="group" aria-label="Продукты в миске" style="left:${pileBox.left}%;top:${pileBox.top}%;width:${pileBox.width}%;height:${pileBox.height}%">${pieces}</div></div><div class="food-note-slot" data-food-note-slot></div></div><div class="food-bins ${chosen?'food-ready':''}"><button id="food-safe" data-bin="safe" class="food-bin food-destination" aria-label="Коту"><span class="food-destination-art food-cat-target" data-food-cat>${foodCatPortrait()}</span>${hearts}<span class="food-retch-mark" aria-hidden="true"><svg viewBox="0 0 50 20"><path d="M4 15q1-6 8-5 3-9 10-5 7-5 10 3 10-1 14 7Z" fill="#c19a68" stroke="#173744" stroke-width="1.5"/></svg></span></button><button id="food-away" data-bin="away" class="food-bin food-destination" aria-label="В мусор"><span class="food-destination-art food-trash-target">${trash}</span></button></div></div>`;
 }

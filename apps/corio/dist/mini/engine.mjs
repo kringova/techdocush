@@ -1,9 +1,9 @@
-import {tunnelEdges,traceTunnelRoute,connectedRoute} from './tunnel-route.mjs?v=0.17.0';
+import {tunnelEdges,traceTunnelRoute,connectedRoute} from './tunnel-route.mjs?v=0.17.1';
 export {tunnelEdges,traceTunnelRoute,connectedRoute};
-import {TUNNEL_LEVELS} from './tunnel-data.mjs?v=0.17.0';
-import {SEARCH_LEVELS,SEARCH_SCENES} from './search-data.mjs?v=0.17.0';
-import {FOOD_LEVELS,FOOD_PILE_ASPECT,foodIsExposed} from './food-data.mjs?v=0.17.0';
-import {YARN_LEVELS,YARN_ANCHOR,YARN_POINT_SPACING} from './yarn-data.mjs?v=0.17.0';
+import {TUNNEL_LEVELS} from './tunnel-data.mjs?v=0.17.1';
+import {SEARCH_LEVELS,SEARCH_SCENES} from './search-data.mjs?v=0.17.1';
+import {FOOD_LEVELS,FOOD_PILE_ASPECT,foodIsExposed} from './food-data.mjs?v=0.17.1';
+import {YARN_LEVELS,YARN_ANCHOR,YARN_POINT_SPACING} from './yarn-data.mjs?v=0.17.1';
 export {FOOD_LEVELS,FOOD_PILE_ASPECT,foodIsExposed};
 // Original short scenarios for comparing mechanics. No clocks or offline decay.
 const copy=value=>structuredClone(value);
@@ -12,7 +12,7 @@ export const FOODS={
   wet:{name:'Влажный корм',safe:true,why:'Это корм для кошек. Его отправляют коту.',icon:'can'},
   treat:{name:'Кошачье лакомство',safe:true,why:'Это лакомство для кошек. Его отправляют коту.',icon:'treat'},
   water:{name:'Питьевая вода',safe:true,why:'Свежая вода нужна всегда. Ей место в отдельной поилке.',icon:'water'},
-  chicken:{name:'Готовая курица',detail:'Без соли, приправ и костей',safe:true,why:'Эта курица полностью приготовлена, без соли, приправ и костей. Её можно отправить коту.',icon:'chicken'},
+  chicken:{name:'Готовая курица',displayName:'Готовая курица без соли и костей',detail:'Без соли, приправ и костей',safe:true,why:'Эта курица полностью приготовлена, без соли, приправ и костей. Её можно отправить коту.',icon:'chicken'},
   chocolate:{name:'Тёмный шоколад',safe:false,why:'Шоколад опасен для кошек.',icon:'chocolate'},
   onion:{name:'Лук',safe:false,why:'Лук может повреждать клетки крови.',icon:'onion'},
   garlic:{name:'Чеснок',safe:false,why:'Чеснок опасен для кошек.',icon:'garlic'},
