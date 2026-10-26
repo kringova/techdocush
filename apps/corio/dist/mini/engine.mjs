@@ -1,9 +1,10 @@
-import {tunnelEdges,traceTunnelRoute,connectedRoute} from './tunnel-route.mjs?v=0.18.0';
+import {LITTER_LEVELS as litterLevels} from './litter-data.mjs?v=0.19.0';
+import {tunnelEdges,traceTunnelRoute,connectedRoute} from './tunnel-route.mjs?v=0.19.0';
 export {tunnelEdges,traceTunnelRoute,connectedRoute};
-import {TUNNEL_LEVELS} from './tunnel-data.mjs?v=0.18.0';
-import {SEARCH_LEVELS,SEARCH_SCENES} from './search-data.mjs?v=0.18.0';
-import {FOOD_LEVELS,FOOD_PILE_ASPECT,foodIsExposed} from './food-data.mjs?v=0.18.0';
-import {YARN_LEVELS,YARN_ANCHOR,YARN_POINT_SPACING} from './yarn-data.mjs?v=0.18.0';
+import {TUNNEL_LEVELS} from './tunnel-data.mjs?v=0.19.0';
+import {SEARCH_LEVELS,SEARCH_SCENES} from './search-data.mjs?v=0.19.0';
+import {FOOD_LEVELS,FOOD_PILE_ASPECT,foodIsExposed} from './food-data.mjs?v=0.19.0';
+import {YARN_LEVELS,YARN_ANCHOR,YARN_POINT_SPACING} from './yarn-data.mjs?v=0.19.0';
 export {FOOD_LEVELS,FOOD_PILE_ASPECT,foodIsExposed};
 // Original short scenarios for comparing mechanics. No clocks or offline decay.
 const copy=value=>structuredClone(value);
@@ -48,13 +49,6 @@ const groomingLevels=[
 ];
 export const GROOM_STEPS={dust:['wipe',null],tangle:['brush',null],mud:['water','soapy'],soapy:['soap','foam'],foam:['rinse','wet'],wet:['towel',null]};
 export const GROOM_TOOLS={wipe:'Тканевая салфетка',brush:'Щётка',water:'Тёплая вода',soap:'Шампунь для кошек',rinse:'Смыть пену',towel:'Полотенце',pause:'Передышка'};
-const litterLevels=Array.from({length:5},(_,i)=>{
-  const w=[3,4,4,5,6][i],h=[2,3,4,4,4][i],pairs=i+2;
-  const cells=[...Array.from({length:pairs},(_,shape)=>[shape,shape]).flat(),...Array(w*h-pairs*2).fill(null)];
-  let seed=7349+i*977;
-  for(let n=cells.length-1;n>0;n--){seed=(Math.imul(seed,1664525)+1013904223)>>>0;const at=seed%(n+1);[cells[n],cells[at]]=[cells[at],cells[n]];}
-  return{name:['Две первые пары','Пустые местечки','Четыре формы','Запомнить и найти','Весь лоток'][i],w,h,pairs,cells};
-});
 const orient=(a,b,c)=>(b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x);
 const onSegment=(a,b,p)=>Math.abs(orient(a,b,p))<.01&&p.x>=Math.min(a.x,b.x)-.01&&p.x<=Math.max(a.x,b.x)+.01&&p.y>=Math.min(a.y,b.y)-.01&&p.y<=Math.max(a.y,b.y)+.01;
 export function yarnConflicts(points,edges){

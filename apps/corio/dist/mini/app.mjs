@@ -1,22 +1,22 @@
-import {fitFoodScene,renderFoodInfo} from './food-view.mjs?v=0.18.0';
-import {createFoodFeedback} from './food-feedback.mjs?v=0.18.0';
-import {tunnelWalkPoints} from './tunnel-art.mjs?v=0.18.0';
-import {setupFocusUI,fitFocusedScene} from './focus.mjs?v=0.18.0';
-import {GAMES,FOODS,GROOM_STEPS,createMini,miniAction,solutionFor,connectedRoute} from './engine.mjs?v=0.18.0';
-import {renderScene,toolsFor,goalText} from './views.mjs?v=0.18.0';
-import {createModeController} from '../modes.mjs?v=0.18.0';
-import {catFigure,setCatWalkFrame} from '../characters.mjs?v=0.18.0';
-import {createSearchLife} from './search-life.mjs?v=0.18.0';
-import {updateYarnPreview} from './yarn-view.mjs?v=0.18.0';
+import {fitFoodScene,renderFoodInfo} from './food-view.mjs?v=0.19.0';
+import {createFoodFeedback} from './food-feedback.mjs?v=0.19.0';
+import {tunnelWalkPoints} from './tunnel-art.mjs?v=0.19.0';
+import {setupFocusUI,fitFocusedScene} from './focus.mjs?v=0.19.0';
+import {GAMES,FOODS,GROOM_STEPS,createMini,miniAction,solutionFor,connectedRoute} from './engine.mjs?v=0.19.0';
+import {renderScene,toolsFor,goalText} from './views.mjs?v=0.19.0';
+import {createModeController} from '../modes.mjs?v=0.19.0';
+import {catFigure,setCatWalkFrame} from '../characters.mjs?v=0.19.0';
+import {createSearchLife} from './search-life.mjs?v=0.19.0';
+import {updateYarnPreview} from './yarn-view.mjs?v=0.19.0';
 const $=query=>document.querySelector(query),id=$('[data-game]').dataset.game,game=GAMES[id],scene=$('#scene'),tools=$('#tools'),win=$('#win');
 // Keep the live note/status nodes across scene renders; feedback owns this host.
 const foodNote=id==='food'?$('#food-note'):null;
 let foodCaptionHistory=[];
 let attempt=0,settleTimer=null,settleEpoch=0,routeWalking=false,routeAnimation=null,routeFrame=null,searchLife=null,foodFeedback=null;
-let state=createMini(id),history=[],selected=id==='grooming'?'wipe':id==='litter'?'scoop':id==='search'?1:null,drag=null,ignoreClickUntil=0,paused=false,platformPaused=false,sfx=true,audio=null,modes;
-const manyLevels=id==='search'||id==='tunnels'||id==='food'||id==='yarn';
-const key=id==='litter'?'corio-litter-pairs-v1':id==='search'?'corio-search-50-v3':id==='food'?'corio-food-50-v2':id==='tunnels'?'corio-tunnels-50-v2':id==='yarn'?'corio-yarn-50-v1':'corio-'+id+'-v1';let best=Array(game.levels.length).fill(null);
-const currentLevelKey=id==='tunnels'?'corio-tunnels-v2-current-v1':id==='food'?'corio-food-50-v2-current-v1':id==='yarn'?'corio-yarn-50-current-v1':'corio-'+id+'-current-v1';
+let state=createMini(id),history=[],selected=id==='grooming'?'wipe':id==='litter'?'scoop':id==='search'?1:null,drag=null,ignoreClickUntil=0,paused=false,platformPaused=false,sfx=true,audio=null,sandSource=null,sandBuffer=null,modes;
+const manyLevels=id==='search'||id==='tunnels'||id==='food'||id==='yarn'||id==='litter';
+const key=id==='litter'?'corio-litter-50-v1':id==='search'?'corio-search-50-v3':id==='food'?'corio-food-50-v2':id==='tunnels'?'corio-tunnels-50-v2':id==='yarn'?'corio-yarn-50-v1':'corio-'+id+'-v1';let best=Array(game.levels.length).fill(null);
+const currentLevelKey=id==='litter'?'corio-litter-50-current-v1':id==='tunnels'?'corio-tunnels-v2-current-v1':id==='food'?'corio-food-50-v2-current-v1':id==='yarn'?'corio-yarn-50-current-v1':'corio-'+id+'-current-v1';
 try{sfx=localStorage.getItem('corio-litter-sfx-v1')!=='off';const value=JSON.parse(localStorage.getItem(key));if(Array.isArray(value))best=best.map((_,i)=>Number.isInteger(value[i])?value[i]:null);}catch{}
 const settingsOpen=()=>!!document.querySelector('[data-game-panel][open]');
 const blocked=()=>settingsOpen()||paused||platformPaused||win.open||modes?.isModalOpen();
@@ -38,7 +38,7 @@ function render(){
   for(const button of document.querySelectorAll('[data-level]')){const index=+button.dataset.level;button.setAttribute('aria-current',String(index===state.index));button.classList.toggle('completed',best[index]!==null);button.title=best[index]!==null?'Пройдено: '+best[index]+' действий':game.levels[index].name;}
   fitFocusedScene(id==='search'?selected:1);if(id==='food'){scene.querySelector('[data-food-note-slot]').append(foodNote);foodNote.hidden=false;$('#food-info').innerHTML=renderFoodInfo(state,selected);fitFoodScene(scene);foodFeedback?.afterRender();}
   if(scroll){const viewport=scene.querySelector('.search-viewport');viewport.scrollLeft=scroll.x;viewport.scrollTop=scroll.y;}
-  if(focused)document.getElementById(focused)?.focus({preventScroll:true});
+  if(focused){const target=document.getElementById(focused);if(id==='litter'&&target?.disabled){const candidates=[...scene.querySelectorAll('[data-cell]:not(:disabled)')];(candidates.find(el=>+el.dataset.cell>+target.dataset.cell)||candidates[0])?.focus({preventScroll:true});}else target?.focus({preventScroll:true});}
   searchLife?.afterRender();
 }
 function restoreFoodDrag(current){
@@ -61,14 +61,14 @@ function scheduleSettle(){
   const epoch=settleEpoch;
   const settle=()=>{
     if(epoch!==settleEpoch||!state.pending)return;
-    if(blocked()){settleTimer=setTimeout(settle,150);return;}
+    if(blocked()){settleTimer=null;return;}
     state=miniAction(state,{type:'settle'});render();status(state.message);settleTimer=null;
   };
   settleTimer=setTimeout(settle,950);
 }
 function load(index){
-  searchLife?.newLevel();foodFeedback?.newLevel();attempt++;cancelRouteWalk();cancelSettle();endDrag();history=[];foodCaptionHistory=[];state=createMini(id,index);selected=id==='grooming'?'wipe':id==='search'?1:null;paused=false;platformPaused=false;ignoreClickUntil=0;
-  if(win.open)win.close();if($('#pause-dialog').open)$('#pause-dialog').close();modes?.newAttempt(id==='litter'?game.levels[index].w*game.levels[index].h*2:solutionFor(id,index).length);render();status(id==='food'?'':id==='yarn'?'Тяни кольца и свободный конец. Убери все пересечения.':id==='tunnels'?tunnelInstruction(game.levels[index]):game.rule);window.dispatchEvent(new Event('corio:resume'));
+  stopSandSound();searchLife?.newLevel();foodFeedback?.newLevel();attempt++;cancelRouteWalk();cancelSettle();endDrag();history=[];foodCaptionHistory=[];state=createMini(id,index);selected=id==='grooming'?'wipe':id==='search'?1:null;paused=false;platformPaused=false;ignoreClickUntil=0;
+  if(win.open)win.close();if($('#pause-dialog').open)$('#pause-dialog').close();modes?.newAttempt(id==='litter'?game.levels[index].w*game.levels[index].h*2:solutionFor(id,index).length);render();status(id==='food'?'':id==='yarn'?'Тяни кольца и свободный конец. Убери все пересечения.':id==='tunnels'?tunnelInstruction(game.levels[index]):id==='litter'?'Найди одинаковые формы. Пустые места можно оставить.':game.rule);window.dispatchEvent(new Event('corio:resume'));
   if(manyLevels)try{localStorage.setItem(currentLevelKey,String(index));}catch{}
 }
 function commit(action){
@@ -138,10 +138,16 @@ function undo(){
   const caption=id==='food'?foodCaptionHistory.pop():null;if(caption)selected=caption.selected;render();
   if(id==='food'){foodFeedback?.undo(state.mistakes);status(caption?.message||'');}else status('Действие отменено.');modes.changed();scheduleSettle();
 }
-function pause(){if(paused||platformPaused||win.open||state.won&&!routeWalking)return;paused=true;syncRouteMotion();cancelSettle();endDrag();$('#pause-dialog').showModal();window.dispatchEvent(new Event('corio:pause'));if(audio)audio.suspend();}
+function pause(){if(paused||platformPaused||win.open||state.won&&!routeWalking)return;paused=true;syncRouteMotion();cancelSettle();endDrag();$('#pause-dialog').showModal();window.dispatchEvent(new Event('corio:pause'));stopSandSound();if(audio)audio.suspend();}
 function resume(){paused=false;if($('#pause-dialog').open)$('#pause-dialog').close();syncRouteMotion();scheduleSettle();window.dispatchEvent(new Event('corio:resume'));}
-function sandSound(type){
-  if(!sfx)return;try{audio??=new(window.AudioContext||window.webkitAudioContext)();audio.resume();const duration=type==='rake'?.27:.17,buffer=audio.createBuffer(1,Math.ceil(audio.sampleRate*duration),audio.sampleRate),data=buffer.getChannelData(0);for(let i=0;i<data.length;i++){const t=i/data.length;data[i]=(Math.random()*2-1)*Math.sin(Math.PI*t)**1.5*(.7+.3*Math.sin(i*.018));}const source=audio.createBufferSource(),filter=audio.createBiquadFilter(),gain=audio.createGain();source.buffer=buffer;filter.type='lowpass';filter.frequency.value=type==='rake'?1500:1050;gain.gain.value=.065;source.connect(filter);filter.connect(gain);gain.connect(audio.destination);source.start();}catch{}
+function stopSandSound(){if(sandSource){try{sandSource.stop();}catch{}sandSource.disconnect();sandSource=null;}}
+function sandSound(){
+  if(!sfx)return;
+  try{
+    audio??=new(window.AudioContext||window.webkitAudioContext)();audio.resume();stopSandSound();
+    if(!sandBuffer){const duration=.17;sandBuffer=audio.createBuffer(1,Math.ceil(audio.sampleRate*duration),audio.sampleRate);const data=sandBuffer.getChannelData(0);for(let i=0;i<data.length;i++){const t=i/data.length;data[i]=(Math.random()*2-1)*Math.sin(Math.PI*t)**1.5*(.7+.3*Math.sin(i*.018));}}
+    const source=audio.createBufferSource(),filter=audio.createBiquadFilter(),gain=audio.createGain();sandSource=source;source.buffer=sandBuffer;filter.type='lowpass';filter.frequency.value=1050;gain.gain.value=.065;source.connect(filter);filter.connect(gain);gain.connect(audio.destination);source.onended=()=>{source.disconnect();filter.disconnect();gain.disconnect();if(sandSource===source)sandSource=null;};source.start();
+  }catch{}
 }
 scene.addEventListener('click',event=>{
   if(drag||blocked()||performance.now()<ignoreClickUntil&&!(id==='food'&&event.target.closest('[data-bin]')))return;
@@ -164,12 +170,12 @@ scene.addEventListener('keydown',event=>{
   if(node&&event.key.startsWith('Arrow')){event.preventDefault();const index=+node.dataset.node,p=state.points[index],dx=event.key==='ArrowLeft'?-3:event.key==='ArrowRight'?3:0,dy=event.key==='ArrowUp'?-3:event.key==='ArrowDown'?3:0;commit({type:'move',node:index,x:p.x+dx,y:p.y+dy});}
 });
 tools.addEventListener('click',event=>{
+  if(event.target.closest('[data-sfx]')){sfx=!sfx;if(!sfx)stopSandSound();try{localStorage.setItem('corio-litter-sfx-v1',sfx?'on':'off');}catch{}render();return;}
   if(blocked())return;const tool=event.target.closest('[data-tool]'),care=event.target.closest('[data-care]');
   const zoom=event.target.closest('[data-zoom]');if(zoom){selected=Math.max(1,Math.min(2.5,selected+(zoom.dataset.zoom==='in'?.5:-.5)));render();}
   if(event.target.closest('[data-hint]')){commit({type:'hint'});if(state.hint)document.getElementById('find-'+state.hint)?.scrollIntoView({block:'nearest',inline:'center',behavior:'auto'});}
   if(tool){if(tool.dataset.tool==='pause'){commit({type:'pause'});return;}selected=tool.dataset.tool;render();}
   if(care)commit({type:care.dataset.care});
-  if(event.target.closest('[data-sfx]')){sfx=!sfx;try{localStorage.setItem('corio-litter-sfx-v1',sfx?'on':'off');}catch{}render();}
 });
 function pointFor(event){const r=scene.querySelector('.yarn-board').getBoundingClientRect();return{x:(event.clientX-r.left)/r.width*100,y:(event.clientY-r.top)/r.height*100};}
 function brushAt(event){
@@ -229,7 +235,7 @@ const levelClick=event=>{const b=event.target.closest('[data-level]');if(b){load
 $('#levels').addEventListener('click',levelClick);$('#level-grid')?.addEventListener('click',levelClick);
 document.addEventListener('keydown',event=>{if(event.ctrlKey||event.metaKey||event.altKey||settingsOpen()||modes.isModalOpen()||paused||platformPaused)return;if(event.code==='KeyZ'){event.preventDefault();undo();}if(event.code==='KeyR'&&!win.open){event.preventDefault();load(state.index);}});
 window.addEventListener('blur',pause);document.addEventListener('visibilitychange',()=>{if(document.hidden)pause();});
-window.addEventListener('corio:platform-pause',()=>{platformPaused=true;syncRouteMotion();cancelSettle();endDrag();window.dispatchEvent(new Event('corio:pause'));if(audio)audio.suspend();});window.addEventListener('corio:platform-resume',()=>{platformPaused=false;syncRouteMotion();scheduleSettle();if(!paused)window.dispatchEvent(new Event('corio:resume'));});
+window.addEventListener('corio:platform-pause',()=>{platformPaused=true;syncRouteMotion();cancelSettle();endDrag();window.dispatchEvent(new Event('corio:pause'));stopSandSound();if(audio)audio.suspend();});window.addEventListener('corio:platform-resume',()=>{platformPaused=false;syncRouteMotion();scheduleSettle();if(!paused)window.dispatchEvent(new Event('corio:resume'));});
 modes=createModeController({gameId:id,host:$('[data-modes]'),getMoves:()=>state.moves,isWon:()=>state.won,canUndo:()=>history.length>0,onUndo:undo,onRestart:()=>load(state.index),onBlock:endDrag});
 Object.defineProperty(window,'__mini',{value:()=>({...structuredClone(state),selected,paused,platformPaused,routeWalking,best:[...best]})});Object.defineProperty(window,'__corioModes',{value:()=>modes.state()});
 const requestedLevel=Number(new URL(location.href).searchParams.get('level'));
@@ -248,4 +254,15 @@ if(id==='food'||id==='yarn'){
     endDrag();
   }});
   for(const dialog of document.querySelectorAll('[data-game-panel]'))cancelSceneDrag.observe(dialog,{attributes:true,attributeFilter:['open']});
+}
+
+if(id==='litter'){
+  const pendingPanels=new MutationObserver(()=>{cancelSettle();if(!blocked())scheduleSettle();});
+  for(const dialog of document.querySelectorAll('dialog'))pendingPanels.observe(dialog,{attributes:true,attributeFilter:['open']});
+  scene.addEventListener('keydown',event=>{
+    const cell=event.target.closest('[data-cell]');if(!cell||blocked())return;
+    const width=game.levels[state.index].w,delta={ArrowLeft:-1,ArrowRight:1,ArrowUp:-width,ArrowDown:width}[event.key];
+    if(!delta)return;event.preventDefault();const cells=[...scene.querySelectorAll('[data-cell]')];let i=+cell.dataset.cell+delta;
+    while(i>=0&&i<cells.length){if(!cells[i].disabled){cells[i].focus();break;}i+=delta;}
+  });
 }

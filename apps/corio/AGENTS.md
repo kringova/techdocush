@@ -1,3 +1,5 @@
+Current019 snapshot: litter now50layouts,2→12pairs with2–7empty cells, max6cols. Existing atlas preserved; extra6forms in separate PNG. New corio-litter-50-v1/corio-litter-50-current-v1; retain legacy keys. First exact/100memory passes/100desktop wins/native touch/14localphases verified in source3a50fd3 tagcorio-source-019-20261026. Other six50-level games stay current; grooming/pet5 each, total360 only after deployment proof. Shared mini tests and litter fixture are copied from source. User requires real coat changes in grooming (preserve exact wet image); pet scene rejected, redesign remains open. Current food shows only name before wrong sort, explicit chicken withoutsalt/bones; no portion advice. Actionaudio other than existing sand remains deferred.
+
 # Corio prototype
 
 - User-authorized destination: `https://ringova.com/play/corio/`. Preserve `/play/` and the existing Sudoku/nonogram app.

@@ -5,7 +5,7 @@ import {foodFigure} from '../dist/characters.mjs';
 import {SEARCH_SCENES} from '../dist/mini/search-data.mjs';
 import {SEARCH_SLOTS,searchSlotsFor,placeSearchObject} from '../dist/mini/search-layout.mjs';
 for(const[id,game]of Object.entries(GAMES))test(`${id}: all scenarios finish through valid actions without mutating old states`,()=>{
-  const count=['search','tunnels','food','yarn'].includes(id)?50:5;assert.equal(game.levels.length,count);const definitions=new Set();
+  const count=['search','tunnels','food','yarn','litter'].includes(id)?50:5;assert.equal(game.levels.length,count);const definitions=new Set();
   for(let index=0;index<count;index++){
     definitions.add(JSON.stringify(game.levels[index]));let state=createMini(id,index);assert.equal(state.won,false);
     if(id==='yarn')assert.ok(yarnConflicts(state.points,game.levels[index].edges).length>0);
@@ -169,7 +169,7 @@ test('grooming distinguishes cloth, water, shampoo, rinse and towel; rest is req
 });
 test('litter has exact pairs and empty cells on every increasingly large board',()=>{
   let previous=0;
-  for(const level of GAMES.litter.levels){assert.ok(level.cells.length>previous);previous=level.cells.length;assert.ok(level.cells.includes(null));for(let shape=0;shape<level.pairs;shape++)assert.equal(level.cells.filter(v=>v===shape).length,2);}
+  for(const level of GAMES.litter.levels){assert.ok(level.cells.length>=previous);previous=level.cells.length;assert.ok(level.cells.includes(null));for(let shape=0;shape<level.pairs;shape++)assert.equal(level.cells.filter(v=>v===shape).length,2);}
 });
 test('empty sand preserves the first selection; mismatches lock until settled without spending a move',()=>{
   const level=GAMES.litter.levels[0],a=level.cells.indexOf(0),b=level.cells.indexOf(1),empty=level.cells.indexOf(null);

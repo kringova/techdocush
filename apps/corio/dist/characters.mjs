@@ -1,4 +1,5 @@
-import {FOOD_VARIETY_CROPS,FOOD_VARIETY_SIZE} from './mini/food-variety-crops.mjs?v=0.18.0';
+import {LITTER_EXTRA_CROPS,LITTER_EXTRA_ATLAS,LITTER_EXTRA_SIZE} from './mini/litter-crops.mjs?v=0.19.0';
+import {FOOD_VARIETY_CROPS,FOOD_VARIETY_SIZE} from './mini/food-variety-crops.mjs?v=0.19.0';
 const asset=file=>new URL('./assets/'+file,import.meta.url).href;
 let serial=0;
 function croppedImage(file,view,size){
@@ -17,7 +18,7 @@ export function catFigure(pose='attentive',{className='',label='Белый го�
   return`<svg ${id?`id="${id}"`:''} class="cat-figure ${className}" data-cat-pose="${pose}" viewBox="${view.join(' ')}" ${x!==undefined?`x="${x}" y="${y}" width="${width}" height="${height}"`:''} role="img" aria-label="${label}" preserveAspectRatio="xMidYMax meet" overflow="hidden">${flipX?`<g transform="translate(${view[0]*2+view[2]} 0) scale(-1 1)">${drawing}</g>`:drawing}</svg>`;
 }
 const shapes=[[129,140,310,291],[616,215,310,198],[1126,156,298,267],[122,643,306,233],[593,654,374,222],[1144,657,273,210]];
-export function litterShape(index){return`<svg class="litter-shape" viewBox="${shapes[index].join(' ')}" aria-hidden="true">${croppedImage('litter-pairs-atlas-v1.png',shapes[index],[1536,1024])}</svg>`;}
+export function litterShape(index){const extra=LITTER_EXTRA_CROPS[index],crop=extra||shapes[index];return`<svg class="litter-shape" viewBox="${crop.join(' ')}" aria-hidden="true">${croppedImage(extra?LITTER_EXTRA_ATLAS:'litter-pairs-atlas-v1.png',crop,extra?LITTER_EXTRA_SIZE:[1536,1024])}</svg>`;}
 
 const foodCrops={"dry":[18,101,361,248],"wet":[433,18,299,339],"treat":[803,120,303,221],"water":[1156,111,359,233],"chicken":[17,393,378,274],"chocolate":[414,394,339,256],"onion":[810,340,284,348],"garlic":[1198,368,296,312],"coffee":[32,690,334,276],"bone":[392,695,375,266],"raw":[776,701,376,279],"candy":[1177,708,343,252]};
 export function foodFigure(kind){const extra=FOOD_VARIETY_CROPS[kind],crop=extra||foodCrops[kind];return`<svg class="food-figure" viewBox="${crop.join(' ')}" aria-hidden="true">${croppedImage(extra?'food-variety-alpha-v1.png':'food-atlas-v1.png',crop,extra?FOOD_VARIETY_SIZE:[1536,1024])}</svg>`;}

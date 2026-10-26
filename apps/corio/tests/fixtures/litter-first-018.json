@@ -1,0 +1,19 @@
+{
+  "sourceTag": "corio-source-018-20261026",
+  "sourceFile": "games/corio/mini/engine.mjs",
+  "level": {
+    "name": "Две первые пары",
+    "w": 3,
+    "h": 2,
+    "pairs": 2,
+    "cells": [
+      1,
+      0,
+      null,
+      null,
+      0,
+      1
+    ]
+  },
+  "sourceSha256": "568fb63bf4e25ee466d9150a7140198bc7c81aca935b7cc5e95606ffb4b0f662"
+}
