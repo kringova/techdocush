@@ -1,4 +1,4 @@
-.game-shell[data-game=pet] .stage-area{display:grid;grid-template-rows:minmax(0,1fr) auto;gap:8px}
+.game-shell[data-game=pet] .stage-area{display:grid;grid-template-rows:minmax(0,1fr) auto auto;gap:8px}
 .game-shell[data-game=pet] .scene{background:#173744;border:1px solid #9cafa050;position:relative;min-height:0;overflow:hidden}
 .pet-room-view{position:relative;width:100%;height:100%;display:grid;place-items:center;overflow:hidden;background:#203f4b}
 .pet-painting{width:100%;height:100%;display:block}
@@ -34,6 +34,26 @@
 .pet-memories li{padding:13px 0;border-bottom:1px solid #9cafa035;font:18px/1.45 Georgia,serif;color:#e8dcc4}
 .pet-memories .memory-empty{font:14px/1.6 system-ui,sans-serif;color:#b7c2ae;border:0}
 .pet-room-view image{pointer-events:none}
+.pet-painting .litter-shape{width:100%;height:100%}
+.pet-painting [data-pet-clump]{cursor:pointer;outline:none}
+.pet-clump-hit{stroke:transparent;stroke-width:3}
+[data-pet-clump]:hover .pet-clump-hit,[data-pet-clump]:focus-visible .pet-clump-hit{stroke:#f1d39d;stroke-dasharray:5 5}
+.pet-gesture-zone{stroke:transparent;stroke-width:2}
+.scene[data-pet-tool=brush] [data-pet-zone=body],.scene[data-pet-tool=scritch] [data-pet-zone=ear],.scene[data-pet-tool=tease] [data-pet-zone=tease]{stroke:#ecd6a999;stroke-dasharray:5 8;rx:20;fill:#f4ead408}
+.pet-character[data-pet-activity=brush] .pet-eyelids,.pet-character[data-pet-activity=pet] .pet-eyelids{opacity:1}
+.scene[data-pet-holding=true][data-pet-tool=brush] .pet-eyelids,.scene[data-pet-holding=true][data-pet-tool=scritch] .pet-eyelids{opacity:1}
+.pet-treat-piece{animation:pet-treat-eaten 3s ease-in forwards}
+@keyframes pet-treat-eaten{0%,65%{opacity:1}100%{opacity:0}}
+.pet-workbar{display:flex;gap:10px;align-items:center;min-height:32px;color:#d8d7bc;font:11px/1.4 system-ui,sans-serif}
+.pet-workbar[hidden]{display:none}.pet-workbar p{flex:1;margin:0}
+.pet-workbar button,.pet-activities button{background:transparent;color:#e8dcc4;border:1px solid #9cafa070;border-radius:6px;min-height:32px;padding:7px 9px;font:11px/1.4 system-ui,sans-serif;cursor:pointer}
+.pet-workbar button[hidden]{display:none}.pet-activities button:disabled{cursor:default;opacity:.45}
+.pet-activities-quick{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.pet-activities-quick [aria-pressed=true]{background:#b6c5a52e;border-color:#d6c5a2}
+.pet-activities-open{display:none}.pet-activities p{font-size:10px;color:#b8c4af;margin:8px 0 0}
+.pet-activity-options{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:24px}
+.pet-activity-options button{margin:0;background:#254752;color:#e8dcc4;text-align:left;border:1px solid #9cafa060;border-radius:8px;padding:13px;font:17px/1.35 Georgia,serif}
+.pet-activity-options span{display:block;font:11px/1.5 system-ui,sans-serif;margin-top:7px;color:#b9c7b0}
 @media(max-width:650px){
  .pet-needs{gap:10px;padding:9px 8px}.pet-need{font-size:9px;gap:6px;flex-direction:column}.pet-need-track{width:48px;height:5px}
  .pet-wish{font-size:12px;top:8px;left:8px;padding:6px 9px;max-width:78%}
@@ -43,11 +63,14 @@
  .game-shell[data-game=pet] .status{grid-column:1/-1;grid-row:2;font-size:10px;min-height:26px;line-height:1.45}
  .pet-companionship{grid-column:1;grid-row:3;border:0;padding:0}.pet-companionship p{font-size:10px}.pet-companionship #pet-bond{display:none}
  .pet-care-controls{grid-column:2;grid-row:3}.pet-care-controls button{font-size:10px;min-height:32px;padding:7px 9px}
+ .pet-activities{grid-column:1/-1;grid-row:4;display:flex;align-items:center;justify-content:space-between;gap:10px}.pet-activities-quick{display:none}.pet-activities-open{display:block}.pet-activities p{margin:0;font-size:9px}
+ .pet-workbar{font-size:10px;gap:7px}.pet-workbar button{font-size:10px;padding:5px 7px}
  .pet-about,.pet-save-note{display:none}
 }
 @media(max-height:500px) and (min-width:651px){
  .game-shell[data-game=pet] .pet-life-panel{gap:8px}.pet-kicker{font-size:9px;margin-bottom:3px}.pet-now h2{font-size:21px}
  .game-shell[data-game=pet] .status{font-size:10px;line-height:1.4}.pet-companionship{padding:8px 0}.pet-companionship p{font-size:10px}
  .pet-about,.pet-save-note{display:none}.pet-care-controls button{font-size:10px;padding:7px 9px}.pet-needs{padding:6px 9px}.pet-need{font-size:10px;gap:6px}.pet-need-track{width:45px}
+ .pet-activities-quick{display:none}.pet-activities-open{display:block;font-size:10px!important}.pet-activities p{font-size:9px;margin:4px 0 0}
 }
-@media(prefers-reduced-motion:reduce){.pet-character{animation:none!important}}
+@media(prefers-reduced-motion:reduce){.pet-character,.pet-treat-piece{animation:none!important}}

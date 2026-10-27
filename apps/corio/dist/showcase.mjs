@@ -1,4 +1,4 @@
-import {catFigure,litterShape,foodFigure} from './characters.mjs?v=0.24.0';
+import {catFigure,litterShape,foodFigure} from './characters.mjs?v=0.25.0';
 const asset=file=>new URL('./assets/'+file,import.meta.url).href;
 for(const [name,pose]of [['pet','loaf'],['grooming','wet'],['yarn','stretch']]){
   const cover=document.querySelector('.'+name+'-cover');if(!cover)continue;

@@ -1,8 +1,8 @@
-import {SEARCH_SCENES} from './search-data.mjs?v=0.24.0';
-import {PAINTED_SCENES} from './search-painted.mjs?v=0.24.0';
-import {SEARCH_CATS} from './search-cat-art.mjs?v=0.24.0';
-import {searchAmbient,searchNight} from './search-ambient.mjs?v=0.24.0';
-import {exactSearchSilhouette,movableSearchProp,repairSearchBackground} from './search-props.mjs?v=0.24.0';
+import {SEARCH_SCENES} from './search-data.mjs?v=0.25.0';
+import {PAINTED_SCENES} from './search-painted.mjs?v=0.25.0';
+import {SEARCH_CATS} from './search-cat-art.mjs?v=0.25.0';
+import {searchAmbient,searchNight} from './search-ambient.mjs?v=0.25.0';
+import {exactSearchSilhouette,movableSearchProp,repairSearchBackground} from './search-props.mjs?v=0.25.0';
 const asset=file=>new URL('../assets/'+file,import.meta.url).href;
 const scale=800/1536,height=1024*scale;
 let serial=0;

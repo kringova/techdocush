@@ -10,13 +10,14 @@ export function createPetPlay({scene,blocked=()=>false,isApproaching=()=>false})
   scene.removeAttribute('data-pet-play-active');
  }
  function stop(){cancel();lastState=null;}
- function eligible(state){return state?.activity==='play'&&Number.isFinite(state.activityLeft)&&state.activityLeft>0&&!blocked()&&!isApproaching()&&!doc.hidden&&!reduced.matches;}
+ function eligible(state){return ['play','tease','scratch'].includes(state?.activity)&&Number.isFinite(state.activityLeft)&&state.activityLeft>0&&!blocked()&&!isApproaching()&&!doc.hidden&&!reduced.matches;}
  function sync(state){
   lastState=state;
   if(!eligible(state)){cancel();return;}
-  const body=scene.querySelector('[data-pet-play-body]'),paw=scene.querySelector('[data-pet-play-paw]'),toy=scene.querySelector('[data-pet-toy]');
-  if(!body||!paw||!toy||![body,paw,toy].every(element=>element.isConnected&&typeof element.animate==='function')){cancel();return;}
-  const episode=state.care?.play??null;
+  const scratch=state.activity==='scratch',tease=state.activity==='tease';
+  const body=scene.querySelector('[data-pet-play-body]'),paw=scene.querySelector('[data-pet-play-paw]'),toy=scratch?null:scene.querySelector(tease?'[data-pet-teaser]':'[data-pet-toy]');
+  if(!body||!paw||!scratch&&!toy||![body,paw,toy].filter(Boolean).every(element=>element.isConnected&&typeof element.animate==='function')){cancel();return;}
+  const episode=state.activity+':'+(state.care?.[state.activity]??0);
   // Keep a naturally completed record until activity/DOM changes. A clock render
   // just before the reducer completes must not create another short tap.
   if(current&&current.body===body&&current.paw===paw&&current.toy===toy&&current.episode===episode)return;
@@ -38,15 +39,16 @@ export function createPetPlay({scene,blocked=()=>false,isApproaching=()=>false})
   for(let tap=0;tap<taps;tap++)for(const [phase,x,y,angle,tx,ty,roll]of phases){
    if(tap>0&&phase===0)continue;
    const offset=(tap+phase)/taps;
-   frames.body.push({offset,transform:`translate(${x}px,${y}px)`});
+   frames.body.push({offset,transform:`translate(${scratch?-x*.4:x}px,${y}px)`});
    // This layer is inside the atlas mirror. Positive raw rotation raises its
    // forepaw; applying another flip here would turn it away from the toy.
    frames.paw.push({offset,transform:`translate(235px,815px) rotate(${angle}deg) translate(-235px,-815px)`});
-   frames.toy.push({offset,transform:`translate(${tx}px,${ty}px) rotate(${roll}deg)`});
+   frames.toy.push({offset,transform:`translate(${tease?tx*.6:tx}px,${tease?ty*2:ty}px) rotate(${tease?roll/8:roll}deg)`});
   }
   const record={body,paw,toy,episode,animations:[],finished:false};current=record;
   try{
    for(const [name,element]of Object.entries({body,paw,toy})){
+    if(!element)continue;
     const bounds=name==='toy'?element.getBBox():null;
     const origin=name==='toy'?`${bounds.x+bounds.width/2}px ${bounds.y+bounds.height/2}px`:'0px 0px';
     const keyframes=frames[name].map(frame=>({...frame,transformBox:'view-box',transformOrigin:origin,easing:'ease-in-out'}));
@@ -66,7 +68,7 @@ export function createPetPlay({scene,blocked=()=>false,isApproaching=()=>false})
  // Root normally calls stop before replacing the SVG. This also covers a
  // replacement by another view owner without animating detached old nodes.
  const observer=new win.MutationObserver(()=>{
-  if(current&&![current.body,current.paw,current.toy].every(element=>element.isConnected&&scene.contains(element)))cancel();
+  if(current&&![current.body,current.paw,current.toy].filter(Boolean).every(element=>element.isConnected&&scene.contains(element)))cancel();
  });
  observer.observe(scene,{childList:true,subtree:true});
  return{sync,stop};
