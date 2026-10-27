@@ -1,22 +1,27 @@
-import {fitFoodScene,renderFoodInfo} from './food-view.mjs?v=0.19.0';
-import {createFoodFeedback} from './food-feedback.mjs?v=0.19.0';
-import {tunnelWalkPoints} from './tunnel-art.mjs?v=0.19.0';
-import {setupFocusUI,fitFocusedScene} from './focus.mjs?v=0.19.0';
-import {GAMES,FOODS,GROOM_STEPS,createMini,miniAction,solutionFor,connectedRoute} from './engine.mjs?v=0.19.0';
-import {renderScene,toolsFor,goalText} from './views.mjs?v=0.19.0';
-import {createModeController} from '../modes.mjs?v=0.19.0';
-import {catFigure,setCatWalkFrame} from '../characters.mjs?v=0.19.0';
-import {createSearchLife} from './search-life.mjs?v=0.19.0';
-import {updateYarnPreview} from './yarn-view.mjs?v=0.19.0';
+import {groomToolIcon} from './grooming-tools.mjs?v=0.20.0';
+import {fitFoodScene,renderFoodInfo} from './food-view.mjs?v=0.20.0';
+import {createFoodFeedback} from './food-feedback.mjs?v=0.20.0';
+import {tunnelWalkPoints} from './tunnel-art.mjs?v=0.20.0';
+import {setupFocusUI,fitFocusedScene} from './focus.mjs?v=0.20.0';
+import {GAMES,FOODS,GROOM_STEPS,createMini,miniAction,solutionFor,connectedRoute} from './engine.mjs?v=0.20.0';
+import {renderScene,toolsFor,goalText} from './views.mjs?v=0.20.0';
+import {createModeController} from '../modes.mjs?v=0.20.0';
+import {catFigure,setCatWalkFrame} from '../characters.mjs?v=0.20.0';
+import {createSearchLife} from './search-life.mjs?v=0.20.0';
+import {updateYarnPreview} from './yarn-view.mjs?v=0.20.0';
 const $=query=>document.querySelector(query),id=$('[data-game]').dataset.game,game=GAMES[id],scene=$('#scene'),tools=$('#tools'),win=$('#win');
 // Keep the live note/status nodes across scene renders; feedback owns this host.
 const foodNote=id==='food'?$('#food-note'):null;
 let foodCaptionHistory=[];
+let careGesture=null;
+function clearCareGesture(){careGesture?.remove();careGesture=null;}
+function moveCareGesture(event){if(!careGesture)return;careGesture.style.left=(event.clientX+12)+'px';careGesture.style.top=(event.clientY+8)+'px';}
+function startCareGesture(event){clearCareGesture();careGesture=document.createElement('div');careGesture.className='care-tool-gesture';careGesture.setAttribute('aria-hidden','true');careGesture.innerHTML=groomToolIcon(selected);document.body.append(careGesture);moveCareGesture(event);}
 let attempt=0,settleTimer=null,settleEpoch=0,routeWalking=false,routeAnimation=null,routeFrame=null,searchLife=null,foodFeedback=null;
 let state=createMini(id),history=[],selected=id==='grooming'?'wipe':id==='litter'?'scoop':id==='search'?1:null,drag=null,ignoreClickUntil=0,paused=false,platformPaused=false,sfx=true,audio=null,sandSource=null,sandBuffer=null,modes;
-const manyLevels=id==='search'||id==='tunnels'||id==='food'||id==='yarn'||id==='litter';
-const key=id==='litter'?'corio-litter-50-v1':id==='search'?'corio-search-50-v3':id==='food'?'corio-food-50-v2':id==='tunnels'?'corio-tunnels-50-v2':id==='yarn'?'corio-yarn-50-v1':'corio-'+id+'-v1';let best=Array(game.levels.length).fill(null);
-const currentLevelKey=id==='litter'?'corio-litter-50-current-v1':id==='tunnels'?'corio-tunnels-v2-current-v1':id==='food'?'corio-food-50-v2-current-v1':id==='yarn'?'corio-yarn-50-current-v1':'corio-'+id+'-current-v1';
+const manyLevels=id==='search'||id==='tunnels'||id==='food'||id==='yarn'||id==='litter'||id==='grooming';
+const key=id==='grooming'?'corio-grooming-50-v1':id==='litter'?'corio-litter-50-v1':id==='search'?'corio-search-50-v3':id==='food'?'corio-food-50-v2':id==='tunnels'?'corio-tunnels-50-v2':id==='yarn'?'corio-yarn-50-v1':'corio-'+id+'-v1';let best=Array(game.levels.length).fill(null);
+const currentLevelKey=id==='grooming'?'corio-grooming-50-current-v1':id==='litter'?'corio-litter-50-current-v1':id==='tunnels'?'corio-tunnels-v2-current-v1':id==='food'?'corio-food-50-v2-current-v1':id==='yarn'?'corio-yarn-50-current-v1':'corio-'+id+'-current-v1';
 try{sfx=localStorage.getItem('corio-litter-sfx-v1')!=='off';const value=JSON.parse(localStorage.getItem(key));if(Array.isArray(value))best=best.map((_,i)=>Number.isInteger(value[i])?value[i]:null);}catch{}
 const settingsOpen=()=>!!document.querySelector('[data-game-panel][open]');
 const blocked=()=>settingsOpen()||paused||platformPaused||win.open||modes?.isModalOpen();
@@ -50,7 +55,7 @@ function restoreFoodDrag(current){
   else item.remove();
 }
 function endDrag(){
-  const current=drag,restorePreview=current?.type==='yarn';drag=null;
+  const current=drag,restorePreview=current?.type==='yarn';drag=null;if(current?.type==='brush'){clearCareGesture();ignoreClickUntil=performance.now()+200;}
   restoreFoodDrag(current);
   if(current&&scene.hasPointerCapture(current.pointer))try{scene.releasePointerCapture(current.pointer);}catch{}
   document.querySelector('.drag-food')?.remove();if(current?.type==='food'){$('#food-info').innerHTML=renderFoodInfo(state,selected);if(current.active)status(current.noteMessage);}if(restorePreview)render();
@@ -68,7 +73,7 @@ function scheduleSettle(){
 }
 function load(index){
   stopSandSound();searchLife?.newLevel();foodFeedback?.newLevel();attempt++;cancelRouteWalk();cancelSettle();endDrag();history=[];foodCaptionHistory=[];state=createMini(id,index);selected=id==='grooming'?'wipe':id==='search'?1:null;paused=false;platformPaused=false;ignoreClickUntil=0;
-  if(win.open)win.close();if($('#pause-dialog').open)$('#pause-dialog').close();modes?.newAttempt(id==='litter'?game.levels[index].w*game.levels[index].h*2:solutionFor(id,index).length);render();status(id==='food'?'':id==='yarn'?'Тяни кольца и свободный конец. Убери все пересечения.':id==='tunnels'?tunnelInstruction(game.levels[index]):id==='litter'?'Найди одинаковые формы. Пустые места можно оставить.':game.rule);window.dispatchEvent(new Event('corio:resume'));
+  if(win.open)win.close();if($('#pause-dialog').open)$('#pause-dialog').close();modes?.newAttempt(id==='litter'?game.levels[index].w*game.levels[index].h*2:solutionFor(id,index).length);render();status(id==='food'?'':id==='yarn'?'Тяни кольца и свободный конец. Убери все пересечения.':id==='tunnels'?tunnelInstruction(game.levels[index]):id==='litter'?'Найди одинаковые формы. Пустые места можно оставить.':id==='grooming'?'Выбери инструмент и проведи по шерсти.':game.rule);window.dispatchEvent(new Event('corio:resume'));
   if(manyLevels)try{localStorage.setItem(currentLevelKey,String(index));}catch{}
 }
 function commit(action){
@@ -187,18 +192,18 @@ scene.addEventListener('pointerdown',event=>{
   if(drag||event.isPrimary===false||event.button!==0||blocked()||state.won)return;
   // Chrome may adjust a touch target toward a neighbouring button. Resolve
   // food from the real pointer pixel rather than that adjusted event target.
-  const pixelTarget=id==='food'||id==='yarn'?(document.elementFromPoint(event.clientX,event.clientY)||event.target):event.target;
+  const pixelTarget=id==='food'||id==='yarn'||id==='grooming'?(document.elementFromPoint(event.clientX,event.clientY)||event.target):event.target;
   const node=pixelTarget.closest('[data-node]'),food=pixelTarget.closest('[data-food]');
   if(id==='food'&&food&&food.dataset.exposed!=='true'){ignoreClickUntil=performance.now()+350;return;}
   if(node){event.preventDefault();const at=pointFor(event),index=+node.dataset.node;drag={type:'yarn',pointer:event.pointerId,node:index,start:at,original:{...state.points[index]},preview:structuredClone(state.points)};scene.setPointerCapture(event.pointerId);}
   else if(food&&food.dataset.exposed==='true'){drag={type:'food',pointer:event.pointerId,item:+food.dataset.food,x:event.clientX,y:event.clientY,element:food,active:false,noteMessage:$('#status').textContent};scene.setPointerCapture(event.pointerId);}
-  else if(id==='grooming'&&event.target.closest('[data-spot]')){event.preventDefault();drag={type:'brush',pointer:event.pointerId,visited:new Set()};scene.setPointerCapture(event.pointerId);brushAt(event);}
+  else if(id==='grooming'&&pixelTarget.closest('[data-spot]')){event.preventDefault();drag={type:'brush',pointer:event.pointerId,visited:new Set()};scene.setPointerCapture(event.pointerId);startCareGesture(event);brushAt(event);}
 });
 scene.addEventListener('pointermove',event=>{
   if(!drag||event.pointerId!==drag.pointer||blocked())return;
-  if((drag.type==='food'||drag.type==='yarn')&&event.pointerType==='mouse'&&event.buttons===0){endDrag();return;}
+  if((drag.type==='food'||drag.type==='yarn'||drag.type==='brush')&&event.pointerType==='mouse'&&event.buttons===0){endDrag();return;}
   if(drag.type==='yarn'){event.preventDefault();const at=pointFor(event);drag.preview[drag.node]={x:Math.max(8,Math.min(92,drag.original.x+at.x-drag.start.x)),y:Math.max(8,Math.min(92,drag.original.y+at.y-drag.start.y))};const level=game.levels[state.index];updateYarnPreview(scene,drag.preview,level,drag.node);$('#goal').textContent=goalText(id,{...state,points:drag.preview},level);}
-  if(drag.type==='brush')brushAt(event);
+  if(drag.type==='brush'){moveCareGesture(event);brushAt(event);}
   if(drag?.type==='food'){
     if(!drag.active&&Math.hypot(event.clientX-drag.x,event.clientY-drag.y)>8){
       const item=drag.element,r=item.getBoundingClientRect(),css=getComputedStyle(item),width=parseFloat(css.width),height=parseFloat(css.height),rotation=item.style.transform;
@@ -216,10 +221,10 @@ scene.addEventListener('pointerup',event=>{
   if(!drag||event.pointerId!==drag.pointer)return;const current=drag;restoreFoodDrag(current);drag=null;
   if(current.type==='yarn'){ignoreClickUntil=performance.now()+200;const p=current.preview[current.node];commit({type:'move',node:current.node,...p});render();}
   if(current.type==='food'){ignoreClickUntil=performance.now()+200;if(current.active){status(selected===current.item?current.noteMessage:'');selected=current.item;const bin=document.elementFromPoint(event.clientX,event.clientY)?.closest('[data-bin]');if(bin)commit({type:'sort',item:current.item,bin:bin.dataset.bin});else{status('');render();}}else selectFood(current.item);}
-  if(current.type==='brush')ignoreClickUntil=performance.now()+200;
+  if(current.type==='brush'){clearCareGesture();ignoreClickUntil=performance.now()+200;}
   document.querySelector('.drag-food')?.remove();try{scene.releasePointerCapture(event.pointerId);}catch{}
 });
-scene.addEventListener('lostpointercapture',event=>{if((drag?.type==='food'||drag?.type==='yarn')&&drag.pointer===event.pointerId)endDrag();});
+scene.addEventListener('lostpointercapture',event=>{if((drag?.type==='food'||drag?.type==='yarn'||drag?.type==='brush')&&drag.pointer===event.pointerId)endDrag();});
 scene.addEventListener('pointercancel',()=>{
   // A browser gesture may cancel a pointer even when this game has no drag.
   // Replacing the scene then would detach the cat from its running animation.
@@ -248,7 +253,7 @@ if(id==='tunnels'){
   const routePanels=new MutationObserver(syncRouteMotion);
   for(const dialog of document.querySelectorAll('dialog'))routePanels.observe(dialog,{attributes:true,attributeFilter:['open']});
 }
-if(id==='food'||id==='yarn'){
+if(id==='food'||id==='yarn'||id==='grooming'){
   const cancelSceneDrag=new MutationObserver(()=>{if(settingsOpen()){
     if(drag&&scene.hasPointerCapture(drag.pointer))scene.releasePointerCapture(drag.pointer);
     endDrag();
@@ -266,3 +271,8 @@ if(id==='litter'){
     while(i>=0&&i<cells.length){if(!cells[i].disabled){cells[i].focus();break;}i+=delta;}
   });
 }
+
+// A held key is one care gesture, including when focus moves into the win dialog.
+if(id==='grooming')document.addEventListener('keydown',event=>{
+  if(event.repeat&&(event.code==='Enter'||event.code==='Space')){event.preventDefault();event.stopPropagation();}
+},{capture:true});

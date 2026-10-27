@@ -1,10 +1,11 @@
-import {LITTER_LEVELS as litterLevels} from './litter-data.mjs?v=0.19.0';
-import {tunnelEdges,traceTunnelRoute,connectedRoute} from './tunnel-route.mjs?v=0.19.0';
+import {GROOMING_LEVELS as groomingLevels} from './grooming-data.mjs?v=0.20.0';
+import {LITTER_LEVELS as litterLevels} from './litter-data.mjs?v=0.20.0';
+import {tunnelEdges,traceTunnelRoute,connectedRoute} from './tunnel-route.mjs?v=0.20.0';
 export {tunnelEdges,traceTunnelRoute,connectedRoute};
-import {TUNNEL_LEVELS} from './tunnel-data.mjs?v=0.19.0';
-import {SEARCH_LEVELS,SEARCH_SCENES} from './search-data.mjs?v=0.19.0';
-import {FOOD_LEVELS,FOOD_PILE_ASPECT,foodIsExposed} from './food-data.mjs?v=0.19.0';
-import {YARN_LEVELS,YARN_ANCHOR,YARN_POINT_SPACING} from './yarn-data.mjs?v=0.19.0';
+import {TUNNEL_LEVELS} from './tunnel-data.mjs?v=0.20.0';
+import {SEARCH_LEVELS,SEARCH_SCENES} from './search-data.mjs?v=0.20.0';
+import {FOOD_LEVELS,FOOD_PILE_ASPECT,foodIsExposed} from './food-data.mjs?v=0.20.0';
+import {YARN_LEVELS,YARN_ANCHOR,YARN_POINT_SPACING} from './yarn-data.mjs?v=0.20.0';
 export {FOOD_LEVELS,FOOD_PILE_ASPECT,foodIsExposed};
 // Original short scenarios for comparing mechanics. No clocks or offline decay.
 const copy=value=>structuredClone(value);
@@ -39,14 +40,6 @@ const petLevels=[
   {name:'Собираемся спать',needs:[1,1,1,1]}
 ];
 export const PET_ACTIONS={food:{name:'Порция корма',effect:[2,-1,0,0]},water:{name:'Свежая вода',effect:[0,3,0,0]},play:{name:'Поиграть',effect:[-1,-1,2,-1]},rest:{name:'Отдохнуть',effect:[-1,0,-1,3]}};
-const spot=(id,kind,x,y)=>({id,kind,x,y});
-const groomingLevels=[
-  {name:'Пыльные лапы',spots:[spot(0,'dust',45,66),spot(1,'dust',66,70),spot(2,'tangle',48,43)]},
-  {name:'Шерстинки на боках',spots:[spot(0,'tangle',37,45),spot(1,'tangle',48,52),spot(2,'dust',62,69),spot(3,'dust',43,68)]},
-  {name:'Одно грязное пятно',spots:[spot(0,'mud',44,51)]},
-  {name:'После прогулки',spots:[spot(0,'mud',39,49),spot(1,'dust',63,69),spot(2,'tangle',51,44),spot(3,'dust',43,67)]},
-  {name:'Перед сном',spots:[spot(0,'mud',40,50),spot(1,'mud',53,50),spot(2,'tangle',48,40),spot(3,'dust',62,68)]}
-];
 export const GROOM_STEPS={dust:['wipe',null],tangle:['brush',null],mud:['water','soapy'],soapy:['soap','foam'],foam:['rinse','wet'],wet:['towel',null]};
 export const GROOM_TOOLS={wipe:'Тканевая салфетка',brush:'Щётка',water:'Тёплая вода',soap:'Шампунь для кошек',rinse:'Смыть пену',towel:'Полотенце',pause:'Передышка'};
 const orient=(a,b,c)=>(b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x);
@@ -86,7 +79,7 @@ export const GAMES={
   tunnels:{title:'Настенная трасса',levels:TUNNEL_LEVELS,rule:'Поворачивай тоннели. Проведи кота к лакомству через все колокольчики. Полки и гамаки закреплены.'},
   food:{title:'Что в миске?',levels:FOOD_LEVELS,rule:'Выбери открытый продукт в миске, затем отправь его в подходящую зону. Убирай верхние предметы, чтобы открывать нижние.'},
   pet:{title:'Вечер с котом',levels:petLevels,rule:'Помоги коту поесть, попить, поиграть и отдохнуть. Доведи все четыре показателя до трёх отметок.'},
-  grooming:{title:'Чистые лапы',levels:groomingLevels,rule:'Выбери инструмент и коснись пятнышка. Следи за настроением: если кот устал, дай ему передышку.'},
+  grooming:{title:'Чистые лапы',levels:groomingLevels,rule:'Выбери инструмент и проведи по загрязнённой шерсти. Несколько мягких движений очищают участок. Если кот устал, дай ему передышку.'},
   litter:{title:'Пары в лотке',levels:litterLevels,rule:'Открывай ячейки совком и ищи две одинаковые формы. Здесь есть и пустые места. Несовпавшая пара снова скроется — запоминай, где что лежит.'},
   yarn:{title:'Распутай клубок',levels:YARN_LEVELS,rule:'Один клубок — одна нить. Тяни изгибы и свободный конец, пока нить не перестанет пересекать себя. Клубок остаётся на месте.'}
 };
@@ -97,7 +90,7 @@ export function createMini(id,index=0){
   if(id==='tunnels')data={pieces:copy(level.pieces)};
   if(id==='food')data={remaining:level.items.map((type,id)=>({type,id})),sorted:[],mistakes:0};
   if(id==='pet')data={needs:[...level.needs],pose:'loaf'};
-  if(id==='grooming')data={spots:copy(level.spots),patience:3,washed:false};
+  if(id==='grooming')data={spots:copy(level.spots).map(mark=>({...mark,remaining:mark.strength})),patience:3,washed:false,workDone:0};
   if(id==='litter')data={open:[],matched:[],empty:[],pending:false};
   if(id==='yarn')data={points:copy(level.points)};
   return{id,index,moves:0,won:false,message:'',...data};
@@ -129,12 +122,19 @@ export function miniAction(state,action){
     if(action.type==='pause'){
       if(next.patience===3)return state;next.patience=3;next.message='Передохнули. Можно продолжать.';
     }else{
-      const at=next.spots.findIndex(spot=>spot.id===action.spot);if(at<0||!GROOM_TOOLS[action.tool])return state;
+      const at=next.spots.findIndex(spot=>spot.id===action.spot);
+      if(action.type!=='clean'||at<0||!GROOM_TOOLS[action.tool]||action.tool==='pause')return state;
       if(next.patience===0)return{...state,message:'Кот хочет передохнуть. Нажми «Передышка».'};
       const mark=next.spots[at],step=GROOM_STEPS[mark.kind];next.patience--;
-      if(step[0]!==action.tool)next.message='Для этого пятнышка нужен другой инструмент.';
-      else if(step[1]){mark.kind=step[1];if(action.tool==='water')next.washed=true;next.message={soapy:'Пятно намочено. Теперь кошачий шампунь.',foam:'Пену нужно полностью смыть.',wet:'Осталось промокнуть полотенцем.'}[step[1]];}
-      else{next.spots.splice(at,1);next.message='Готово. Хорошо получилось.';}
+      if(step[0]!==action.tool)next.message='Для этого участка нужен другой инструмент.';
+      else{
+        next.workDone=(next.workDone||0)+1;
+        if(action.tool==='water')next.washed=true;
+        mark.remaining=(mark.remaining??mark.strength??1)-1;
+        if(mark.remaining>0)next.message={dust:'Пыль уходит. Ещё мягкое движение.',tangle:'Свободной шерсти стало меньше.',mud:'Грязь размокает. Ещё немного воды.',soapy:'Распределяем шампунь по шерсти.',foam:'Пены стало меньше. Смываем остатки.',wet:'Шерсть подсыхает под полотенцем.'}[mark.kind];
+        else if(step[1]){mark.kind=step[1];mark.remaining=mark.strength||1;next.message={soapy:'Шерсть намочена. Теперь шампунь для кошек.',foam:'Теперь нужно полностью смыть пену.',wet:'Осталось промокнуть полотенцем.'}[step[1]];}
+        else{next.spots.splice(at,1);next.message='Этот участок чистый.';}
+      }
     }next.won=!next.spots.length;
   }else if(id==='litter'){
     if(action.type==='settle'){

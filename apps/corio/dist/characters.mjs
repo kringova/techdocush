@@ -1,5 +1,5 @@
-import {LITTER_EXTRA_CROPS,LITTER_EXTRA_ATLAS,LITTER_EXTRA_SIZE} from './mini/litter-crops.mjs?v=0.19.0';
-import {FOOD_VARIETY_CROPS,FOOD_VARIETY_SIZE} from './mini/food-variety-crops.mjs?v=0.19.0';
+import {LITTER_EXTRA_CROPS,LITTER_EXTRA_ATLAS,LITTER_EXTRA_SIZE} from './mini/litter-crops.mjs?v=0.20.0';
+import {FOOD_VARIETY_CROPS,FOOD_VARIETY_SIZE} from './mini/food-variety-crops.mjs?v=0.20.0';
 const asset=file=>new URL('./assets/'+file,import.meta.url).href;
 let serial=0;
 function croppedImage(file,view,size){

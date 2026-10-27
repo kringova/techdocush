@@ -5,7 +5,7 @@ import {foodFigure} from '../dist/characters.mjs';
 import {SEARCH_SCENES} from '../dist/mini/search-data.mjs';
 import {SEARCH_SLOTS,searchSlotsFor,placeSearchObject} from '../dist/mini/search-layout.mjs';
 for(const[id,game]of Object.entries(GAMES))test(`${id}: all scenarios finish through valid actions without mutating old states`,()=>{
-  const count=['search','tunnels','food','yarn','litter'].includes(id)?50:5;assert.equal(game.levels.length,count);const definitions=new Set();
+  const count=['search','tunnels','food','yarn','litter','grooming'].includes(id)?50:5;assert.equal(game.levels.length,count);const definitions=new Set();
   for(let index=0;index<count;index++){
     definitions.add(JSON.stringify(game.levels[index]));let state=createMini(id,index);assert.equal(state.won,false);
     if(id==='yarn')assert.ok(yarnConflicts(state.points,game.levels[index].edges).length>0);
@@ -161,11 +161,13 @@ test('pet actions cap needs, reject extra feeding at satiety, and require replen
   const state={...createMini('pet'),needs:[4,4,0,4]},fed=miniAction(state,{type:'food'});assert.equal(fed.moves,0);assert.deepEqual(fed.needs,state.needs);
   const play=miniAction(state,{type:'play'});assert.deepEqual(play.needs,[3,3,2,3]);assert.ok(play.needs.every(n=>n>=0&&n<=4));
 });
-test('grooming distinguishes cloth, water, shampoo, rinse and towel; rest is required',()=>{
-  let state=createMini('grooming',2);const wrong=miniAction(state,{type:'clean',tool:'wipe',spot:0});assert.equal(wrong.spots[0].kind,'mud');
-  for(const tool of ['water','soap','rinse'])state=miniAction(state,{type:'clean',tool,spot:0});assert.equal(state.patience,0);assert.equal(state.spots[0].kind,'wet');
-  const blocked=miniAction(state,{type:'clean',tool:'towel',spot:0});assert.equal(blocked.moves,state.moves);assert.equal(blocked.spots.length,1);
-  state=miniAction(state,{type:'pause'});state=miniAction(state,{type:'clean',tool:'towel',spot:0});assert.equal(state.won,true);assert.equal(state.spots.length,0);assert.equal(GROOM_STEPS.dust[0],'wipe');
+test('grooming has gradual cleaning, full wash phases, rest, undo-compatible immutable states and invalid no-ops',()=>{
+  let state={...createMini('grooming'),spots:[{id:0,zone:'flank',kind:'mud',strength:2,remaining:2}]};
+  const old=structuredClone(state),wrong=miniAction(state,{type:'clean',tool:'wipe',spot:0});assert.equal(wrong.spots[0].kind,'mud');assert.equal(wrong.spots[0].remaining,2);assert.equal(wrong.workDone,0);assert.deepEqual(state,old);
+  assert.equal(miniAction(state,{type:'other',tool:'water',spot:0}),state);assert.equal(miniAction(state,{type:'clean',tool:'pause',spot:0}),state);assert.equal(miniAction(state,{type:'pause'}),state);
+  for(const tool of['water','water','soap'])state=miniAction(state,{type:'clean',tool,spot:0});assert.equal(state.patience,0);assert.equal(state.spots[0].kind,'soapy');assert.equal(state.spots[0].remaining,1);assert.ok(state.washed);
+  const blocked=miniAction(state,{type:'clean',tool:'soap',spot:0});assert.equal(blocked.moves,state.moves);assert.deepEqual(blocked.spots,state.spots);
+  for(const tool of['soap','rinse','rinse','towel','towel']){if(state.patience===0)state=miniAction(state,{type:'pause'});state=miniAction(state,{type:'clean',tool,spot:0});}assert.ok(state.won);assert.equal(state.workDone,8);assert.equal(GROOM_STEPS.dust[0],'wipe');
 });
 test('litter has exact pairs and empty cells on every increasingly large board',()=>{
   let previous=0;
