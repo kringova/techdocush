@@ -1,4 +1,4 @@
-import {searchLayout} from './search-layout.mjs?v=0.23.1';
+import {searchLayout} from './search-layout.mjs?v=0.23.2';
 const item=(id,name,x,y,size=56,angle=0)=>({id,name,x,y,size,angle});
 export const SEARCH_SCENES={
   room:[item('yarn','Жёлтый клубок',660,443,66),item('brush','Щётка',105,338,62,-16),item('key','Ключ с колечком',330,335,57,15),item('cup','Чашка',440,327,54),item('sock','Полосатый носок',525,418,60,-16),item('glasses','Очки',570,270,64,-12),item('bell','Колокольчик',220,443,50,10),item('ribbon','Синий бант',400,460,58,-8),item('book','Книга с закладкой',140,265,60,8),item('ball','Полосатый мяч',720,350,56)],

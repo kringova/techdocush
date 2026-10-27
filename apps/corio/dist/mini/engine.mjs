@@ -1,11 +1,11 @@
-import {GROOMING_LEVELS as groomingLevels} from './grooming-data.mjs?v=0.23.1';
-import {LITTER_LEVELS as litterLevels} from './litter-data.mjs?v=0.23.1';
-import {tunnelEdges,traceTunnelRoute,connectedRoute} from './tunnel-route.mjs?v=0.23.1';
+import {GROOMING_LEVELS as groomingLevels} from './grooming-data.mjs?v=0.23.2';
+import {LITTER_LEVELS as litterLevels} from './litter-data.mjs?v=0.23.2';
+import {tunnelEdges,traceTunnelRoute,connectedRoute} from './tunnel-route.mjs?v=0.23.2';
 export {tunnelEdges,traceTunnelRoute,connectedRoute};
-import {TUNNEL_LEVELS} from './tunnel-data.mjs?v=0.23.1';
-import {SEARCH_LEVELS,SEARCH_SCENES} from './search-data.mjs?v=0.23.1';
-import {FOOD_LEVELS,FOOD_PILE_ASPECT,foodIsExposed} from './food-data.mjs?v=0.23.1';
-import {YARN_LEVELS,YARN_ANCHOR,YARN_POINT_SPACING} from './yarn-data.mjs?v=0.23.1';
+import {TUNNEL_LEVELS} from './tunnel-data.mjs?v=0.23.2';
+import {SEARCH_LEVELS,SEARCH_SCENES} from './search-data.mjs?v=0.23.2';
+import {FOOD_LEVELS,FOOD_PILE_ASPECT,foodIsExposed} from './food-data.mjs?v=0.23.2';
+import {YARN_LEVELS,YARN_ANCHOR,YARN_POINT_SPACING} from './yarn-data.mjs?v=0.23.2';
 export {FOOD_LEVELS,FOOD_PILE_ASPECT,foodIsExposed};
 // Original short scenarios for comparing mechanics. No clocks or offline decay.
 const copy=value=>structuredClone(value);

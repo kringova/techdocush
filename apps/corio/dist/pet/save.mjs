@@ -1,4 +1,4 @@
-import {createPetLifeState,validatePetLifeSave,migratePetBook} from '../mini/pet-continuous.mjs?v=0.23.1';
+import {createPetLifeState,validatePetLifeSave,migratePetBook} from '../mini/pet-continuous.mjs?v=0.23.2';
 export const PET_BUDGET_KEY='corio-pet-care-budget-v1';
 export function readPetHome(raw,legacyRaw=null){
  if(raw){try{const parsed=JSON.parse(raw),envelope=parsed?.version===3&&Object.hasOwn(parsed,'cat'),state=validatePetLifeSave(envelope?parsed.cat:parsed);if(state)return{state,budget:envelope?readPetBudget(JSON.stringify(parsed.budget)):null,migrated:false,recovered:false};}catch{}}

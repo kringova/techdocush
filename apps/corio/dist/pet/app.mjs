@@ -1,10 +1,10 @@
-import {PET_LIFE_KEY,PET_LIFE_MEMORIES,advancePetLife,petLifeAction} from '../mini/pet-continuous.mjs?v=0.23.1';
-import {readPetHome,readPetBudget,PET_BUDGET_KEY} from './save.mjs?v=0.23.1';
-import {petRoom,petNeeds,petSceneKey,petWish} from './view.mjs?v=0.23.1';
-import {createPetLife} from './life.mjs?v=0.23.1';
-import {createPetApproach} from './motion.mjs?v=0.23.1';
-import {createModeController} from '../modes.mjs?v=0.23.1';
-import {setupFocusUI} from '../mini/focus.mjs?v=0.23.1';
+import {PET_LIFE_KEY,PET_LIFE_MEMORIES,advancePetLife,petLifeAction} from '../mini/pet-continuous.mjs?v=0.23.2';
+import {readPetHome,readPetBudget,PET_BUDGET_KEY} from './save.mjs?v=0.23.2';
+import {petRoom,petNeeds,petSceneKey,petWish} from './view.mjs?v=0.23.2';
+import {createPetLife} from './life.mjs?v=0.23.2';
+import {createPetApproach} from './motion.mjs?v=0.23.2';
+import {createModeController} from '../modes.mjs?v=0.23.2';
+import {setupFocusUI} from '../mini/focus.mjs?v=0.23.2';
 
 const $=selector=>document.querySelector(selector),scene=$('#scene');
 // Preserve the previously requested optional limited mode; it never resets the cat.

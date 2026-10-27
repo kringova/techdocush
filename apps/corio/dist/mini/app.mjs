@@ -1,15 +1,15 @@
-import {beginGroomRub,advanceGroomRub} from './grooming-gesture.mjs?v=0.23.1';
-import {groomToolIcon} from './grooming-tools.mjs?v=0.23.1';
-import {fitFoodScene,renderFoodInfo} from './food-view.mjs?v=0.23.1';
-import {createFoodFeedback,foodCatPortrait} from './food-feedback.mjs?v=0.23.1';
-import {tunnelWalkPoints} from './tunnel-art.mjs?v=0.23.1';
-import {setupFocusUI,fitFocusedScene} from './focus.mjs?v=0.23.1';
-import {GAMES,FOODS,GROOM_STEPS,createMini,miniAction,solutionFor,connectedRoute} from './engine.mjs?v=0.23.1';
-import {renderScene,toolsFor,goalText} from './views.mjs?v=0.23.1';
-import {createModeController} from '../modes.mjs?v=0.23.1';
-import {catFigure,setCatWalkFrame} from '../characters.mjs?v=0.23.1';
-import {createSearchLife} from './search-life.mjs?v=0.23.1';
-import {updateYarnPreview} from './yarn-view.mjs?v=0.23.1';
+import {beginGroomRub,advanceGroomRub} from './grooming-gesture.mjs?v=0.23.2';
+import {groomToolIcon} from './grooming-tools.mjs?v=0.23.2';
+import {fitFoodScene,renderFoodInfo} from './food-view.mjs?v=0.23.2';
+import {createFoodFeedback,foodCatPortrait} from './food-feedback.mjs?v=0.23.2';
+import {tunnelWalkPoints} from './tunnel-art.mjs?v=0.23.2';
+import {setupFocusUI,fitFocusedScene} from './focus.mjs?v=0.23.2';
+import {GAMES,FOODS,GROOM_STEPS,createMini,miniAction,solutionFor,connectedRoute} from './engine.mjs?v=0.23.2';
+import {renderScene,toolsFor,goalText} from './views.mjs?v=0.23.2';
+import {createModeController} from '../modes.mjs?v=0.23.2';
+import {catFigure,setCatWalkFrame} from '../characters.mjs?v=0.23.2';
+import {createSearchLife} from './search-life.mjs?v=0.23.2';
+import {updateYarnPreview} from './yarn-view.mjs?v=0.23.2';
 const $=query=>document.querySelector(query),id=$('[data-game]').dataset.game,game=GAMES[id],scene=$('#scene'),tools=$('#tools'),win=$('#win');
 // Keep the live note/status nodes across scene renders; feedback owns this host.
 const foodNote=id==='food'?$('#food-note'):null;

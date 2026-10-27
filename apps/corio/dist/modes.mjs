@@ -1,5 +1,5 @@
-import {createCommerce} from './commerce.mjs?v=0.23.1';
-import {SERIES,PROFILE} from './series.mjs?v=0.23.1';
+import {createCommerce} from './commerce.mjs?v=0.23.2';
+import {SERIES,PROFILE} from './series.mjs?v=0.23.2';
 
 export function createModeController({gameId,host,getMoves,isWon,canUndo=()=>false,onUndo,onRestart,onBlock=()=>{},onStateChange=()=>{},getSDK=async()=>null}){
   const productId=SERIES.find(g=>g.id===gameId).product,prototype=PROFILE==='web-prototype',petCare=gameId==='pet';

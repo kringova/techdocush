@@ -1,5 +1,5 @@
-import {catFigure,CAT_POSES} from '../characters.mjs?v=0.23.1';
-import {petLifeAvailable} from '../mini/pet-continuous.mjs?v=0.23.1';
+import {catFigure,CAT_POSES} from '../characters.mjs?v=0.23.2';
+import {petLifeAvailable} from '../mini/pet-continuous.mjs?v=0.23.2';
 const asset=file=>new URL('../assets/'+file,import.meta.url).href;
 const image=(file,x,y,w,h)=>`<image href="${asset(file)}" x="${x}" y="${y}" width="${w}" height="${h}"/>`;
 const names=['Сытость','Вода','Игра','Силы'];
@@ -21,7 +21,7 @@ const bedBox=portrait=>portrait?[25,621,340,160]:[45,387,350,165];
 export function petSceneKey(state,portrait){return JSON.stringify([portrait,visualPose(state),place(state),state.bowls,state.asleep,state.lamp,...['food','water','play','rest'].map(type=>petLifeAvailable(state,type))]);}
 function cat(state,portrait){
  const pose=visualPose(state),placement=place(state);
- const positions=portrait?{food:[90,700,375,251],water:[324,700,375,251],play:[300,570,320,216],rest:[50,571,286,172]}:{food:[90,462,375,251],water:[720,462,375,251],play:[625,327,340,230],rest:[75,338,290,174]};
+ const positions=portrait?{food:[90,643,375,251],water:[324,683,375,251],play:[300,570,320,216],rest:[50,571,286,172]}:{food:[90,405,375,251],water:[720,445,375,251],play:[625,327,340,230],rest:[75,338,290,174]};
  const home=pose==='lookback'?(portrait?[290,457,274,337]:[450,348,274,337]):pose==='attentive'?(portrait?[289,414,280,380]:[456,305,280,380]):(portrait?[275,520,305,274]:[440,410,305,274]),p=positions[placement]||home;
  const crop=CAT_POSES[pose],k=Math.min(p[2]/crop[2],p[3]/crop[3]),head={lookback:[1340,165,65,55],attentive:[290,155,65,65],cautious:[590,415,63,49],stretch:[173,767,63,50],loaf:[871,725,86,63],sleep:[1193,823,100,70]}[pose],flipped=placement==='water'||placement==='play';
  const hx=p[0]+(p[2]-crop[2]*k)/2+((flipped?crop[0]*2+crop[2]-head[0]:head[0])-crop[0])*k,hy=p[1]+p[3]-crop[3]*k+(head[1]-crop[1])*k;
@@ -40,7 +40,7 @@ export function petRoom(state,portrait=false){
  const play=object('play',t[0],t[1],165,150,`<g data-pet-toy>${image('yarn-v1.png',t[0]+11,t[1]+6,145,145)}</g>`,'Играть');
  const bedDrawing=`<svg x="${b[0]}" y="${b[1]}" width="${b[2]}" height="${b[3]}" viewBox="40 212 1453 683">${image('pet-bed-alpha-v1.png',0,0,1536,1024)}</svg>`;
  const bed=object('rest',b[0]+10,b[1],b[2]-20,b[3],bedDrawing,'Лежанка');
- const bedFront=`<g data-pet-bed-front pointer-events="none"><defs><clipPath id="pet-bed-front"><rect x="${b[0]}" y="${b[1]+b[3]*.7}" width="${b[2]}" height="${b[3]*.3}"/></clipPath></defs><g clip-path="url(#pet-bed-front)">${bedDrawing}</g></g>`;
+ const bedFront=`<g data-pet-bed-front data-pet-front-active="${state.asleep}" pointer-events="none"><defs><clipPath id="pet-bed-front"><rect x="${b[0]}" y="${b[1]+b[3]*.7}" width="${b[2]}" height="${b[3]*.3}"/></clipPath></defs><g clip-path="url(#pet-bed-front)">${state.asleep?bedDrawing:''}</g></g>`;
  const background=portrait?image('pet-room-painted-v1.png',-330,0,1575,1050):image('pet-room-painted-v1.png',0,0,1200,800);
  return `<div class="pet-room-view"><svg class="pet-painting" viewBox="0 0 ${portrait?'800 1050':'1200 800'}" role="group" aria-label="Уголок Кориолана" preserveAspectRatio="xMidYMid meet">${background}${bed}${cat(state,portrait)}${bedFront}${food}${water}${play}<g class="pet-sleep-marks" aria-hidden="true" opacity="${state.asleep?1:0}"><text x="${portrait?265:340}" y="${portrait?555:340}">z</text><text x="${portrait?290:365}" y="${portrait?520:305}">z</text></g>${state.lamp==='dim'?`<rect data-pet-shade width="${portrait?800:1200}" height="${portrait?1050:800}" fill="#0b1828" opacity=".760784" pointer-events="none"/>`:''}</svg><p class="pet-wish">${petWish(state)}</p></div>`;
 }
