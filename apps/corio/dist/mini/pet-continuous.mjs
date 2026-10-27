@@ -1,4 +1,4 @@
-import {PET_LEVELS as OLD_PET_LEVELS,validatePetSave} from './pet-care.mjs?v=0.23.2';
+import {PET_LEVELS as OLD_PET_LEVELS,validatePetSave} from './pet-care.mjs?v=0.24.0';
 
 // A persistent pet, not a sequence of puzzles. Only explicit active time counts.
 // These are game rates, not feeding quantities or real cat-care instructions.

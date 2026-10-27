@@ -1,8 +1,10 @@
-import {catFigure,CAT_POSES} from '../characters.mjs?v=0.23.2';
-import {petLifeAvailable} from '../mini/pet-continuous.mjs?v=0.23.2';
+import {catFigure,CAT_POSES} from '../characters.mjs?v=0.24.0';
+import {petLifeAvailable} from '../mini/pet-continuous.mjs?v=0.24.0';
 const asset=file=>new URL('../assets/'+file,import.meta.url).href;
 const image=(file,x,y,w,h)=>`<image href="${asset(file)}" x="${x}" y="${y}" width="${w}" height="${h}"/>`;
 const names=['Сытость','Вода','Игра','Силы'];
+// All native cat drawings use the same scene units, including the walk atlas.
+export const PET_CAT_SCALE=.66;
 const eyePoints={lookback:[[1316,149,12,10],[1364,154,22,12]],attentive:[[268,125,21,14],[322,135,13,14]],cautious:[[564,408,10,11],[607,407,18,13]],stretch:[[151,761,12,11],[195,760,19,12]],loaf:[[838,701,20,8],[910,700,18,9]]};
 export function petWish(state){
  if(state.asleep)return'Кориолан дремлет. Можно просто посидеть рядом.';
@@ -21,14 +23,23 @@ const bedBox=portrait=>portrait?[25,621,340,160]:[45,387,350,165];
 export function petSceneKey(state,portrait){return JSON.stringify([portrait,visualPose(state),place(state),state.bowls,state.asleep,state.lamp,...['food','water','play','rest'].map(type=>petLifeAvailable(state,type))]);}
 function cat(state,portrait){
  const pose=visualPose(state),placement=place(state);
- const positions=portrait?{food:[90,643,375,251],water:[324,683,375,251],play:[300,570,320,216],rest:[50,571,286,172]}:{food:[90,405,375,251],water:[720,445,375,251],play:[625,327,340,230],rest:[75,338,290,174]};
- const home=pose==='lookback'?(portrait?[290,457,274,337]:[450,348,274,337]):pose==='attentive'?(portrait?[289,414,280,380]:[456,305,280,380]):(portrait?[275,520,305,274]:[440,410,305,274]),p=positions[placement]||home;
- const crop=CAT_POSES[pose],k=Math.min(p[2]/crop[2],p[3]/crop[3]),head={lookback:[1340,165,65,55],attentive:[290,155,65,65],cautious:[590,415,63,49],stretch:[173,767,63,50],loaf:[871,725,86,63],sleep:[1193,823,100,70]}[pose],flipped=placement==='water'||placement==='play';
+ const crop=CAT_POSES[pose],k=PET_CAT_SCALE,width=crop[2]*k,height=crop[3]*k;
+ const positions=portrait?{food:[90,643],water:[324,683],play:[255,543],rest:[193-width/2,743-height]}:{food:[90,405],water:[720,445],play:[598,312],rest:[220-width/2,512-height]};
+ const origin=positions[placement]||[(portrait?428:592)-width/2,(portrait?794:685)-height],p=[...origin,width,height];
+ const head={lookback:[1340,165,65,55],attentive:[290,155,65,65],cautious:[590,415,63,49],stretch:[173,767,63,50],loaf:[871,725,86,63],sleep:[1193,823,100,70]}[pose],flipped=placement==='water'||placement==='play';
  const hx=p[0]+(p[2]-crop[2]*k)/2+((flipped?crop[0]*2+crop[2]-head[0]:head[0])-crop[0])*k,hy=p[1]+p[3]-crop[3]*k+(head[1]-crop[1])*k;
  const eyes=eyePoints[pose];
- let figure=catFigure(pose,{className:'pet-figure',x:p[0],y:p[1],width:p[2],height:p[3],flipX:flipped});
- if(eyes){const lids='<g class="pet-eyelids" aria-hidden="true">'+eyes.map(([x,y,rx,ry])=>`<ellipse cx="${x}" cy="${y}" rx="${rx+3}" ry="${ry+3}" fill="#f6eedb"/><path d="M${x-rx} ${y} Q${x} ${y+ry*.7} ${x+rx} ${y-1}" fill="none" stroke="#173744" stroke-width="4" stroke-linecap="round"/>`).join('')+'</g>';figure=figure.slice(0,-6)+(flipped?`<g transform="translate(${CAT_POSES[pose][0]*2+CAT_POSES[pose][2]} 0) scale(-1 1)">${lids}</g>`:lids)+'</svg>';}
- return `<g class="pet-character ${pose==='sleep'?'is-sleeping':''}" ${state.asleep?'data-care="rest"':''} data-pet-foot-x="${p[0]+p[2]/2}" data-pet-foot-y="${p[1]+p[3]-8}" data-pet-pose="${pose}" data-pet-action-pose="${placement||'home'}" role="button" tabindex="0" aria-label="${state.asleep?'Разбудить кота':'Погладить Кориолана'}"><ellipse class="pet-cat-hit" cx="${hx}" cy="${hy}" rx="${head[2]*k}" ry="${head[3]*k}" fill="transparent"/><ellipse class="pet-contact-shadow" pointer-events="none" cx="${p[0]+p[2]*.5}" cy="${p[1]+p[3]-8}" rx="${p[2]*.38}" ry="12" fill="#173744" opacity=".13"/>${figure}</g>`;
+ let figure=catFigure(pose,{className:'pet-figure',x:p[0],y:p[1],width:p[2],height:p[3]}),open=figure.indexOf('>')+1,content=figure.slice(open,-6);
+ if(pose==='stretch'&&state.activity==='play'){
+  const paw='M226 790L254 812L227 840L159 875L98 900L56 904L39 889L45 868L117 828L184 803Z';
+  const cut='M198 808L232 833L159 875L98 900L56 904L39 889L45 868L117 828Z';
+  const overlay=catFigure(pose),drawing=overlay.slice(overlay.indexOf('>')+1,-6);
+  content=`<defs><mask id="pet-paw-body" maskUnits="userSpaceOnUse" x="31" y="562" width="555" height="374"><rect x="31" y="562" width="555" height="374" fill="white"/><path d="${cut}" fill="black"/></mask><clipPath id="pet-paw-layer"><path d="${paw}"/></clipPath></defs><g mask="url(#pet-paw-body)">${content}</g><g data-pet-play-paw><g clip-path="url(#pet-paw-layer)">${drawing}</g></g>`;
+ }
+ if(eyes)content+='<g class="pet-eyelids" aria-hidden="true">'+eyes.map(([x,y,rx,ry])=>`<ellipse cx="${x}" cy="${y}" rx="${rx+3}" ry="${ry+3}" fill="#f6eedb"/><path d="M${x-rx} ${y} Q${x} ${y+ry*.7} ${x+rx} ${y-1}" fill="none" stroke="#173744" stroke-width="4" stroke-linecap="round"/>`).join('')+'</g>';
+ if(flipped)content=`<g transform="translate(${crop[0]*2+crop[2]} 0) scale(-1 1)">${content}</g>`;
+ figure=figure.slice(0,open)+content+'</svg>';
+ return `<g class="pet-character ${pose==='sleep'?'is-sleeping':''}" ${state.asleep?'data-care="rest"':''} data-pet-scale="${k}" data-pet-foot-x="${p[0]+p[2]/2}" data-pet-foot-y="${p[1]+p[3]-8}" data-pet-pose="${pose}" data-pet-action-pose="${placement||'home'}" role="button" tabindex="0" aria-label="${state.asleep?'Разбудить кота':'Погладить Кориолана'}"><ellipse class="pet-cat-hit" cx="${hx}" cy="${hy}" rx="${head[2]*k}" ry="${head[3]*k}" fill="transparent"/><ellipse class="pet-contact-shadow" pointer-events="none" cx="${p[0]+p[2]*.5}" cy="${p[1]+p[3]-8}" rx="${p[2]*.38}" ry="12" fill="#173744" opacity=".13"/><g data-pet-play-body>${figure}</g></g>`;
 }
 export function petRoom(state,portrait=false){
  const labels={food:'Насыпать корм',water:'Налить воду',play:'Покатать клубок',rest:state.asleep?'Разбудить кота':'Устроиться в лежанке'};

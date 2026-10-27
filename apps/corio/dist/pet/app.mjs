@@ -1,10 +1,11 @@
-import {PET_LIFE_KEY,PET_LIFE_MEMORIES,advancePetLife,petLifeAction} from '../mini/pet-continuous.mjs?v=0.23.2';
-import {readPetHome,readPetBudget,PET_BUDGET_KEY} from './save.mjs?v=0.23.2';
-import {petRoom,petNeeds,petSceneKey,petWish} from './view.mjs?v=0.23.2';
-import {createPetLife} from './life.mjs?v=0.23.2';
-import {createPetApproach} from './motion.mjs?v=0.23.2';
-import {createModeController} from '../modes.mjs?v=0.23.2';
-import {setupFocusUI} from '../mini/focus.mjs?v=0.23.2';
+import {PET_LIFE_KEY,PET_LIFE_MEMORIES,advancePetLife,petLifeAction} from '../mini/pet-continuous.mjs?v=0.24.0';
+import {readPetHome,readPetBudget,PET_BUDGET_KEY} from './save.mjs?v=0.24.0';
+import {petRoom,petNeeds,petSceneKey,petWish} from './view.mjs?v=0.24.0';
+import {createPetLife} from './life.mjs?v=0.24.0';
+import {createPetApproach} from './motion.mjs?v=0.24.0';
+import {createPetPlay} from './play.mjs?v=0.24.0';
+import {createModeController} from '../modes.mjs?v=0.24.0';
+import {setupFocusUI} from '../mini/focus.mjs?v=0.24.0';
 
 const $=selector=>document.querySelector(selector),scene=$('#scene');
 // Preserve the previously requested optional limited mode; it never resets the cat.
@@ -19,7 +20,7 @@ try{
 }catch{storageOK=false;loaded=readPetHome(null);budget=readPetBudget(null);}
 let state=loaded.state,paused=false,platformPaused=false,focused=document.hasFocus(),ownsCat=false;
 let modes=null,life=null,drag=null,sceneKey='',timer=null,lastClock=null,lastSave=0,budgetReady=false,assetsReady=false;
-let approach=null;
+let approach=null,play=null;
 const portrait=()=>innerWidth<=650&&innerHeight>innerWidth;
 const blocked=()=>!assetsReady||!ownsCat||paused||platformPaused||!focused||document.hidden||!!document.querySelector('[data-game-panel][open]')||!!modes?.isModalOpen();
 function setText(selector,value){const node=$(selector);if(node&&node.textContent!==value)node.textContent=value;}
@@ -61,6 +62,7 @@ function fitTargets(){
 function render(force=false){
  const nextKey=petSceneKey(state,portrait());
  if(!drag&&(force||nextKey!==sceneKey)){
+  play?.stop();
   const from=approach?.anchor();approach?.stop();
   const target=document.activeElement?.closest('[data-care],.pet-character');
   const focus=target?.dataset.care,catFocused=target?.classList.contains('pet-character');
@@ -68,6 +70,7 @@ function render(force=false){
   if(!force)approach?.move(from);
   if(focus)scene.querySelector(`[data-care="${focus}"]`)?.focus({preventScroll:true});else if(catFocused)scene.querySelector('.pet-character')?.focus({preventScroll:true});
  }
+ play?.sync(state);
  setText('.pet-wish',petWish(state));setText('#status',state.message);
  setText('#pet-mood',state.asleep?'Дремлет':state.needs[2]<35?'Хочет внимания':state.needs[2]>75?'Доволен':'Спокоен');
  const minutes=Math.floor(state.activeSeconds/60);
@@ -98,7 +101,7 @@ function tick(){
  timer=setTimeout(tick,1000);
 }
 function sync(){
- cancelDrag();life?.sync();if(blocked()){approach?.stop();stopClock();save(true);}else startClock();
+ cancelDrag();life?.sync();if(blocked()){play?.stop();approach?.stop();stopClock();save(true);}else{startClock();play?.sync(state);}
  window.dispatchEvent(new Event(blocked()?'corio:pause':'corio:resume'));
 }
 function act(type){
@@ -119,7 +122,7 @@ if(WITH_LIMITS){
 window.__corioModes=()=>modes?.state()||{mode:'calm',remaining:null};
 window.__pet=()=>structuredClone(state);window.__mini=window.__pet;
 window.__petUI=()=>({paused,platformPaused,focused,ownsCat,ready:assetsReady,blocked:blocked(),storageOK,drag:!!drag,clockRunning:timer!==null,budget:structuredClone(budget),migrated:loaded.migrated});
-life=createPetLife({scene,blocked});approach=createPetApproach({scene,blocked});setupFocusUI({unit:'действий'});new ResizeObserver(fitTargets).observe(scene);
+life=createPetLife({scene,blocked});approach=createPetApproach({scene,blocked,onArrive:()=>play?.sync(state)});play=createPetPlay({scene,blocked,isApproaching:()=>approach.isMoving()});setupFocusUI({unit:'действий'});new ResizeObserver(fitTargets).observe(scene);
 scene.addEventListener('click',event=>{
  const object=event.target.closest('[data-care]');
  if(object){if(object.dataset.care!=='play'||event.detail===0)act(object.dataset.care);return;}
@@ -150,7 +153,7 @@ new MutationObserver(sync).observe(document.body,{subtree:true,attributes:true,a
 window.addEventListener('corio:platform-pause',()=>{platformPaused=true;sync();});window.addEventListener('corio:platform-resume',()=>{platformPaused=false;sync();});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&focused)takeCat();sync();});window.addEventListener('blur',()=>{focused=false;sync();});window.addEventListener('focus',()=>{focused=true;takeCat();sync();});
 window.addEventListener('storage',event=>{if(event.key===OWNER_KEY){isOwner();if(!ownsCat)readLatest();sync();}else if(event.key===PET_LIFE_KEY&&!isOwner()){readLatest();life?.sync();}});
-window.addEventListener('pagehide',()=>{approach.stop();stopClock();save(true);try{if(localStorage.getItem(OWNER_KEY)===ownerId)localStorage.removeItem(OWNER_KEY);}catch{}ownsCat=false;life.stop();});
+window.addEventListener('pagehide',()=>{play.stop();approach.stop();stopClock();save(true);try{if(localStorage.getItem(OWNER_KEY)===ownerId)localStorage.removeItem(OWNER_KEY);}catch{}ownsCat=false;life.stop();});
 window.addEventListener('pageshow',()=>{focused=document.hasFocus();if(assetsReady&&focused&&!document.hidden){takeCat();sync();}});
 window.addEventListener('resize',()=>{cancelDrag();render(true);});
 document.addEventListener('keydown',event=>{if(event.repeat&&['Enter',' '].includes(event.key)){event.preventDefault();return;}if(event.key==='Escape'&&drag){cancelDrag();render();}},{capture:true});
