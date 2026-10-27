@@ -1,4 +1,4 @@
-import {GROOM_TEXTURE_FILE,GROOM_TEXTURE_SIZE,GROOM_TEXTURE_CROPS} from './grooming-crops.mjs?v=0.20.0';
+import {GROOM_TEXTURE_FILE,GROOM_TEXTURE_SIZE,GROOM_TEXTURE_CROPS} from './grooming-crops.mjs?v=0.21.0';
 const asset=file=>new URL('../assets/'+file,import.meta.url).href;
 const freeze=value=>{for(const v of Object.values(value))if(v&&typeof v==='object')freeze(v);return Object.freeze(value);};
 // Both approved wet and candidate dry images use the same 1254px seated camera.
@@ -13,15 +13,16 @@ export const GROOM_ZONES=freeze({
 });
 const names={dust:'пыль',tangle:'свободная шерсть',mud:'грязь',soapy:'влажная грязь',foam:'пена',wet:'мокрая шерсть'};
 let serial=0;
-export function groomPose(state){return state.washed&&!state.won?'wet':'dry';}
+export function groomPose(state){return !state.won&&state.washed===true?'wet':'dry';}
 function texture(kind,box,opacity){
  const crop=GROOM_TEXTURE_CROPS[kind];if(!crop||opacity<=0)return'';
  return `<svg x="${box[0]}" y="${box[1]}" width="${box[2]}" height="${box[3]}" viewBox="${crop.join(' ')}" preserveAspectRatio="none" overflow="hidden" opacity="${opacity}" style="${kind==='dust'||kind==='mud'?'mix-blend-mode:multiply':''}"><image href="${asset(GROOM_TEXTURE_FILE)}" width="${GROOM_TEXTURE_SIZE[0]}" height="${GROOM_TEXTURE_SIZE[1]}"/></svg>`;
 }
 export function renderGroomingView(state,level){
- const pose=groomPose(state),file=pose==='wet'?'cat-wet-v1.png':'cat-dry-seated-v1.png',base=asset(file),prefix='care-'+(++serial),alpha=prefix+'-alpha';
- const zoneDefs=state.spots.map(mark=>`<mask id="${prefix}-zone-${mark.id}" maskUnits="userSpaceOnUse" x="0" y="552" width="1254" height="702" style="mask-type:alpha"><path d="${GROOM_ZONES[mark.zone].path}" fill="white" filter="url(#${prefix}-feather)"/></mask>`).join('');
- const overlays=state.spots.map(mark=>{
+ const pose=groomPose(state),file=pose==='wet'?'cat-wet-v1.png':'cat-dry-happy-v2.png',base=asset(file),prefix='care-'+(++serial),alpha=prefix+'-alpha';
+ const marks=state.won?[]:state.spots;
+ const zoneDefs=marks.map(mark=>`<mask id="${prefix}-zone-${mark.id}" maskUnits="userSpaceOnUse" x="0" y="552" width="1254" height="702" style="mask-type:alpha"><path d="${GROOM_ZONES[mark.zone].path}" fill="white" filter="url(#${prefix}-feather)"/></mask>`).join('');
+ const overlays=marks.map(mark=>{
   const zone=GROOM_ZONES[mark.zone],fraction=mark.remaining/mark.strength,clip=prefix+'-zone-'+mark.id;
   let content='';
   const recolor=(filter,opacity)=>`<image href="${base}" width="1254" height="1254" filter="url(#${prefix}-${filter})" opacity="${opacity}"/>`;
@@ -33,6 +34,7 @@ export function renderGroomingView(state,level){
   if(mark.kind==='wet')content=recolor('damp',fraction*.48);
   return `<g data-coat-zone="${mark.zone}" data-coat-kind="${mark.kind}" data-coat-remaining="${mark.remaining}" mask="url(#${clip})"><g mask="url(#${alpha})">${content}</g></g>`;
  }).join('');
- const targets=state.spots.map(mark=>{const z=GROOM_ZONES[mark.zone];return `<button type="button" class="care-zone" id="spot-${mark.id}" data-spot="${mark.id}" data-zone="${mark.zone}" style="left:${z.hit[0]/12.54}%;top:${z.hit[1]/12.54}%" aria-label="${z.name}: ${names[mark.kind]}"></button>`;}).join('');
- return `<div class="care-room"><div class="care-cat-wrap" data-care-pose="${pose}"><svg class="care-coat" viewBox="0 0 1254 1254" role="img" aria-label="Белый голубоглазый бобтейл: ${pose==='wet'?'мокрая':'сухая'} шерсть"><defs><mask id="${alpha}" style="mask-type:alpha"><image href="${base}" width="1254" height="1254"/></mask>${zoneDefs}<filter id="${prefix}-feather" x="-25%" y="-25%" width="150%" height="150%"><feGaussianBlur stdDeviation="18"/></filter><filter id="${prefix}-dust"><feColorMatrix type="matrix" values=".65 0 0 0 .12  0 .58 0 0 .11  0 0 .44 0 .08  0 0 0 1 0"/></filter><filter id="${prefix}-mud"><feColorMatrix type="matrix" values=".39 0 0 0 .1  0 .29 0 0 .07  0 0 .18 0 .04  0 0 0 1 0"/></filter><filter id="${prefix}-damp"><feColorMatrix type="matrix" values=".8 0 0 0 .02  0 .86 0 0 .02  0 0 .9 0 .03  0 0 0 1 0"/></filter></defs><image data-care-base href="${base}" width="1254" height="1254"/>${overlays}</svg>${targets}</div><div class="care-comfort" aria-label="Запас спокойствия: ${state.patience} из 3"><span>${state.patience?'Можно продолжать':'Нужна передышка'}</span>${[0,1,2].map(n=>`<i class="${n<state.patience?'filled':''}" aria-hidden="true"></i>`).join('')}</div></div>`;
+ const targets=marks.map(mark=>{const z=GROOM_ZONES[mark.zone];return `<button type="button" class="care-zone" id="spot-${mark.id}" data-spot="${mark.id}" data-zone="${mark.zone}" style="left:${z.hit[0]/12.54}%;top:${z.hit[1]/12.54}%" aria-label="${z.name}: ${names[mark.kind]}"></button>`;}).join('');
+ const hearts=state.won?'<g data-care-hearts fill="#d67f8c" opacity=".9">'+[[160,180,.9],[650,5,.9],[950,280,.85]].map(([x,y,k])=>`<g transform="translate(${x} ${y}) scale(${k*4})"><path d="M12 21 3 12C-4 4 7-3 12 5 17-3 28 4 21 12Z"/></g>`).join('')+'</g>':'';
+ return `<div class="care-room" data-care-finished="${state.won}"><div class="care-cat-wrap" data-care-pose="${pose}" data-care-state="${state.won?'clean-dry-happy':pose==='wet'?'wet':'dirty-dry'}"><svg class="care-coat" viewBox="0 0 1254 1254" role="img" aria-label="Белый голубоглазый бобтейл: ${pose==='wet'?'мокрая':'сухая'} шерсть"><defs><mask id="${alpha}" style="mask-type:alpha"><image href="${base}" width="1254" height="1254"/></mask>${zoneDefs}<filter id="${prefix}-feather" x="-25%" y="-25%" width="150%" height="150%"><feGaussianBlur stdDeviation="18"/></filter><filter id="${prefix}-dust"><feColorMatrix type="matrix" values=".65 0 0 0 .12  0 .58 0 0 .11  0 0 .44 0 .08  0 0 0 1 0"/></filter><filter id="${prefix}-mud"><feColorMatrix type="matrix" values=".39 0 0 0 .1  0 .29 0 0 .07  0 0 .18 0 .04  0 0 0 1 0"/></filter><filter id="${prefix}-damp"><feColorMatrix type="matrix" values=".8 0 0 0 .02  0 .86 0 0 .02  0 0 .9 0 .03  0 0 0 1 0"/></filter></defs><image data-care-base href="${base}" width="1254" height="1254"/>${overlays}${hearts}</svg>${targets}</div><div class="care-comfort" aria-label="Запас спокойствия: ${state.patience} из 3"><span>${state.patience?'Можно продолжать':'Нужна передышка'}</span>${[0,1,2].map(n=>`<i class="${n<state.patience?'filled':''}" aria-hidden="true"></i>`).join('')}</div></div>`;
 }

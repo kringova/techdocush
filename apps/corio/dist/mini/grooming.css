@@ -17,3 +17,10 @@
 
 .care-tools button{display:flex;align-items:center;justify-content:center;gap:4px}.care-tool-icon{width:24px;height:24px;flex:none;pointer-events:none}.care-tools button>span{pointer-events:none}.care-tool-gesture{position:fixed;z-index:100;pointer-events:none;width:44px;height:44px;filter:drop-shadow(1px 2px 1px #17374430)}.care-tool-gesture .care-tool-icon{width:100%;height:100%}
 @media(max-width:760px){.care-tools button{gap:2px}.care-tools .care-tool-icon{width:16px;height:16px}.care-tools button>span{font-size:10px;line-height:1.1}}
+
+.care-rub-progress{position:absolute;left:6px;right:6px;bottom:-3px;height:4px;border-radius:3px;background:#17374450;overflow:hidden}.care-rub-progress i{display:block;width:calc(var(--care-progress,0)*100%);height:100%;background:#f4ead4}.care-finish-portrait{position:relative;width:150px!important;height:150px!important;margin:auto}.care-finish-portrait svg{width:100%;height:100%}.care-win-hearts{position:absolute;top:0;left:-15px;right:-15px;color:#d67f8c;font-size:23px;letter-spacing:13px}.care-room[data-care-finished=true]::after{content:'Чистый и пушистый';position:absolute;top:12px;right:14px;background:#f4ead4e8;color:#173744;padding:7px 12px;border-radius:6px;font:13px Georgia,serif}
+
+body:has(.app[data-game=grooming]) #win::backdrop{background:#17374418}
+
+#win:has(.care-finish-portrait){max-height:calc(100dvh - 24px);overflow:auto;padding:18px}
+@media(max-height:500px){.care-finish-portrait{width:90px!important;height:90px!important}#win:has(.care-finish-portrait) h2{font-size:29px;margin:8px 0}.care-win-hearts{font-size:18px;letter-spacing:6px}}
