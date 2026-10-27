@@ -1,3 +1,5 @@
+CURRENT0231: Bed moved back to yarn depth; cat approaches object via bounded4frame native walk, then actual play/rest/meal position; front basket rim above sleeping paws. Dim matches search #0b1828 alpha.760784. No new art/audio, save/model/rates unchanged. Source94fc7b5/tagcorio-source-0231-20261027;115unit/24petbrowser+2groomingregression. Preserve continuous-pet scope (400puzzlelevels+pet) and v3keys.
+
 CURRENT023: One continuous persistent pet, NO levels/goals/wins/restart/scenario-picker. User2026-10-27 overrides former50pet target: series400puzzle levels plus one pet. Active-time needs, autonomous meals/drinks, gradual sleep, repeatable care and attachment. v3atomic cat+budget, read-only v2migration, active-tab ownership, playable ephemeral fallback on storage refusal.115sourceunit/22browserphases+2groomregression, source504eaef/tagcorio-source-023-20261027. Preserve exact previous scene/cat/audio and approved wet/food images. No Yandex submission.
 
 Historical snapshots below are superseded for pet mechanics.

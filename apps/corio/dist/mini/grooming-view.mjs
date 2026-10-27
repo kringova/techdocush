@@ -1,4 +1,4 @@
-import {GROOM_TEXTURE_FILE,GROOM_TEXTURE_SIZE,GROOM_TEXTURE_CROPS} from './grooming-crops.mjs?v=0.23.0';
+import {GROOM_TEXTURE_FILE,GROOM_TEXTURE_SIZE,GROOM_TEXTURE_CROPS} from './grooming-crops.mjs?v=0.23.1';
 const asset=file=>new URL('../assets/'+file,import.meta.url).href;
 const freeze=value=>{for(const v of Object.values(value))if(v&&typeof v==='object')freeze(v);return Object.freeze(value);};
 // Both approved wet and candidate dry images use the same 1254px seated camera.
