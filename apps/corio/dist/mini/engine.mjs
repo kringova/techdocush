@@ -1,11 +1,13 @@
-import {GROOMING_LEVELS as groomingLevels} from './grooming-data.mjs?v=0.21.0';
-import {LITTER_LEVELS as litterLevels} from './litter-data.mjs?v=0.21.0';
-import {tunnelEdges,traceTunnelRoute,connectedRoute} from './tunnel-route.mjs?v=0.21.0';
+import {PET_LEVELS as petLevels,PET_ACTIONS,createPet,petAction,petSolution} from './pet-care.mjs?v=0.22.0';
+export {PET_ACTIONS};
+import {GROOMING_LEVELS as groomingLevels} from './grooming-data.mjs?v=0.22.0';
+import {LITTER_LEVELS as litterLevels} from './litter-data.mjs?v=0.22.0';
+import {tunnelEdges,traceTunnelRoute,connectedRoute} from './tunnel-route.mjs?v=0.22.0';
 export {tunnelEdges,traceTunnelRoute,connectedRoute};
-import {TUNNEL_LEVELS} from './tunnel-data.mjs?v=0.21.0';
-import {SEARCH_LEVELS,SEARCH_SCENES} from './search-data.mjs?v=0.21.0';
-import {FOOD_LEVELS,FOOD_PILE_ASPECT,foodIsExposed} from './food-data.mjs?v=0.21.0';
-import {YARN_LEVELS,YARN_ANCHOR,YARN_POINT_SPACING} from './yarn-data.mjs?v=0.21.0';
+import {TUNNEL_LEVELS} from './tunnel-data.mjs?v=0.22.0';
+import {SEARCH_LEVELS,SEARCH_SCENES} from './search-data.mjs?v=0.22.0';
+import {FOOD_LEVELS,FOOD_PILE_ASPECT,foodIsExposed} from './food-data.mjs?v=0.22.0';
+import {YARN_LEVELS,YARN_ANCHOR,YARN_POINT_SPACING} from './yarn-data.mjs?v=0.22.0';
 export {FOOD_LEVELS,FOOD_PILE_ASPECT,foodIsExposed};
 // Original short scenarios for comparing mechanics. No clocks or offline decay.
 const copy=value=>structuredClone(value);
@@ -32,14 +34,6 @@ export const FOODS={
   treatJerky:{name:'Кошачье лакомство: сушёные кусочки',safe:true,why:'Это лакомство для кошек. Его отправляют коту.',icon:'treatJerky'},
   treatPaste:{name:'Кошачье лакомство: пюре',safe:true,why:'Это лакомство для кошек. Его отправляют коту.',icon:'treatPaste'}
 };
-const petLevels=[
-  {name:'Вода и ужин',needs:[1,1,4,4]},
-  {name:'Хочется поиграть',needs:[3,3,0,3]},
-  {name:'После игры',needs:[1,1,4,1]},
-  {name:'Дождливый вечер',needs:[2,2,1,2]},
-  {name:'Собираемся спать',needs:[1,1,1,1]}
-];
-export const PET_ACTIONS={food:{name:'Порция корма',effect:[2,-1,0,0]},water:{name:'Свежая вода',effect:[0,3,0,0]},play:{name:'Поиграть',effect:[-1,-1,2,-1]},rest:{name:'Отдохнуть',effect:[-1,0,-1,3]}};
 export const GROOM_STEPS={dust:['wipe',null],tangle:['brush',null],mud:['water','soapy'],soapy:['soap','foam'],foam:['rinse','wet'],wet:['towel',null]};
 export const GROOM_TOOLS={wipe:'Тканевая салфетка',brush:'Щётка',water:'Тёплая вода',soap:'Шампунь для кошек',rinse:'Смыть пену',towel:'Полотенце',pause:'Передышка'};
 const orient=(a,b,c)=>(b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x);
@@ -78,24 +72,25 @@ export const GAMES={
   search:{title:'Куда пропало?',levels:SEARCH_LEVELS,rule:'Найди предметы из списка. Приближай сцену кнопкой «+» и передвигай её, чтобы рассмотреть детали.'},
   tunnels:{title:'Настенная трасса',levels:TUNNEL_LEVELS,rule:'Поворачивай тоннели. Проведи кота к лакомству через все колокольчики. Полки и гамаки закреплены.'},
   food:{title:'Что в миске?',levels:FOOD_LEVELS,rule:'Выбери открытый продукт в миске, затем отправь его в подходящую зону. Убирай верхние предметы, чтобы открывать нижние.'},
-  pet:{title:'Вечер с котом',levels:petLevels,rule:'Помоги коту поесть, попить, поиграть и отдохнуть. Доведи все четыре показателя до трёх отметок.'},
+  pet:{title:'Вечер с котом',levels:petLevels,rule:'Нажимай на миски, клубок и лежанку. У каждого вечера своя забота; кот подскажет, чего ему хочется.'},
   grooming:{title:'Чистые лапы',levels:groomingLevels,rule:'Выбери инструмент и проведи по загрязнённой шерсти. Несколько мягких движений очищают участок. Если кот устал, дай ему передышку.'},
   litter:{title:'Пары в лотке',levels:litterLevels,rule:'Открывай ячейки совком и ищи две одинаковые формы. Здесь есть и пустые места. Несовпавшая пара снова скроется — запоминай, где что лежит.'},
   yarn:{title:'Распутай клубок',levels:YARN_LEVELS,rule:'Один клубок — одна нить. Тяни изгибы и свободный конец, пока нить не перестанет пересекать себя. Клубок остаётся на месте.'}
 };
 export function createMini(id,index=0){
+  if(id==='pet')return createPet(index);
   const level=GAMES[id]?.levels[index];if(!level)throw new RangeError('Unknown game or level');
   let data={};
   if(id==='search')data={found:[],mistakes:0,hint:null};
   if(id==='tunnels')data={pieces:copy(level.pieces)};
   if(id==='food')data={remaining:level.items.map((type,id)=>({type,id})),sorted:[],mistakes:0};
-  if(id==='pet')data={needs:[...level.needs],pose:'loaf'};
   if(id==='grooming')data={spots:copy(level.spots).map(mark=>({...mark,remaining:mark.strength})),patience:3,washed:false,workDone:0};
   if(id==='litter')data={open:[],matched:[],empty:[],pending:false};
   if(id==='yarn')data={points:copy(level.points)};
   return{id,index,moves:0,won:false,message:'',...data};
 }
 export function miniAction(state,action){
+  if(state.id==='pet')return petAction(state,action);
   if(state.won)return state;const {id,index}=state,level=GAMES[id].levels[index],next=copy(state);next.message='';
   if(id==='search'){
     if(action.type==='hint'){next.hint=level.targets.find(item=>!next.found.includes(item));if(!next.hint)return state;next.message='Подсказка отмечена на сцене.';}
@@ -110,14 +105,6 @@ export function miniAction(state,action){
     if(food.safe!==(action.bin==='safe')){next.mistakes++;next.message=food.why;}
     else{next.remaining.splice(at,1);next.sorted.push(item);next.message='';}
     next.won=!next.remaining.length;
-  }else if(id==='pet'){
-    const choice=PET_ACTIONS[action.type];if(!choice)return state;
-    if(action.type==='food'&&next.needs[0]>=4){next.message='Кот уже сыт. Лучше выбрать другое действие.';return{...state,message:next.message};}
-    next.needs=next.needs.map((n,i)=>Math.max(0,Math.min(4,n+choice.effect[i])));
-    if(next.needs.every((n,i)=>n===state.needs[i]))return state;
-    next.pose={food:'cautious',water:'cautious',play:'stretch',rest:'sleep'}[action.type];
-    next.message={food:'Кот поел. После корма можно попить.',water:'В поилке свежая вода.',play:'Поиграли. На игру уходят силы, после неё хочется пить.',rest:'Кот немного отдохнул.'}[action.type];
-    next.won=next.needs.every(n=>n>=3);
   }else if(id==='grooming'){
     if(action.type==='pause'){
       if(next.patience===3)return state;next.patience=3;next.message='Передохнули. Можно продолжать.';
@@ -176,10 +163,7 @@ export function solutionFor(id,index){
     }
     return actions;
   }
-  if(id==='pet'){
-    const initial=createMini(id,index),queue=[{state:initial,path:[]}],seen=new Set();
-    for(let cursor=0;cursor<queue.length;cursor++){const {state,path}=queue[cursor];if(state.won)return path;const key=state.needs.join(',');if(seen.has(key))continue;seen.add(key);for(const type of Object.keys(PET_ACTIONS)){const next=miniAction(state,{type});if(next.moves>state.moves)queue.push({state:next,path:[...path,{type}]});}}return null;
-  }
+  if(id==='pet')return petSolution(index);
   if(id==='grooming'){
     const actions=[];let state=createMini(id,index);while(!state.won){const action=state.patience===0?{type:'pause'}:{type:'clean',spot:state.spots[0].id,tool:GROOM_STEPS[state.spots[0].kind][0]};actions.push(action);state=miniAction(state,action);}return actions;
   }
