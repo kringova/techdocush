@@ -157,10 +157,6 @@ test('food solutions and alternative exposed choices fully clear every bowl with
   }
   assert.equal(JSON.stringify(FOOD_LEVELS),definitions);
 });
-test('pet actions cap needs, reject extra feeding at satiety, and require replenishment after play',()=>{
-  const state={...createMini('pet'),needs:[4,4,0,4]},fed=miniAction(state,{type:'food'});assert.equal(fed.moves,0);assert.deepEqual(fed.needs,state.needs);
-  const play=miniAction(state,{type:'play'});assert.deepEqual(play.needs,[4,3,2,3]);assert.ok(play.needs.every(n=>n>=0&&n<=4));
-});
 test('grooming has gradual cleaning, full wash phases, rest, undo-compatible immutable states and invalid no-ops',()=>{
   let state={...createMini('grooming'),spots:[{id:0,zone:'flank',kind:'mud',strength:2,remaining:2}]};
   const old=structuredClone(state),wrong=miniAction(state,{type:'clean',tool:'wipe',spot:0});assert.equal(wrong.spots[0].kind,'mud');assert.equal(wrong.spots[0].remaining,2);assert.equal(wrong.workDone,0);assert.deepEqual(state,old);

@@ -1,16 +1,11 @@
-import {PET_LEVELS,createPet,petAction,validatePetSave} from '../mini/pet-care.mjs?v=0.22.0';
-export function newPetBook(){return{version:2,active:0,scenes:PET_LEVELS.map((_,i)=>createPet(i))};}
-export function readPetBook(raw){
- try{
-  const book=JSON.parse(raw);
-  if(!book||book.version!==2||!Number.isInteger(book.active)||book.active<0||book.active>=PET_LEVELS.length||!Array.isArray(book.scenes)||book.scenes.length!==PET_LEVELS.length)return null;
-  const scenes=book.scenes.map((state,index)=>{const valid=validatePetSave(state);return valid?.index===index?valid:null;});
-  return scenes.every(Boolean)?{version:2,active:book.active,scenes}:null;
- }catch{return null;}
+import {createPetLifeState,validatePetLifeSave,migratePetBook} from '../mini/pet-continuous.mjs?v=0.23.0';
+export const PET_BUDGET_KEY='corio-pet-care-budget-v1';
+export function readPetHome(raw,legacyRaw=null){
+ if(raw){try{const parsed=JSON.parse(raw),envelope=parsed?.version===3&&Object.hasOwn(parsed,'cat'),state=validatePetLifeSave(envelope?parsed.cat:parsed);if(state)return{state,budget:envelope?readPetBudget(JSON.stringify(parsed.budget)):null,migrated:false,recovered:false};}catch{}}
+ const migrated=migratePetBook(legacyRaw);
+ return{state:migrated||createPetLifeState(),budget:null,migrated:!!migrated,recovered:!!raw};
 }
-export function petPrevious(state){
- if(!state.trace.length)return state;
- let previous=createPet(state.index);
- for(const type of state.trace.slice(0,-1))previous=petAction(previous,{type});
- return previous;
+export function readPetBudget(raw){
+ try{const value=JSON.parse(raw);if(value&&Number.isSafeInteger(value.used)&&value.used>=0&&Number.isSafeInteger(value.bonus)&&value.bonus>=0)return{used:value.used,bonus:value.bonus};}catch{}
+ return{used:0,bonus:0};
 }

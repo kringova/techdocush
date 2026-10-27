@@ -1,59 +1,155 @@
-import {PET_LEVELS,PET_SAVE_KEY,PET_BEST_KEY,createPet,petAction,petGoals} from '../mini/pet-care.mjs?v=0.22.0';
-import {newPetBook,readPetBook,petPrevious} from './save.mjs?v=0.22.0';
-import {petRoom,petNeeds,petChecklist} from './view.mjs?v=0.22.0';
-import {createPetLife} from './life.mjs?v=0.22.0';
-import {createModeController} from '../modes.mjs?v=0.22.0';
-import {setupFocusUI} from '../mini/focus.mjs?v=0.22.0';
-import {catFigure} from '../characters.mjs?v=0.22.0';
-const $=s=>document.querySelector(s),scene=$('#scene'),win=$('#win');
-let book=newPetBook(),best=Array(PET_LEVELS.length).fill(null),paused=false,platformPaused=false,modes,life,drag=null,storageOK=true;
-try{const raw=localStorage.getItem(PET_SAVE_KEY);if(raw){const restored=readPetBook(raw);if(restored)book=restored;else $('#save-note').textContent='Предыдущее сохранение не удалось прочитать. Открыт новый вечер.';}const saved=JSON.parse(localStorage.getItem(PET_BEST_KEY));if(Array.isArray(saved))best=best.map((_,i)=>Number.isSafeInteger(saved[i])&&saved[i]>0?saved[i]:null);}catch{storageOK=false;}
-const requested=new URLSearchParams(location.search).get('level');
-if(requested!==null){const i=Number(requested)-1;if(Number.isInteger(i)&&i>=0&&i<PET_LEVELS.length)book.active=i;}
-const state=()=>book.scenes[book.active];
-const blocked=()=>paused||platformPaused||document.hidden||win.open||!!document.querySelector('[data-game-panel][open]')||!!modes?.isModalOpen();
-function save(){try{localStorage.setItem(PET_SAVE_KEY,JSON.stringify(book));localStorage.setItem(PET_BEST_KEY,JSON.stringify(best));storageOK=true;}catch{storageOK=false;}$('#save-note').textContent=storageOK?'Вечер сохраняется в этом браузере. Пока тебя нет, ничего не меняется.':'Браузер не разрешил сохранить вечер. Сейчас можно продолжить играть.';}
-function say(text){$('#status').textContent=text;}
+import {PET_LIFE_KEY,PET_LIFE_MEMORIES,advancePetLife,petLifeAction} from '../mini/pet-continuous.mjs?v=0.23.0';
+import {readPetHome,readPetBudget,PET_BUDGET_KEY} from './save.mjs?v=0.23.0';
+import {petRoom,petNeeds,petSceneKey,petWish} from './view.mjs?v=0.23.0';
+import {createPetLife} from './life.mjs?v=0.23.0';
+import {createModeController} from '../modes.mjs?v=0.23.0';
+import {setupFocusUI} from '../mini/focus.mjs?v=0.23.0';
+
+const $=selector=>document.querySelector(selector),scene=$('#scene');
+// Preserve the previously requested optional limited mode; it never resets the cat.
+const WITH_LIMITS=true;
+const OWNER_KEY='corio-pet-active-tab-v1',ownerId=crypto.randomUUID();
+let storageOK=true,canCoordinate=true,loaded,budget;
+let lastStoredRaw=null;
+try{
+ lastStoredRaw=localStorage.getItem(PET_LIFE_KEY);
+ loaded=readPetHome(lastStoredRaw,localStorage.getItem('corio-pet-care-v2'));
+ budget=loaded.budget||readPetBudget(localStorage.getItem(PET_BUDGET_KEY));
+}catch{storageOK=false;loaded=readPetHome(null);budget=readPetBudget(null);}
+let state=loaded.state,paused=false,platformPaused=false,focused=document.hasFocus(),ownsCat=false;
+let modes=null,life=null,drag=null,sceneKey='',timer=null,lastClock=null,lastSave=0,budgetReady=false,assetsReady=false;
+const portrait=()=>innerWidth<=650&&innerHeight>innerWidth;
+const blocked=()=>!assetsReady||!ownsCat||paused||platformPaused||!focused||document.hidden||!!document.querySelector('[data-game-panel][open]')||!!modes?.isModalOpen();
+function setText(selector,value){const node=$(selector);if(node&&node.textContent!==value)node.textContent=value;}
+function isOwner(){if(!canCoordinate){ownsCat=true;return true;}try{ownsCat=localStorage.getItem(OWNER_KEY)===ownerId;}catch{ownsCat=true;}return ownsCat;}
+function readLatest(){
+ if(!canCoordinate)return;
+ try{
+  const raw=localStorage.getItem(PET_LIFE_KEY);
+  if(!raw||raw===lastStoredRaw)return;
+  const incoming=readPetHome(raw);if(incoming.recovered)return;
+  state=incoming.state;lastStoredRaw=raw;lastClock=null;sceneKey='';
+  if(incoming.budget){budget=incoming.budget;if(modes){budgetReady=false;modes.newAttempt(12,{initialBonus:budget.bonus});budgetReady=true;}}
+  if(assetsReady&&!document.hidden)render();
+ }catch{storageOK=false;}
+}
+function takeCat(){
+ if(!assetsReady||document.hidden||!focused)return false;
+ readLatest();try{localStorage.setItem(OWNER_KEY,ownerId);ownsCat=true;}catch{storageOK=false;canCoordinate=false;ownsCat=true;}
+ lastClock=null;render();return true;
+}
+function save(force=false){
+ if(!isOwner())return;
+ if(!canCoordinate){storageOK=false;setText('#save-note','Браузер не разрешил сохранение. Сейчас можно продолжить играть.');return;}
+ const now=performance.now();if(!force&&now-lastSave<5000)return;
+ try{const raw=JSON.stringify({version:3,cat:state,budget});if(raw!==lastStoredRaw)localStorage.setItem(PET_LIFE_KEY,raw);lastStoredRaw=raw;storageOK=true;lastSave=now;}catch{storageOK=false;}
+ setText('#save-note',storageOK?'Кориолан останется здесь. Пока игра закрыта, потребности не ухудшаются.':'Браузер не разрешил сохранение. Сейчас можно продолжить играть.');
+}
 function fitTargets(){
- const svg=scene.querySelector('.pet-painting'),box=svg.getBoundingClientRect(),v=svg.viewBox.baseVal,scale=Math.min(box.width/v.width,box.height/v.height);
+ const svg=scene.querySelector('.pet-painting');if(!svg)return;
+ const box=svg.getBoundingClientRect(),v=svg.viewBox.baseVal,scale=Math.min(box.width/v.width,box.height/v.height);
  if(!scale)return;
- for(const hit of svg.querySelectorAll('.pet-object-hit')){const x=+hit.getAttribute('x'),y=+hit.getAttribute('y'),w=+hit.getAttribute('width'),h=+hit.getAttribute('height'),width=Math.max(w,38/scale),height=Math.max(h,38/scale);hit.setAttribute('x',x+(w-width)/2);hit.setAttribute('y',y+(h-height)/2);hit.setAttribute('width',width);hit.setAttribute('height',height);}
+ for(const hit of svg.querySelectorAll('.pet-object-hit')){
+  const original=hit.dataset.original?JSON.parse(hit.dataset.original):['x','y','width','height'].map(a=>+hit.getAttribute(a));
+  hit.dataset.original=JSON.stringify(original);
+  const [x,y,w,h]=original,width=Math.max(w,38/scale),height=Math.max(h,38/scale);
+  for(const [key,value]of Object.entries({x:x+(w-width)/2,y:y+(h-height)/2,width,height})){const text=String(value);if(hit.getAttribute(key)!==text)hit.setAttribute(key,text);}
+ }
 }
-function render(){
- const s=state(),level=PET_LEVELS[s.index],focus=document.activeElement?.closest('[data-care]')?.dataset.care;
- $('#level-number').textContent=`${s.index+1} / ${PET_LEVELS.length}`;$('#level-name').textContent=level.name;$('#moves').textContent=s.moves;$('#goal').textContent=s.won?'Хороший вечер':petGoals(s).find(goal=>!goal.done)?.text||level.name;$('#intro').textContent=level.intro;$('#pet-checklist').innerHTML=petChecklist(s);$('#pet-needs').innerHTML=petNeeds(s);$('#undo').disabled=!s.trace.length;
- scene.innerHTML=petRoom(s,innerWidth<=650&&innerHeight>innerWidth);$('#levels').innerHTML=PET_LEVELS.map((l,i)=>`<button data-level="${i}" aria-current="${i===s.index}" class="${best[i]!==null?'completed':''}" aria-label="Вечер ${i+1}: ${l.name}">${i+1}</button>`).join('');
- $('#level-grid').innerHTML=PET_LEVELS.map((l,i)=>`<button data-level="${i}" aria-current="${i===s.index}">${i+1}. ${l.name}${best[i]!==null?' · ✓':''}</button>`).join('');
- fitTargets();say(s.message);if(focus)scene.querySelector(`[data-care="${focus}"]`)?.focus({preventScroll:true});life?.sync();
+function render(force=false){
+ const nextKey=petSceneKey(state,portrait());
+ if(!drag&&(force||nextKey!==sceneKey)){
+  const target=document.activeElement?.closest('[data-care],.pet-character');
+  const focus=target?.dataset.care,catFocused=target?.classList.contains('pet-character');
+  scene.innerHTML=petRoom(state,portrait());sceneKey=nextKey;fitTargets();
+  if(focus)scene.querySelector(`[data-care="${focus}"]`)?.focus({preventScroll:true});else if(catFocused)scene.querySelector('.pet-character')?.focus({preventScroll:true});
+ }
+ setText('.pet-wish',petWish(state));setText('#status',state.message);
+ setText('#pet-mood',state.asleep?'Дремлет':state.needs[2]<35?'Хочет внимания':state.needs[2]>75?'Доволен':'Спокоен');
+ const minutes=Math.floor(state.activeSeconds/60);
+ setText('#together',minutes<1?'Только устроились':`Вместе ${minutes} мин`);
+ setText('#pet-bond',state.affection<15?'Осваивается рядом с тобой':state.affection<50?'Всё чаще ищет твоего внимания':'Доверяет и чувствует себя дома');
+ const light=$('#light');setText('#light',state.lamp==='dim'?'☼ Сделать светлее':'☾ Приглушить свет');const dim=String(state.lamp==='dim');if(light.getAttribute('aria-pressed')!==dim)light.setAttribute('aria-pressed',dim);
+ for(const [i,value]of state.needs.entries()){
+  const track=$(`[data-need="${i}"]`),label=['Сытость','Вода','Игра','Силы'][i];
+  const transform=`scaleX(${Math.round(value)/100})`;if(track.firstElementChild.style.transform!==transform)track.firstElementChild.style.transform=transform;
+  const aria=`${label}: ${Math.round(value)} из 100`;if(track.getAttribute('aria-label')!==aria)track.setAttribute('aria-label',aria);
+ }
+ const signature=state.memories.join(',');
+ if($('#memory-list').dataset.memories!==signature){
+  $('#memory-list').dataset.memories=signature;
+  $('#memory-list').innerHTML=state.memories.length?state.memories.map(id=>`<li>${PET_LIFE_MEMORIES[id]}</li>`).join(''):'<li class="memory-empty">Здесь останутся заметки о ваших вечерах с котом.</li>';
+ }
 }
-function cancelDrag(){const current=drag;drag=null;if(current){current.toy?.removeAttribute('transform');if(scene.hasPointerCapture(current.pointer))try{scene.releasePointerCapture(current.pointer);}catch{}}}
-function sync(){cancelDrag();life?.sync();window.dispatchEvent(new Event(blocked()?'corio:pause':'corio:resume'));}
-function showWin(){if(!state().won)return;$('#win-title').textContent='Хороший вечер';$('#win-copy').textContent=state().index===PET_LEVELS.length-1?'Кориолан устроился спать. Все пять вечеров пройдены; можно вернуться к любому из них.':'Кориолану хорошо. Этот вечер сохранён — можно перейти к следующему или ещё побыть рядом.';$('#next').textContent=state().index===PET_LEVELS.length-1?'К первому вечеру':'Следующий вечер';$('#win-portrait').innerHTML=catFigure('sleep',{className:'win-cat'});win.showModal();sync();}
+function cancelDrag(){
+ const current=drag;drag=null;
+ if(current){current.toy?.removeAttribute('transform');if(scene.hasPointerCapture(current.pointer))try{scene.releasePointerCapture(current.pointer);}catch{}}
+}
+function stopClock(){clearTimeout(timer);timer=null;lastClock=null;}
+function startClock(){if(timer!==null||blocked())return;lastClock=performance.now();timer=setTimeout(tick,1000);}
+function tick(){
+ timer=null;if(!isOwner()||blocked()){lastClock=null;life?.sync();return;}
+ const now=performance.now(),elapsed=lastClock===null?0:Math.max(0,Math.min(2,(now-lastClock)/1000));lastClock=now;
+ const before=petSceneKey(state,portrait());state=advancePetLife(state,elapsed);render();save(before!==petSceneKey(state,portrait()));
+ timer=setTimeout(tick,1000);
+}
+function sync(){
+ cancelDrag();life?.sync();if(blocked()){stopClock();save(true);}else startClock();
+ window.dispatchEvent(new Event(blocked()?'corio:pause':'corio:resume'));
+}
 function act(type){
- if(blocked()||!modes.guard())return;
- const before=state(),next=petAction(before,{type});if(before===next)return;
- book.scenes[book.active]=next;render();save();modes.changed();
- if(next.won){best[next.index]=Math.min(best[next.index]??Infinity,next.moves);save();showWin();}
+ if(!ownsCat&&assetsReady&&!document.hidden&&!paused&&!platformPaused){focused=true;takeCat();sync();}
+ if(blocked())return;
+ if(type!=='light'&&WITH_LIMITS&&!modes.guard())return;
+ const before=state,next=petLifeAction(before,{type});
+ if(next===before){setText('#status',type==='food'?'Миска уже полная.':type==='water'?'В поилке уже есть вода.':state.message);return;}
+ const accepted=Object.keys(next.care).some(key=>next.care[key]>before.care[key]);
+ state=next;if(accepted&&WITH_LIMITS)budget.used++;render();save(true);
+ if(type==='pet'&&accepted)life.greet();if(accepted)modes?.changed();
 }
-function load(index){
- cancelDrag();life?.stop();if(win.open)win.close();if($('#pause-dialog').open)$('#pause-dialog').close();paused=false;book.active=index;modes.newAttempt(PET_LEVELS[index].metrics.referenceMoves);render();save();sync();if(state().won)showWin();
-}
-function undo(){cancelDrag();if(!state().trace.length)return;if(win.open)win.close();book.scenes[book.active]=petPrevious(state());render();save();modes.changed();sync();}
-function restart(){if(blocked()&&!win.open&&!modes.isModalOpen())return;book.scenes[book.active]=createPet(book.active);load(book.active);}
-modes=createModeController({gameId:'pet',host:$('[data-modes]'),getMoves:()=>state().moves,isWon:()=>state().won,canUndo:()=>!!state().trace.length,onUndo:undo,onRestart:restart,onBlock:()=>{cancelDrag();life?.sync();}});
-window.__corioModes=()=>modes.state();window.__mini=()=>structuredClone(state());window.__petUI=()=>({paused,platformPaused,blocked:blocked(),storageOK,drag:!!drag});
-life=createPetLife({scene,blocked});setupFocusUI();new ResizeObserver(fitTargets).observe(scene);
-scene.addEventListener('click',e=>{if(blocked())return;const object=e.target.closest('[data-care]');if(object){if(object.dataset.care!=='play'||e.detail===0)act(object.dataset.care);return;}if(e.target.closest('.pet-character')){life.greet();say(state().pose==='sleep'?'Кориолан дремлет рядом.':'Кориолан подставляет щёку под ладонь.');}});
-scene.addEventListener('keydown',e=>{const target=e.target.closest('[data-care],.pet-character');if(target&&['Enter',' '].includes(e.key)){e.preventDefault();if(!e.repeat)target.dispatchEvent(new MouseEvent('click',{bubbles:true}));}});
-scene.addEventListener('pointerdown',e=>{if(e.button!==0||e.isPrimary===false||blocked()||drag||!e.target.closest('[data-care="play"]'))return;const toy=scene.querySelector('[data-pet-toy]');drag={pointer:e.pointerId,startX:e.clientX,startY:e.clientY,x:e.clientX,y:e.clientY,distance:0,toy};scene.setPointerCapture(e.pointerId);});
-scene.addEventListener('pointermove',e=>{if(!drag||drag.pointer!==e.pointerId)return;if(blocked()){cancelDrag();return;}const d=Math.hypot(e.clientX-drag.x,e.clientY-drag.y);drag.distance+=d;drag.x=e.clientX;drag.y=e.clientY;const bounds=scene.querySelector('svg').getBoundingClientRect(),scale=Math.min(bounds.width/1200,bounds.height/800);drag.toy.setAttribute('transform',`translate(${Math.max(-110,Math.min(70,(e.clientX-drag.startX)/scale))} ${Math.max(-65,Math.min(65,(e.clientY-drag.startY)/scale))})`);});
-scene.addEventListener('pointerup',e=>{if(!drag||drag.pointer!==e.pointerId)return;cancelDrag();act('play');});
-scene.addEventListener('pointercancel',cancelDrag);scene.addEventListener('lostpointercapture',cancelDrag);
-document.addEventListener('click',e=>{const level=e.target.closest('[data-level]');if(level){const dialog=level.closest('dialog');if(dialog?.open)dialog.close();load(+level.dataset.level);}});
-$('#undo').addEventListener('click',()=>{if(!blocked())undo();});$('#restart').addEventListener('click',restart);$('#again').addEventListener('click',restart);$('#next').addEventListener('click',()=>load((book.active+1)%PET_LEVELS.length));$('#stay').addEventListener('click',()=>{win.close();sync();say('Можно ещё немного побыть рядом. Вечер сохранён.');});
-$('#pause').addEventListener('click',()=>{if(win.open)return;paused=true;$('#pause-dialog').showModal();sync();});$('#resume').addEventListener('click',()=>{paused=false;$('#pause-dialog').close();sync();});$('#pause-dialog').addEventListener('close',()=>{paused=false;sync();});
+$('#pet-needs').innerHTML=petNeeds(state);
+if(WITH_LIMITS){
+ modes=createModeController({gameId:'pet',host:$('[data-modes]'),getMoves:()=>budget.used,isWon:()=>false,onBlock:()=>{cancelDrag();life?.stop();},onStateChange:({bonus})=>{if(budgetReady){budget.bonus=bonus;save(true);}}});
+ modes.newAttempt(12,{initialBonus:budget.bonus});budgetReady=true;
+}else{$('[data-mode-button]').hidden=true;$('#mode-settings').remove();}
+window.__corioModes=()=>modes?.state()||{mode:'calm',remaining:null};
+window.__pet=()=>structuredClone(state);window.__mini=window.__pet;
+window.__petUI=()=>({paused,platformPaused,focused,ownsCat,ready:assetsReady,blocked:blocked(),storageOK,drag:!!drag,clockRunning:timer!==null,budget:structuredClone(budget),migrated:loaded.migrated});
+life=createPetLife({scene,blocked});setupFocusUI({unit:'действий'});new ResizeObserver(fitTargets).observe(scene);
+scene.addEventListener('click',event=>{
+ const object=event.target.closest('[data-care]');
+ if(object){if(object.dataset.care!=='play'||event.detail===0)act(object.dataset.care);return;}
+ if(event.target.closest('.pet-character'))act('pet');
+});
+scene.addEventListener('keydown',event=>{
+ const target=event.target.closest('[data-care],.pet-character');
+ if(target&&['Enter',' '].includes(event.key)){event.preventDefault();if(!event.repeat)target.dispatchEvent(new MouseEvent('click',{bubbles:true}));}
+});
+scene.addEventListener('pointerdown',event=>{
+ if(!ownsCat&&assetsReady&&!document.hidden&&!paused&&!platformPaused&&event.target.closest('[data-care="play"]')){focused=true;takeCat();sync();}
+ if(event.button!==0||event.isPrimary===false||blocked()||drag||!event.target.closest('[data-care="play"]'))return;
+ drag={pointer:event.pointerId,startX:event.clientX,startY:event.clientY,toy:scene.querySelector('[data-pet-toy]')};scene.setPointerCapture(event.pointerId);
+});
+scene.addEventListener('pointermove',event=>{
+ if(!drag||drag.pointer!==event.pointerId)return;if(blocked()){cancelDrag();return;}
+ const svg=scene.querySelector('.pet-painting'),box=svg.getBoundingClientRect(),v=svg.viewBox.baseVal,scale=Math.min(box.width/v.width,box.height/v.height);
+ drag.toy.setAttribute('transform',`translate(${Math.max(-110,Math.min(70,(event.clientX-drag.startX)/scale))} ${Math.max(-65,Math.min(65,(event.clientY-drag.startY)/scale))})`);
+});
+scene.addEventListener('pointerup',event=>{if(!drag||drag.pointer!==event.pointerId)return;cancelDrag();act('play');render();});
+scene.addEventListener('pointercancel',()=>{cancelDrag();render();});scene.addEventListener('lostpointercapture',cancelDrag);
+$('#light').addEventListener('click',()=>act('light'));
+$('#pause').addEventListener('click',()=>{paused=true;$('#pause-dialog').showModal();sync();});
+$('#resume').addEventListener('click',()=>{paused=false;$('#pause-dialog').close();sync();});
+$('#pause-dialog').addEventListener('close',()=>{paused=false;sync();});
 for(const dialog of document.querySelectorAll('dialog'))dialog.addEventListener('close',sync);
 new MutationObserver(sync).observe(document.body,{subtree:true,attributes:true,attributeFilter:['open']});
-window.addEventListener('corio:platform-pause',()=>{platformPaused=true;sync();});window.addEventListener('corio:platform-resume',()=>{platformPaused=false;sync();});document.addEventListener('visibilitychange',sync);window.addEventListener('blur',()=>{cancelDrag();life.stop();});window.addEventListener('focus',()=>life.sync());window.addEventListener('resize',()=>{cancelDrag();render();});
-document.addEventListener('keydown',e=>{if(e.repeat&&(e.key==='Enter'||e.key===' ')){e.preventDefault();return;}if(e.key==='Escape'&&drag){cancelDrag();return;}if(e.target.closest('input')||blocked())return;if(e.key.toLowerCase()==='z'){e.preventDefault();undo();}if(e.key.toLowerCase()==='r'){e.preventDefault();restart();}},{capture:true});
-modes.newAttempt(PET_LEVELS[book.active].metrics.referenceMoves);render();life.sync();if(state().won)showWin();
+window.addEventListener('corio:platform-pause',()=>{platformPaused=true;sync();});window.addEventListener('corio:platform-resume',()=>{platformPaused=false;sync();});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&focused)takeCat();sync();});window.addEventListener('blur',()=>{focused=false;sync();});window.addEventListener('focus',()=>{focused=true;takeCat();sync();});
+window.addEventListener('storage',event=>{if(event.key===OWNER_KEY){isOwner();if(!ownsCat)readLatest();sync();}else if(event.key===PET_LIFE_KEY&&!isOwner()){readLatest();life?.sync();}});
+window.addEventListener('pagehide',()=>{stopClock();save(true);try{if(localStorage.getItem(OWNER_KEY)===ownerId)localStorage.removeItem(OWNER_KEY);}catch{}ownsCat=false;life.stop();});
+window.addEventListener('pageshow',()=>{focused=document.hasFocus();if(assetsReady&&focused&&!document.hidden){takeCat();sync();}});
+window.addEventListener('resize',()=>{cancelDrag();render(true);});
+document.addEventListener('keydown',event=>{if(event.repeat&&['Enter',' '].includes(event.key)){event.preventDefault();return;}if(event.key==='Escape'&&drag){cancelDrag();render();}},{capture:true});
+render(true);save(true);
+const initialImages=[...new Set([...scene.querySelectorAll('image')].map(node=>node.href.baseVal))];
+Promise.all(initialImages.map(src=>new Promise((resolve,reject)=>{const image=new Image();image.onload=resolve;image.onerror=()=>reject(new Error(src));image.src=src;}))).then(()=>{assetsReady=true;takeCat();save(true);sync();}).catch(()=>{setText('#status','Не удалось загрузить комнату. Попробуй обновить страницу.');});

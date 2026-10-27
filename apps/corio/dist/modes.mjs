@@ -1,20 +1,20 @@
-import {createCommerce} from './commerce.mjs?v=0.22.0';
-import {SERIES,PROFILE} from './series.mjs?v=0.22.0';
+import {createCommerce} from './commerce.mjs?v=0.23.0';
+import {SERIES,PROFILE} from './series.mjs?v=0.23.0';
 
-export function createModeController({gameId,host,getMoves,isWon,canUndo=()=>false,onUndo,onRestart,onBlock=()=>{},getSDK=async()=>null}){
-  const productId=SERIES.find(g=>g.id===gameId).product,prototype=PROFILE==='web-prototype';
+export function createModeController({gameId,host,getMoves,isWon,canUndo=()=>false,onUndo,onRestart,onBlock=()=>{},onStateChange=()=>{},getSDK=async()=>null}){
+  const productId=SERIES.find(g=>g.id===gameId).product,prototype=PROFILE==='web-prototype',petCare=gameId==='pet';
   let mode=prototype?'calm':'challenge',limit=10,bonus=0,attempt=0,busy=false;
   try{const saved=localStorage.getItem('corio-mode-'+gameId);if(saved==='challenge'||(saved==='calm'&&prototype))mode=saved;}catch{}
   const commerce=createCommerce({profile:PROFILE,productId,getSDK,onPause:()=>window.dispatchEvent(new Event('corio:platform-pause')),onResume:()=>window.dispatchEvent(new Event('corio:platform-resume'))});
   const tabs=document.createElement('div');tabs.className='mode-tabs';tabs.setAttribute('role','group');tabs.setAttribute('aria-label','Режим игры');
   const calm=document.createElement('button'),challenge=document.createElement('button'),counter=document.createElement('span');
-  calm.textContent='Без ограничений';calm.dataset.mode='calm';challenge.textContent='С лимитом ходов';challenge.dataset.mode='challenge';counter.className='mode-counter';counter.setAttribute('role','status');counter.setAttribute('aria-live','polite');
+  calm.textContent='Без ограничений';calm.dataset.mode='calm';challenge.textContent=petCare?'С запасом действий':'С лимитом ходов';challenge.dataset.mode='challenge';counter.className='mode-counter';counter.setAttribute('role','status');counter.setAttribute('aria-live','polite');
   tabs.append(calm,challenge,counter);host.className='mode-controls';host.append(tabs);
   const note=document.createElement('small');note.className='mode-note';note.textContent=prototype?'В прототипе оба режима открыты. Оплаты нет.':'Без ограничений — разовая покупка для этой игры.';host.append(note);
   const dialog=document.createElement('dialog');dialog.className='mode-dialog';dialog.id='mode-dialog';document.body.append(dialog);
   const remaining=()=>mode==='calm'?null:Math.max(0,limit+bonus-getMoves());
   const save=()=>{try{localStorage.setItem('corio-mode-'+gameId,mode);}catch{}};
-  function update(){calm.setAttribute('aria-pressed',String(mode==='calm'));challenge.setAttribute('aria-pressed',String(mode==='challenge'));counter.textContent=mode==='calm'?'Ходов сколько угодно':`Осталось ходов: ${remaining()}`;}
+  function update(){calm.setAttribute('aria-pressed',String(mode==='calm'));challenge.setAttribute('aria-pressed',String(mode==='challenge'));counter.textContent=mode==='calm'?(petCare?'Свободная забота':'Ходов сколько угодно'):(petCare?`Доступно действий: ${remaining()}`:`Осталось ходов: ${remaining()}`);onStateChange({mode,limit,bonus});}
   function close(){if(dialog.open)dialog.close();}
   async function choose(next){
     if(busy)return;
@@ -26,15 +26,15 @@ export function createModeController({gameId,host,getMoves,isWon,canUndo=()=>fal
   function body(title,copy){dialog.replaceChildren();const h=document.createElement('h2');h.textContent=title;const p=document.createElement('p');p.textContent=copy;dialog.append(h,p);return p;}
   function showLimit(){
     if(dialog.open||busy||isWon())return;onBlock();
-    const message=body('Ходы закончились','Расстановка осталась на месте. Можно вернуть ход, начать заново или добавить ещё пять.');
-    const reward=button(prototype?'Добавить 5 ходов · тест':'Смотреть рекламу: +5 ходов',async()=>{
+    const message=body(petCare?'Запас действий закончился':'Ходы закончились',petCare?'Кориолан остаётся рядом. Можно добавить пять действий или продолжить заботу без ограничений.':'Расстановка осталась на месте. Можно вернуть ход, начать заново или добавить ещё пять.');
+    const reward=button(prototype?(petCare?'Добавить 5 действий · тест':'Добавить 5 ходов · тест'):(petCare?'Смотреть рекламу: +5 действий':'Смотреть рекламу: +5 ходов'),async()=>{
       if(busy)return;busy=true;reward.disabled=true;const currentAttempt=attempt;
       try{const result=await commerce.reward();if(result.rewarded&&currentAttempt===attempt){bonus+=5;close();update();}else message.textContent='Ходы не добавлены. Можно попробовать снова или вернуть ход.';}
       catch{message.textContent='Не удалось добавить ходы. Расстановка сохранена на экране.';}
       finally{busy=false;reward.disabled=false;}
     },'primary');
     const undo=button('↶ Вернуть ход',()=>{close();onUndo();changed();});undo.disabled=!canUndo();
-    dialog.append(reward,undo,button('Начать заново',()=>{close();onRestart();}),button(prototype?'Без ограничений · тест':'Открыть режим без ограничений',()=>choose('calm')));
+    dialog.append(reward);if(!petCare)dialog.append(undo,button('Начать заново',()=>{close();onRestart();}));dialog.append(button(prototype?'Без ограничений · тест':'Открыть режим без ограничений',()=>choose('calm')));if(petCare)dialog.append(button('Побыть рядом',close));
     if(prototype){const small=document.createElement('small');small.textContent='Тестовый показ механики: видео и оплаты здесь нет.';dialog.append(small);}
     dialog.showModal();
   }
@@ -52,7 +52,7 @@ export function createModeController({gameId,host,getMoves,isWon,canUndo=()=>fal
   }
   function changed(){update();if(mode==='challenge'&&remaining()===0&&!isWon())showLimit();}
   const controller={
-    newAttempt(solutionMoves){attempt++;limit=Math.max(4,Math.ceil(solutionMoves*1.35)+2);bonus=0;close();update();},
+    newAttempt(solutionMoves,{initialBonus=0}={}){attempt++;limit=Math.max(4,Math.ceil(solutionMoves*1.35)+2);bonus=Number.isSafeInteger(initialBonus)&&initialBonus>=0?initialBonus:0;close();update();},
     guard(){if(dialog.open)return false;if(mode==='challenge'&&remaining()===0){showLimit();return false;}return true;},
     changed,isModalOpen:()=>dialog.open,
     state:()=>({gameId,mode,limit,bonus,remaining:remaining(),moves:getMoves(),attempt,prototype,purchased:commerce.status().purchased,productId,busy}),

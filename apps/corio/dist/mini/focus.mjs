@@ -16,13 +16,13 @@ export function fitFocusedScene(zoom=1){
     rect.setAttribute('width',w);rect.setAttribute('height',h);
   }
 }
-export function setupFocusUI(){
+export function setupFocusUI({unit='ходов'}={}){
   if(!document.body.classList.contains('focus-game'))return;
   for(const button of document.querySelectorAll('[data-open-panel]'))button.addEventListener('click',()=>document.getElementById(button.dataset.openPanel).showModal());
   for(const button of document.querySelectorAll('[data-close-panel]'))button.addEventListener('click',()=>button.closest('dialog').close());
   for(const dialog of document.querySelectorAll('[data-game-panel]'))dialog.addEventListener('click',event=>{if(event.target===dialog){const r=dialog.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)dialog.close();}});
   const modeHost=document.querySelector('[data-modes]'),label=document.getElementById('mode-label');
-  const updateMode=()=>{if(label){const s=window.__corioModes();label.textContent=s.mode==='calm'?'Без лимита':`${s.remaining} ходов`;label.parentElement.classList.toggle('challenge-active',s.mode==='challenge');}};
+  const updateMode=()=>{if(label){const s=window.__corioModes();label.textContent=s.mode==='calm'?'Без лимита':`${s.remaining} ${unit}`;label.parentElement.classList.toggle('challenge-active',s.mode==='challenge');}};
   new MutationObserver(updateMode).observe(modeHost,{subtree:true,childList:true,characterData:true,attributes:true});updateMode();
   modeHost.addEventListener('click',event=>{if(event.target.closest('[data-mode]'))document.getElementById('mode-settings').close();});
   new ResizeObserver(()=>fitFocusedScene(window.__mini?.().selected||1)).observe(document.getElementById('scene'));
