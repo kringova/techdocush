@@ -1,19 +1,28 @@
-import {catFigure} from '../characters.mjs?v=0.25.0';
-import {createModeController} from '../modes.mjs?v=0.25.0';
-import {ITEMS,SHELF_LEVELS,createShelfGame,transfer,solveShelf} from './engine.mjs?v=0.25.0';
-import {shelfArt} from './art.mjs?v=0.25.0';
-import {setupFocusUI} from '../mini/focus.mjs?v=0.25.0';
-import {shelfCatEyes,createShelfLife} from './life.mjs?v=0.25.0';
+import {catFigure} from '../characters.mjs?v=0.26.0';
+import {createModeController} from '../modes.mjs?v=0.26.0';
+import {ITEMS,SHELF_LEVELS,createShelfGame,transfer,solveShelf} from './engine.mjs?v=0.26.0';
+import {shelfArt} from './art.mjs?v=0.26.0';
+import {setupFocusUI} from '../mini/focus.mjs?v=0.26.0';
+import {shelfCatEyes,createShelfLife} from './life.mjs?v=0.26.0';
+import {createActionFeedback} from '../action-feedback.mjs?v=0.26.0';
 const $=s=>document.querySelector(s),board=$('#shelves'),win=$('#win');
 let modes=null,platformPaused=false,paused=false,catLife=null;
-let state=createShelfGame(),selected=-1,history=[],drag=null,ghost=null,ignoreClickUntil=0;
+let state=createShelfGame(),selected=-1,history=[],drag=null,ghost=null,ignoreClickUntil=0,hintTimer=null;
 let best=Array(SHELF_LEVELS.length).fill(null);
 const progressKey='corio-shelves-50-v1';
 try{const saved=JSON.parse(localStorage.getItem(progressKey));if(Array.isArray(saved))best=best.map((_,i)=>Number.isInteger(saved[i])&&saved[i]>0?saved[i]:null);}catch{}
 const settingsOpen=()=>!!document.querySelector('[data-game-panel][open]');
 const blocked=()=>paused||platformPaused||settingsOpen()||win.open||modes?.isModalOpen();
+const feedback=createActionFeedback({gameId:'shelves',scene:board,isBlocked:()=>document.hidden||paused||platformPaused||settingsOpen()||!!modes?.isModalOpen()});
+const shelfNode=index=>board.querySelector(`[data-shelf="${index}"]`);
+const frontNode=index=>shelfNode(index)?.querySelector('.slot.front');
+const material=type=>({yarn:'wool',bowl:'ceramic',brush:'scratch'}[type]||'wood');
+const complete=items=>items.length===SHELF_LEVELS[state.index].capacity&&items.every(item=>item===items[0]);
+function clearCues(){clearTimeout(hintTimer);hintTimer=null;for(const shelf of board.querySelectorAll('.shelf'))shelf.classList.remove('capture-source','drag-source','drag-can-place','drag-over','front-hint');for(const slot of board.querySelectorAll('.drag-hidden'))slot.classList.remove('drag-hidden');}
 function fit(){const scene=$('#scene'),width=Math.min(scene.clientWidth,scene.clientHeight*1.5);board.style.width=width+'px';board.style.height=width/1.5+'px';board.style.setProperty('--shelf-width',width*.33+'px');}
-function render(){
+function render({focusShelf=null}={}){
+  const focused=document.activeElement?.closest('[data-shelf]'),restore=focusShelf??(focused&&board.contains(focused)?+focused.dataset.shelf:null);
+  clearDrag();
   const level=SHELF_LEVELS[state.index];board.replaceChildren();board.style.setProperty('--capacity',level.capacity);board.dataset.rows=state.shelves.length>4?'3':'2';
   state.shelves.forEach((items,index)=>{
     const shelf=document.createElement('section');shelf.className='shelf';shelf.dataset.shelf=index;shelf.dataset.label=`Полка ${index+1}`;shelf.tabIndex=0;shelf.setAttribute('role','button');shelf.setAttribute('aria-pressed',String(selected===index));shelf.setAttribute('aria-label',`Полка ${index+1}: ${items.length?items.map(i=>ITEMS[i].name).join(', '):'пусто'}. ${items.length?'Крайний справа: '+ITEMS[items.at(-1)].name:''}`);
@@ -30,55 +39,80 @@ function render(){
   $('#goal').textContent='Собери на каждой полке один вид вещей';
   const first=Math.max(0,Math.min(SHELF_LEVELS.length-5,state.index-2));$('#levels').innerHTML=Array.from({length:5},(_,i)=>levelButton(first+i)).join('');
   for(const button of document.querySelectorAll('[data-level]')){button.setAttribute('aria-current',String(+button.dataset.level===state.index));button.classList.toggle('completed',best[+button.dataset.level]!==null);}fit();
+  if(restore!==null)shelfNode(restore)?.focus({preventScroll:true});
 }
 function status(text){$('#status').textContent=text;}
-function load(index){clearDrag();paused=false;platformPaused=false;if($('#pause-dialog').open)$('#pause-dialog').close();ignoreClickUntil=0;if(win.open)win.close();state=createShelfGame(index);modes?.newAttempt(solveShelf(index).length);selected=-1;history=[];render();status('Возьми крайний справа предмет, затем выбери полку для него.');try{localStorage.setItem('corio-shelves-current-v1',String(index));}catch{}window.dispatchEvent(new Event('corio:resume'));}
+function load(index){feedback.cancel();clearDrag();paused=false;platformPaused=false;if($('#pause-dialog').open)$('#pause-dialog').close();ignoreClickUntil=0;if(win.open)win.close();state=createShelfGame(index);modes?.newAttempt(solveShelf(index).length);selected=-1;history=[];render();status('Возьми крайний справа предмет, затем выбери полку для него.');try{localStorage.setItem('corio-shelves-current-v1',String(index));}catch{}window.dispatchEvent(new Event('corio:resume'));}
 function finish(){
   best[state.index]=Math.min(best[state.index]??Infinity,state.moves);try{localStorage.setItem(progressKey,JSON.stringify(best));}catch{}
   $('#win-title').textContent='Всё по полочкам';$('#win-copy').textContent=`Всего перестановок: ${state.moves}. Все вещи собраны по видам.`;$('#next').textContent=state.index===SHELF_LEVELS.length-1?'Начать с первой':'Следующая раскладка';win.showModal();
 }
 function put(from,to){
   if(blocked()||modes&&!modes.guard())return false;
-  const next=transfer(state,from,to);
-  if(next===state){status('Поставь рядом с таким же предметом или на свободную полку.');return false;}
-  history.push(state);state=next;selected=-1;render();status('Предмет на новом месте.');modes?.changed();if(state.won)finish();return true;
+  const type=state.shelves[from]?.at(-1),wasComplete=state.shelves[to]?complete(state.shelves[to]):false,next=transfer(state,from,to);
+  if(next===state){status('Поставь рядом с таким же предметом или на свободную полку.');feedback.emit('shelves.invalid',{target:shelfNode(to)||frontNode(from),material:material(type)});return false;}
+  history.push(state);state=next;selected=-1;render({focusShelf:to});status('Предмет на новом месте.');
+  feedback.emit('shelves.place',{target:frontNode(to),material:material(type)});
+  if(!wasComplete&&complete(state.shelves[to]))feedback.emit('shelves.group',{target:shelfNode(to),material:material(type)});
+  if(state.won)feedback.emit('shelves.win',{target:frontNode(to)});
+  modes?.changed();if(state.won)finish();return true;
 }
 function choose(index){
   if(state.won||blocked())return;
-  if(selected===index){selected=-1;render();status('Выбор снят.');return;}
-  if(selected<0){if(!state.shelves[index].length){status('Здесь свободно. Сначала выбери предмет.');return;}selected=index;render();status(`Выбрано: ${ITEMS[state.shelves[index].at(-1)].name.toLowerCase()}. Теперь выбери полку для него.`);}
+  if(selected===index){selected=-1;feedback.cancel();render({focusShelf:index});status('Выбор снят.');return;}
+  if(selected<0){if(!state.shelves[index].length){status('Здесь свободно. Сначала выбери предмет.');return;}selected=index;render({focusShelf:index});feedback.emit('shelves.pick',{target:frontNode(index),material:material(state.shelves[index].at(-1))});status(`Выбрано: ${ITEMS[state.shelves[index].at(-1)].name.toLowerCase()}. Теперь выбери полку для него.`);}
   else put(selected,index);
 }
-function undo(){if(paused||platformPaused||settingsOpen()||!history.length)return;if(win.open)win.close();clearDrag();state=history.pop();selected=-1;render();status('Перестановка отменена.');modes?.changed();}
+function undo(){if(paused||platformPaused||settingsOpen()||!history.length)return;feedback.cancel();if(win.open)win.close();clearDrag();state=history.pop();selected=-1;render();status('Перестановка отменена.');modes?.changed();}
 board.addEventListener('click',event=>{
   if(blocked()||performance.now()<ignoreClickUntil)return;
   const shelf=event.target.closest('[data-shelf]'),slot=event.target.closest('.slot');
-  if(selected<0&&slot&&!slot.classList.contains('front')){shelf.classList.add('front-hint');status('Возьми крайний предмет справа — он крупнее и стоит на свету.');return;}
+  if(selected<0&&slot&&!slot.classList.contains('front')){clearCues();shelf.classList.add('front-hint');hintTimer=setTimeout(()=>{shelf.classList.remove('front-hint');hintTimer=null;},900);feedback.emit('shelves.invalid',{target:slot,material:material(state.shelves[+shelf.dataset.shelf].at(-1))});status('Возьми крайний предмет справа — он крупнее и стоит на свету.');return;}
   if(shelf)choose(+shelf.dataset.shelf);
 });
-board.addEventListener('keydown',event=>{if(['Enter',' '].includes(event.key)){const shelf=event.target.closest('[data-shelf]');if(shelf){event.preventDefault();choose(+shelf.dataset.shelf);}}});
+board.addEventListener('keydown',event=>{if(['Enter',' '].includes(event.key)){const shelf=event.target.closest('[data-shelf]');if(shelf){event.preventDefault();if(!event.repeat)choose(+shelf.dataset.shelf);}}});
 function clearDrag(){
+  const current=drag;drag=null;
   ghost?.remove();ghost=null;
-  if(drag&&board.hasPointerCapture(drag.pointer))try{board.releasePointerCapture(drag.pointer);}catch{}
-  drag=null;
+  clearCues();
+  if(current&&board.hasPointerCapture(current.pointer))try{board.releasePointerCapture(current.pointer);}catch{}
 }
 board.addEventListener('pointerdown',event=>{
   const front=event.target.closest('.slot.front'),shelf=front?.closest('[data-shelf]');
-  if(!shelf||blocked()||state.won||event.button!==0)return;
-  drag={from:+shelf.dataset.shelf,x:event.clientX,y:event.clientY,pointer:event.pointerId,active:false};
+  if(!shelf||blocked()||state.won||event.button!==0||event.isPrimary===false||drag)return;
+  clearCues();const item=front.querySelector('.shelf-item'),rect=item.getBoundingClientRect();
+  drag={from:+shelf.dataset.shelf,x:event.clientX,y:event.clientY,pointer:event.pointerId,active:false,source:front,type:state.shelves[+shelf.dataset.shelf].at(-1),width:rect.width,height:rect.height,grabX:event.clientX-rect.left,grabY:event.clientY-rect.top};
+  shelf.classList.add('capture-source');shelf.focus({preventScroll:true});
 });
-board.addEventListener('pointermove',event=>{
-  if(!drag||blocked()||event.pointerId!==drag.pointer)return;
-  if(!drag.active&&Math.hypot(event.clientX-drag.x,event.clientY-drag.y)>8){drag.active=true;board.setPointerCapture(event.pointerId);ghost=document.createElement('div');ghost.innerHTML=shelfArt(state.shelves[drag.from].at(-1),'shelf-item');ghost.className='drag-ghost';document.body.append(ghost);}
-  if(drag.active){event.preventDefault();ghost.style.left=event.clientX+'px';ghost.style.top=event.clientY+'px';}
+window.addEventListener('pointermove',event=>{
+  if(!drag||event.pointerId!==drag.pointer)return;
+  if(blocked()||event.pointerType==='mouse'&&event.buttons===0){clearDrag();return;}
+  if(!drag.active&&Math.hypot(event.clientX-drag.x,event.clientY-drag.y)>8){
+    drag.active=true;selected=-1;board.setPointerCapture(event.pointerId);ghost=document.createElement('div');ghost.innerHTML=shelfArt(drag.type,'shelf-item');ghost.className='drag-ghost';ghost.style.width=drag.width+'px';ghost.style.height=drag.height+'px';ghost.style.left=event.clientX-drag.grabX+'px';ghost.style.top=event.clientY-drag.grabY+'px';document.body.append(ghost);
+    shelfNode(drag.from).classList.add('drag-source');drag.source.classList.add('drag-hidden');
+    for(const target of board.querySelectorAll('[data-shelf]')){target.classList.remove('selected','can-place');target.setAttribute('aria-pressed','false');target.classList.toggle('drag-can-place',transfer(state,drag.from,+target.dataset.shelf)!==state);}
+    feedback.emit('shelves.pick',{target:ghost,material:material(drag.type)});
+  }
+  if(drag.active){
+    event.preventDefault();ghost.style.left=event.clientX-drag.grabX+'px';ghost.style.top=event.clientY-drag.grabY+'px';
+    const over=document.elementFromPoint(event.clientX,event.clientY)?.closest('[data-shelf]');
+    for(const target of board.querySelectorAll('.drag-over'))if(target!==over)target.classList.remove('drag-over');
+    if(over?.classList.contains('drag-can-place'))over.classList.add('drag-over');
+  }
 });
-board.addEventListener('pointerup',event=>{
-  if(!drag)return;const current=drag;
-  if(current.active){ignoreClickUntil=performance.now()+250;const shelf=document.elementFromPoint(event.clientX,event.clientY)?.closest('[data-shelf]');if(shelf)put(current.from,+shelf.dataset.shelf);try{board.releasePointerCapture(event.pointerId);}catch{}}
+window.addEventListener('pointerup',event=>{
+  if(!drag||event.pointerId!==drag.pointer)return;const current=drag,shelf=current.active?document.elementFromPoint(event.clientX,event.clientY)?.closest('[data-shelf]'):null;
+  if(current.active)ignoreClickUntil=performance.now()+250;
   clearDrag();
+  if(current.active&&!blocked()){
+    if(shelf&&board.contains(shelf))put(current.from,+shelf.dataset.shelf);
+    else{status('Предмет вернулся на полку.');feedback.emit('shelves.invalid',{target:frontNode(current.from),material:material(current.type)});}
+  }
 });
-board.addEventListener('pointercancel',clearDrag);window.addEventListener('blur',clearDrag);
-function pause(){if(paused||platformPaused||win.open)return;clearDrag();paused=true;$('#pause-dialog').showModal();window.dispatchEvent(new Event('corio:pause'));}
+function abortDrag(){if(drag)ignoreClickUntil=performance.now()+250;clearDrag();feedback.cancel();}
+document.addEventListener('keydown',event=>{if(event.key==='Escape'&&drag){event.preventDefault();abortDrag();}},{capture:true});
+window.addEventListener('pointercancel',event=>{if(drag?.pointer===event.pointerId)abortDrag();});board.addEventListener('lostpointercapture',event=>{if(event.target===board&&drag?.pointer===event.pointerId&&!board.hasPointerCapture(event.pointerId))abortDrag();});window.addEventListener('blur',abortDrag);
+function pause(){if(paused||platformPaused||win.open)return;feedback.cancel();clearDrag();paused=true;$('#pause-dialog').showModal();window.dispatchEvent(new Event('corio:pause'));}
 function resume(){paused=false;if($('#pause-dialog').open)$('#pause-dialog').close();window.dispatchEvent(new Event('corio:resume'));}
 $('#undo').addEventListener('click',undo);$('#restart').addEventListener('click',()=>load(state.index));$('#next').addEventListener('click',()=>load((state.index+1)%SHELF_LEVELS.length));$('#again').addEventListener('click',()=>load(state.index));$('#pause').addEventListener('click',pause);$('#resume').addEventListener('click',resume);$('#pause-dialog').addEventListener('cancel',resume);
 win.addEventListener('cancel',event=>{event.preventDefault();});
@@ -87,10 +121,10 @@ function levelButton(index){return`<button data-level="${index}" aria-label="У�
 $('#level-grid').innerHTML=SHELF_LEVELS.map((_,index)=>levelButton(index)).join('');
 function selectLevel(event){const button=event.target.closest('[data-level]');if(!button)return;load(+button.dataset.level);button.closest('dialog')?.close();}
 $('#levels').addEventListener('click',selectLevel);$('#level-grid').addEventListener('click',selectLevel);
-Object.defineProperty(window,'__shelves',{value:()=>({...state,shelves:state.shelves.map(s=>[...s]),selected,paused,platformPaused,undoDepth:history.length,best:[...best],capacity:SHELF_LEVELS[state.index].capacity})});
+Object.defineProperty(window,'__shelves',{value:()=>({...state,shelves:state.shelves.map(s=>[...s]),selected,paused,platformPaused,undoDepth:history.length,best:[...best],capacity:SHELF_LEVELS[state.index].capacity,dragging:!!drag?.active,actionFeedback:feedback.state()})});
 modes=createModeController({gameId:'shelves',host:document.querySelector('[data-modes]'),getMoves:()=>state.moves,isWon:()=>state.won,canUndo:()=>history.length>0,onUndo:undo,onRestart:()=>load(state.index),onBlock:clearDrag,getSDK:async()=>window.__corioSDK||null});
 Object.defineProperty(window,'__corioModes',{value:()=>modes.state()});
-window.addEventListener('corio:platform-pause',()=>{platformPaused=true;clearDrag();window.dispatchEvent(new Event('corio:pause'));});
+window.addEventListener('corio:platform-pause',()=>{platformPaused=true;feedback.cancel();clearDrag();window.dispatchEvent(new Event('corio:pause'));});
 window.addEventListener('corio:platform-resume',()=>{platformPaused=false;window.dispatchEvent(new Event('corio:resume'));});
 catLife=createShelfLife({host:board,isBlocked:blocked});
 const requested=Number(new URL(location.href).searchParams.get('level'));let savedLevel=0;
@@ -98,6 +132,6 @@ try{const saved=Number(localStorage.getItem('corio-shelves-current-v1'));if(Numb
 load(Number.isInteger(requested)&&requested>=1&&requested<=SHELF_LEVELS.length?requested-1:savedLevel);
 window.addEventListener('blur',pause);document.addEventListener('visibilitychange',()=>{if(document.hidden)pause();});
 new ResizeObserver(fit).observe($('#scene'));setupFocusUI();
-const cancelPanelDrag=new MutationObserver(()=>{if(blocked())clearDrag();});
+const cancelPanelDrag=new MutationObserver(()=>{if(blocked()){clearDrag();if(!win.open)feedback.cancel();}});
 for(const dialog of document.querySelectorAll('dialog'))cancelPanelDrag.observe(dialog,{attributes:true,attributeFilter:['open']});
 win.querySelector('.win-cat').outerHTML=catFigure('loaf',{className:'win-cat'});

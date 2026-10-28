@@ -1,4 +1,4 @@
-import {createCatIdle} from './cat-idle.mjs?v=0.25.0';
+import {createCatIdle} from './cat-idle.mjs?v=0.26.0';
 const asset=file=>new URL('../assets/'+file,import.meta.url).href;
 export function createSearchLife({scene,isBlocked}){
   let focused=document.hasFocus(),voice=true,audio=null,voiceStarts=0,voiceError=false;
@@ -6,6 +6,7 @@ export function createSearchLife({scene,isBlocked}){
   let lampTimer=null,lampPending=null,lamp={x:400,y:sceneHeight/2},lastLamp=0,lampUpdates=0,keyboardFocus=false;
   function markFocus(){for(const node of scene.querySelectorAll('.search-cat,.search-object'))node.toggleAttribute('data-keyboard-focus',keyboardFocus);}
   try{voice=localStorage.getItem('corio-cat-voice-v1')!=='off';}catch{}
+  const voiceSettings=()=>window.__corioActionVoice?.()||{enabled:voice,volume:.38};
   const blocked=()=>!focused||document.hidden||isBlocked();
   function stopVoice(){if(audio){audio.pause();audio.currentTime=0;}}
   const idle=createCatIdle({host:scene,isBlocked,parts:['eyes','ear','lick']});
@@ -14,9 +15,9 @@ export function createSearchLife({scene,isBlocked}){
     // A second click never overlays or restarts an unfinished voice.
     if(audio&&!audio.paused)return;
     idle.react('ear');
-    if(!voice)return;
+    const settings=voiceSettings();voice=settings.enabled;if(!voice||settings.volume===0)return;
     audio??=new Audio(asset('meow-long-v1.mp3'));audio.preload='none';audio.loop=false;
-    audio.volume=Math.max(0,Math.min(1,window.__corioMusic?.().volume??.38));
+    audio.volume=Math.max(0,Math.min(1,settings.volume));
     audio.currentTime=0;voiceError=false;voiceStarts++;
     audio.play().catch(()=>{voiceError=true;});
   }
@@ -49,9 +50,9 @@ export function createSearchLife({scene,isBlocked}){
   for(const name of ['corio:pause','corio:resume','corio:platform-pause','corio:platform-resume'])window.addEventListener(name,reconcile);
   const observer=new MutationObserver(reconcile);for(const dialog of document.querySelectorAll('dialog'))observer.observe(dialog,{attributes:true,attributeFilter:['open']});
   const host=document.getElementById('sound-settings');
-  const label=document.createElement('label');label.className='cat-voice-option';
-  const checkbox=document.createElement('input');checkbox.type='checkbox';checkbox.checked=voice;checkbox.dataset.catVoice='';label.append(checkbox,'Мяуканье по нажатию');host?.append(label);
-  checkbox.addEventListener('change',()=>{voice=checkbox.checked;if(!voice)stopVoice();try{localStorage.setItem('corio-cat-voice-v1',voice?'on':'off');}catch{}});
+  voice=voiceSettings().enabled;
+  window.addEventListener('corio:action-voice-change',()=>{const settings=voiceSettings();voice=settings.enabled;if(!voice||settings.volume===0)stopVoice();else if(audio)audio.volume=settings.volume;});
+  window.addEventListener('corio:action-feedback-cancel',stopVoice);
   const credit=document.createElement('a');credit.href='https://bigsoundbank.com/meow-cat-2-s1890.html';credit.textContent='Мяуканье: Joseph SARDIN · CC0';credit.className='cat-voice-credit';credit.target='_blank';credit.rel='noopener noreferrer';host?.append(credit);
   Object.defineProperty(window,'__corioCat',{value:()=>({voice,voicePlaying:!!audio&&!audio.paused,voiceDuration:audio?.duration||0,voiceVolume:audio?.volume??0,voiceStarts,voiceError,...idle.snapshot(),lamp:{...lamp},lampUpdates,lampPending:lampTimer!==null})});
   return{

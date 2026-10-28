@@ -1,6 +1,6 @@
-import {createPetHomeState,validatePetHomeSave,migratePetLifeV3} from '../mini/pet-home.mjs?v=0.25.0';
-import {readPetHome as readPrevious,readPetBudget} from './save.mjs?v=0.25.0';
-export {readPetBudget,PET_BUDGET_KEY} from './save.mjs?v=0.25.0';
+import {createPetHomeState,validatePetHomeSave,migratePetLifeV3} from '../mini/pet-home.mjs?v=0.26.0';
+import {readPetHome as readPrevious,readPetBudget} from './save.mjs?v=0.26.0';
+export {readPetBudget,PET_BUDGET_KEY} from './save.mjs?v=0.26.0';
 
 export function readPetHome(raw,previousRaw=null,oldBookRaw=null){
  if(raw){try{

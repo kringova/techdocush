@@ -1,6 +1,7 @@
-import {createModeController} from '../modes.mjs?v=0.25.0';
-import {SIZE,LEVELS,createGame,move,covered,unlocked,findPath} from './game-engine.mjs?v=0.25.0';
-import {paintRoom,roomArtReady,decodeRoomArt} from './room-art.mjs?v=0.25.0';
+import {createModeController} from '../modes.mjs?v=0.26.0';
+import {SIZE,LEVELS,createGame,move,covered,unlocked,findPath} from './game-engine.mjs?v=0.26.0';
+import {paintRoom,roomArtReady,decodeRoomArt} from './room-art.mjs?v=0.26.0';
+import {createActionFeedback} from '../action-feedback.mjs?v=0.26.0';
 
 const $=selector=>document.querySelector(selector);
 const canvas=$('#board'),ctx=canvas.getContext('2d'),overlay=$('#overlay');
@@ -10,10 +11,12 @@ canvas.width=WORLD;canvas.height=WORLD;
 const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
 let game=createGame(),phase='loading',visual={x:game.x,y:game.y},transition=null,held=null,holdAt=0,pressedButton=null,history=[];
 let modes=null,platformPhase=null;
-let soundEnabled=false,audio=null,blockedAt=-1000,noticeAt=0,lastTime=0,overlayAction=null;
+let blockedAt=-1000,noticeAt=0,lastTime=0,overlayAction=null;
 let frameId=null,renderedFrames=0,noticeTimer=null,freezeAt=null,heading='right';
+const feedback=createActionFeedback({gameId:'boxes',scene:canvas,isBlocked:()=>document.hidden||!['playing','won'].includes(phase)||!!document.querySelector('dialog[open]:not([data-action-result="true"])')});
+function cellPoint(x,y){const rect=canvas.getBoundingClientRect(),size=LEVELS[game.levelIndex].size;return{x:rect.left+(x+.5)/size*rect.width,y:rect.top+(y+.5)/size*rect.height};}
 function requestDraw(){if(frameId===null&&!document.hidden&&!['loading','error'].includes(phase))frameId=requestAnimationFrame(render);}
-function freezeDrawing(){if(freezeAt===null)freezeAt=performance.now();if(frameId!==null)cancelAnimationFrame(frameId);frameId=null;}
+function freezeDrawing(){feedback.cancel();if(freezeAt===null)freezeAt=performance.now();if(frameId!==null)cancelAnimationFrame(frameId);frameId=null;}
 function resumeDrawing(){if(freezeAt!==null&&transition)transition.start+=performance.now()-freezeAt;freezeAt=null;requestDraw();}
 function resetNotice(){clearTimeout(noticeTimer);noticeTimer=setTimeout(()=>{if(phase==='playing')$('#status').textContent=unlocked(game)?'Дверь открыта. Теперь к выходу.':'Поставь коробки на круглые коврики.';noticeAt=0;},2400);}
 const progressKey='corio-box-puzzle-50-v1';
@@ -90,14 +93,6 @@ function render(time){
   if(held&&phase==='playing'&&time>=holdAt&&!transition){step(held);holdAt=time+155;}
   lastTime=time;if((phase==='playing'||phase==='won')&&(transition||held||!reduced&&time-blockedAt<180))requestDraw();
 }
-function tone(kind){
-  if(!soundEnabled)return;
-  try{
-    audio??=new(window.AudioContext||window.webkitAudioContext)();audio.resume();
-    const now=audio.currentTime,tones=kind==='win'?[523.25,659.25,783.99]:kind==='blocked'?[110]:[180];
-    tones.forEach((frequency,i)=>{const oscillator=audio.createOscillator(),gain=audio.createGain();oscillator.type='sine';oscillator.frequency.setValueAtTime(frequency,now+i*.1);gain.gain.setValueAtTime(0,now+i*.1);gain.gain.linearRampToValueAtTime(kind==='step'?.025:.045,now+i*.1+.012);gain.gain.exponentialRampToValueAtTime(.001,now+i*.1+(kind==='win'?.32:.085));oscillator.connect(gain);gain.connect(audio.destination);oscillator.start(now+i*.1);oscillator.stop(now+i*.1+.4);});
-  }catch{}
-}
 function clearHold(){held=null;if(pressedButton){pressedButton.classList.remove('held');pressedButton=null;}}
 function refresh(){
   const level=LEVELS[game.levelIndex];$('#room-number').textContent=`${String(game.levelIndex+1).padStart(2,'0')} / ${LEVELS.length}`;$('#room-name').textContent=level.name;$('#moves').textContent=game.moves;
@@ -108,25 +103,31 @@ function refresh(){
   requestDraw();
 }
 function loadLevel(index){
-  window.dispatchEvent(new Event('corio:resume'));clearHold();clearTimeout(noticeTimer);freezeAt=null;if(overlay.open)overlay.close();game=createGame(index);modes?.newAttempt(findPath(LEVELS[index]).length);WORLD=LEVELS[index].size*C;resizeRendering(true);history=[];phase='playing';visual={x:game.x,y:game.y};transition=null;heading=LEVELS[index].exit.x>game.x?'right':'left';noticeAt=0;$('#status').textContent='Поставь коробки на круглые коврики.';drawBackground();refresh();
+  feedback.cancel();window.dispatchEvent(new Event('corio:resume'));clearHold();clearTimeout(noticeTimer);freezeAt=null;if(overlay.open)overlay.close();game=createGame(index);modes?.newAttempt(findPath(LEVELS[index]).length);WORLD=LEVELS[index].size*C;resizeRendering(true);history=[];phase='playing';visual={x:game.x,y:game.y};transition=null;heading=LEVELS[index].exit.x>game.x?'right':'left';noticeAt=0;$('#status').textContent='Поставь коробки на круглые коврики.';drawBackground();refresh();
 }
-function undo(){if(!history.length||!['playing','won'].includes(phase))return;clearHold();game=history.pop();transition=null;visual={x:game.x,y:game.y};phase='playing';if(overlay.open)overlay.close();$('#status').textContent='Ход отменён.';noticeAt=performance.now();resetNotice();refresh();modes?.changed();}
+function undo(){if(!history.length||!['playing','won'].includes(phase))return;feedback.cancel();clearHold();game=history.pop();transition=null;visual={x:game.x,y:game.y};phase='playing';if(overlay.open)overlay.close();$('#status').textContent='Ход отменён.';noticeAt=performance.now();resetNotice();refresh();modes?.changed();}
 function step(direction){
   if(phase!=='playing'||$('#level-picker').open||transition)return;
   if(modes&&!modes.guard())return;
-  const next=move(game,direction);if(next===game){blockedAt=performance.now();$('#status').textContent='Тут не пройти. Попробуй другой проход.';noticeAt=performance.now();resetNotice();tone('blocked');requestDraw();return;}
+  const previous=game,next=move(previous,direction);if(next===previous){blockedAt=performance.now();$('#status').textContent='Тут не пройти. Попробуй другой проход.';noticeAt=performance.now();resetNotice();feedback.emit('boxes.blocked',{point:cellPoint(game.x,game.y)});requestDraw();return;}
   heading=direction;
-  history.push(game);transition={x:visual.x,y:visual.y,start:performance.now()};game=next;tone('step');refresh();modes?.changed();
+  history.push(previous);transition={x:visual.x,y:visual.y,start:performance.now()};game=next;
+  const pushed=game.pushes>previous.pushes,movedBox=pushed?game.boxes.find((box,index)=>box.x!==previous.boxes[index].x||box.y!==previous.boxes[index].y):null;
+  feedback.emit(pushed?'boxes.push':'boxes.step',{point:cellPoint(movedBox?.x??game.x,movedBox?.y??game.y),material:pushed?'cardboard':'wood'});
+  if(movedBox&&LEVELS[game.levelIndex].targets.some(target=>target.x===movedBox.x&&target.y===movedBox.y))feedback.emit('boxes.mat',{point:cellPoint(movedBox.x,movedBox.y)});
+  if(!unlocked(previous)&&unlocked(game)){const exit=LEVELS[game.levelIndex].exit;feedback.emit('boxes.unlock',{point:cellPoint(exit.x,exit.y)});}
+  refresh();modes?.changed();
   if(unlocked(game))$('#status').textContent='Все коврики заняты. Дверь открыта.';
   else if(game.x===LEVELS[game.levelIndex].exit.x&&game.y===LEVELS[game.levelIndex].exit.y)$('#status').textContent='Дверь закрыта: займи коробками все коврики.';
   if(game.won){
     phase='won';clearHold();best[game.levelIndex]=Math.min(best[game.levelIndex]??Infinity,game.moves);try{localStorage.setItem(progressKey,JSON.stringify(best));}catch{}refresh();
     const completedGame=game;
-    setTimeout(()=>{if(phase!=='won'||game!==completedGame)return;tone('win');showOverlay('won');},reduced?0:140);
+    setTimeout(()=>{if(phase!=='won'||game!==completedGame)return;feedback.emit('boxes.win',{point:cellPoint(game.x,game.y)});showOverlay('won');},reduced?0:140);
   }
 }
 function showOverlay(kind){
   clearHold();const won=kind==='won',last=game.levelIndex===LEVELS.length-1;
+  overlay.dataset.actionResult=String(won);
   $('#win-picture').hidden=!won;$('#overlay-label').textContent=won?(last?'Все уровни пройдены':'Дверь найдена'):'Пауза';
   $('#overlay-title').textContent=won?(last?'Можно отдыхать.':'Вот и выход.'):'Кот подождёт.';
   $('#overlay-copy').textContent=won?`${game.moves} шагов, ${game.pushes} толчков. ${last?'Все комнаты пройдены. Можно вернуться в любую.':'Следующая комната уже открыта.'}`:'Продолжим с того же места.';
@@ -134,7 +135,7 @@ function showOverlay(kind){
   overlayAction=won?()=>loadLevel(last?0:game.levelIndex+1):resume;
   if(!overlay.open)overlay.showModal();
 }
-function pause(){if(phase!=='playing'||$('#level-picker').open)return;window.dispatchEvent(new Event('corio:pause'));phase='paused';freezeDrawing();showOverlay('paused');if(audio)audio.suspend();}
+function pause(){if(phase!=='playing'||$('#level-picker').open)return;window.dispatchEvent(new Event('corio:pause'));phase='paused';freezeDrawing();showOverlay('paused');}
 function resume(){if(phase!=='paused')return;window.dispatchEvent(new Event('corio:resume'));phase='playing';overlay.close();resumeDrawing();canvas.focus({preventScroll:true});}
 $('#primary').addEventListener('click',()=>{overlayAction?.();canvas.focus({preventScroll:true});});
 $('#secondary').addEventListener('click',()=>{loadLevel(game.levelIndex);canvas.focus({preventScroll:true});});
@@ -145,7 +146,6 @@ $('#pause').addEventListener('click',pause);
 $('#choose-level').addEventListener('click',()=>{clearHold();freezeDrawing();$('#level-picker').showModal();});
 $('#close-levels').addEventListener('click',()=>$('#level-picker').close());
 $('#level-picker').addEventListener('close',()=>{if(phase==='playing')resumeDrawing();});
-$('#sound').addEventListener('click',()=>{soundEnabled=!soundEnabled;$('#sound').setAttribute('aria-pressed',String(soundEnabled));$('#sound').setAttribute('aria-label',soundEnabled?'Выключить звук':'Включить звук');if(soundEnabled)tone('step');else if(audio)audio.suspend();});
 for(let index=0;index<LEVELS.length;index++){const button=document.createElement('button');button.textContent=index+1;button.dataset.level=index;button.setAttribute('aria-label',`Комната ${index+1}: ${LEVELS[index].name}`);button.addEventListener('click',()=>{if($('#level-picker').open)$('#level-picker').close();loadLevel(index);canvas.focus({preventScroll:true});});$('#levels').append(button);}
 for(const button of document.querySelectorAll('[data-direction]')){
   button.addEventListener('pointerdown',event=>{if(event.button!==0||phase!=='playing')return;event.preventDefault();clearHold();pressedButton=button;button.classList.add('held');button.setPointerCapture(event.pointerId);held=button.dataset.direction;step(held);holdAt=performance.now()+240;});
@@ -153,6 +153,7 @@ for(const button of document.querySelectorAll('[data-direction]')){
 }
 const keyDirections={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',KeyW:'up',KeyS:'down',KeyA:'left',KeyD:'right'};
 document.addEventListener('keydown',event=>{
+  if(event.target.closest?.('input,textarea,select,[contenteditable=true],[data-music]'))return;
   if(event.ctrlKey||event.metaKey||event.altKey)return;
   if($('#level-picker').open||modes?.isModalOpen())return;
   if(event.code==='Escape'){if(phase==='playing'){event.preventDefault();pause();}return;}
@@ -175,7 +176,7 @@ canvas.addEventListener('pointerup',event=>{
 });
 canvas.addEventListener('pointercancel',()=>{touch=null;clearHold();});
 // Read-only state is available for prototype verification, never for moving the cat.
-Object.defineProperty(window,'__corio',{value:()=>({...game,boxes:game.boxes.map(b=>({...b})),phase,soundEnabled,animating:!!transition,renderedFrames,framePending:frameId!==null,undoDepth:history.length,covered:covered(LEVELS[game.levelIndex],game.boxes),unlocked:unlocked(game),best:[...best],artVersion:'boxes-kit-v2-cat-v2-planter-v1',heading,assetsReady:roomArtReady()}),writable:false});
+Object.defineProperty(window,'__corio',{value:()=>({...game,boxes:game.boxes.map(b=>({...b})),phase,actionFeedback:feedback.state(),animating:!!transition,renderedFrames,framePending:frameId!==null,undoDepth:history.length,covered:covered(LEVELS[game.levelIndex],game.boxes),unlocked:unlocked(game),best:[...best],artVersion:'boxes-kit-v2-cat-v2-planter-v1',heading,assetsReady:roomArtReady()}),writable:false});
 modes=createModeController({gameId:'boxes',host:document.querySelector('[data-modes]'),getMoves:()=>game.moves,isWon:()=>game.won,canUndo:()=>history.length>0,onUndo:undo,onRestart:()=>loadLevel(game.levelIndex),onBlock:clearHold,getSDK:async()=>window.__corioSDK||null});
 new MutationObserver(()=>{if($('#mode-dialog').open){clearHold();freezeDrawing();}else if(phase==='playing')resumeDrawing();}).observe($('#mode-dialog'),{attributes:true,attributeFilter:['open']});
 Object.defineProperty(window,'__corioModes',{value:()=>modes.state()});

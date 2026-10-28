@@ -1,12 +1,14 @@
-import {PET_HOME_KEY as PET_LIFE_KEY,PET_HOME_MEMORIES as PET_LIFE_MEMORIES,advancePetHome as advancePetLife,petHomeAction as petLifeAction,petHomeAvailable} from '../mini/pet-home.mjs?v=0.25.0';
-import {readPetHome,readPetBudget,PET_BUDGET_KEY} from './save-v4.mjs?v=0.25.0';
-import {petRoom,petNeeds,petSceneKey,petWish,petTeaseTarget} from './view.mjs?v=0.25.0';
-import {createPetLife} from './life.mjs?v=0.25.0';
-import {createPetApproach} from './motion.mjs?v=0.25.0';
-import {createPetPlay} from './play.mjs?v=0.25.0';
-import {createPetInteractions} from './interactions.mjs?v=0.25.0';
-import {createModeController} from '../modes.mjs?v=0.25.0';
-import {setupFocusUI} from '../mini/focus.mjs?v=0.25.0';
+import {createActionFeedback} from '../action-feedback.mjs?v=0.26.0';
+import {createPetFeedback} from './feedback.mjs?v=0.26.0';
+import {PET_HOME_KEY as PET_LIFE_KEY,PET_HOME_MEMORIES as PET_LIFE_MEMORIES,advancePetHome as advancePetLife,petHomeAction as petLifeAction,petHomeAvailable} from '../mini/pet-home.mjs?v=0.26.0';
+import {readPetHome,readPetBudget,PET_BUDGET_KEY} from './save-v4.mjs?v=0.26.0';
+import {petRoom,petNeeds,petSceneKey,petWish,petTeaseTarget} from './view.mjs?v=0.26.0';
+import {createPetLife} from './life.mjs?v=0.26.0';
+import {createPetApproach} from './motion.mjs?v=0.26.0';
+import {createPetPlay} from './play.mjs?v=0.26.0';
+import {createPetInteractions} from './interactions.mjs?v=0.26.0';
+import {createModeController} from '../modes.mjs?v=0.26.0';
+import {setupFocusUI} from '../mini/focus.mjs?v=0.26.0';
 
 const $=selector=>document.querySelector(selector),scene=$('#scene');
 // Preserve the previously requested optional limited mode; it never resets the cat.
@@ -24,6 +26,8 @@ let modes=null,life=null,drag=null,sceneKey='',timer=null,lastClock=null,lastSav
 let approach=null,play=null,interactions=null,currentTool=null,roomView='room',teaseTarget=null;
 const portrait=()=>innerWidth<=650&&innerHeight>innerWidth;
 const blocked=()=>!assetsReady||!ownsCat||paused||platformPaused||!focused||document.hidden||!!document.querySelector('[data-game-panel][open]')||!!modes?.isModalOpen();
+const feedback=createActionFeedback({gameId:'pet',scene,isBlocked:blocked});
+const petFeedback=createPetFeedback({scene,feedback,blocked,isApproaching:()=>approach?.isMoving()||false});
 function setText(selector,value){const node=$(selector);if(node&&node.textContent!==value)node.textContent=value;}
 function setHidden(selector,value){const node=$(selector);if(node.hidden!==value)node.hidden=value;}
 function isOwner(){if(!canCoordinate){ownsCat=true;return true;}try{ownsCat=localStorage.getItem(OWNER_KEY)===ownerId;}catch{ownsCat=true;}return ownsCat;}
@@ -119,21 +123,22 @@ function startClock(){if(timer!==null||blocked()||interactions?.isHolding())retu
 function tick(){
  timer=null;if(!isOwner()||blocked()||interactions?.isHolding()){lastClock=null;life?.sync();return;}
  const now=performance.now(),elapsed=lastClock===null?0:Math.max(0,Math.min(2,(now-lastClock)/1000));lastClock=now;
- const before=petSceneKey(state,portrait());state=advancePetLife(state,elapsed);render();save(before!==petSceneKey(state,portrait()));
+ const previous=state,before=petSceneKey(state,portrait());state=advancePetLife(state,elapsed);render();petFeedback.changed(previous,state);save(before!==petSceneKey(state,portrait()));
  timer=setTimeout(tick,1000);
 }
 function sync(){
- life?.sync();if(blocked()){cancelDrag();interactions?.cancel();play?.stop();approach?.stop();stopClock();save(true);}else{startClock();play?.sync(state);}
+ life?.sync();if(blocked()){petFeedback.cancel();cancelDrag();interactions?.cancel();play?.stop();approach?.stop();stopClock();save(true);}else{startClock();play?.sync(state);}
  window.dispatchEvent(new Event(blocked()?'corio:pause':'corio:resume'));
 }
 function act(type,extra={}){
  if(!ownsCat&&assetsReady&&!document.hidden&&!paused&&!platformPaused){focused=true;takeCat();sync();}
  if(blocked())return;
  if(type!=='light'&&WITH_LIMITS&&!modes.guard())return;
+ const point=petFeedback.capture(type,extra.index);
  const before=state,next=petLifeAction(before,{...extra,type});
  if(next===before){setText('#status',type==='food'?'Миска уже полная.':type==='water'?'В поилке уже есть вода.':state.message);return;}
  const accepted=Object.keys(next.care).some(key=>next.care[key]>before.care[key]);
- state=next;if(accepted&&WITH_LIMITS)budget.used++;render();save(true);
+ state=next;if(accepted&&WITH_LIMITS)budget.used++;render();petFeedback.changed(before,state,{type,index:extra.index,point});save(true);
  if(type==='pet'&&accepted)life.greet();if(accepted)modes?.changed();
 }
 function toolAvailable(tool){return petHomeAvailable(state,tool==='scritch'?'pet':tool);}
@@ -153,7 +158,7 @@ if(WITH_LIMITS){
 window.__corioModes=()=>modes?.state()||{mode:'calm',remaining:null};
 window.__pet=()=>structuredClone(state);window.__mini=window.__pet;
 window.__petUI=()=>({paused,platformPaused,focused,ownsCat,ready:assetsReady,blocked:blocked(),storageOK,drag:!!drag,clockRunning:timer!==null,budget:structuredClone(budget),migrated:loaded.migrated,tool:currentTool,roomView,interaction:interactions?.state()});
-life=createPetLife({scene,blocked});approach=createPetApproach({scene,blocked,onArrive:()=>play?.sync(state)});play=createPetPlay({scene,blocked:()=>blocked()||!!interactions?.isHolding(),isApproaching:()=>approach.isMoving()});setupFocusUI({unit:'действий'});new ResizeObserver(fitTargets).observe(scene);
+life=createPetLife({scene,blocked});approach=createPetApproach({scene,blocked,onArrive:()=>{play?.sync(state);petFeedback.arrived(state);}});play=createPetPlay({scene,blocked:()=>blocked()||!!interactions?.isHolding(),isApproaching:()=>approach.isMoving(),onContact:activity=>petFeedback.contact(activity)});setupFocusUI({unit:'действий'});new ResizeObserver(fitTargets).observe(scene);
 interactions=createPetInteractions({scene,getTool:()=>currentTool,blocked,available:toolAvailable,onHoldChange:holding=>{scene.dataset.petHolding=String(holding);if(holding){stopClock();play.stop();}else if(!blocked())startClock();},onCommit:(tool,data)=>{if(tool==='tease')teaseTarget=petTeaseTarget(portrait(),data);act(tool==='scritch'?'pet':tool,data);}});
 scene.addEventListener('focusout',event=>{if(!scene.contains(event.relatedTarget))interactions.cancel();});
 for(const button of document.querySelectorAll('[data-activity]'))button.addEventListener('click',()=>chooseActivity(button.dataset.activity));
@@ -190,7 +195,7 @@ new MutationObserver(sync).observe(document.body,{subtree:true,attributes:true,a
 window.addEventListener('corio:platform-pause',()=>{platformPaused=true;sync();});window.addEventListener('corio:platform-resume',()=>{platformPaused=false;sync();});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&focused)takeCat();sync();});window.addEventListener('blur',()=>{focused=false;sync();});window.addEventListener('focus',()=>{focused=true;takeCat();sync();});
 window.addEventListener('storage',event=>{if(event.key===OWNER_KEY){isOwner();if(!ownsCat)readLatest();sync();}else if(event.key===PET_LIFE_KEY&&!isOwner()){readLatest();life?.sync();}});
-window.addEventListener('pagehide',()=>{interactions.cancel();play.stop();approach.stop();stopClock();save(true);try{if(localStorage.getItem(OWNER_KEY)===ownerId)localStorage.removeItem(OWNER_KEY);}catch{}ownsCat=false;life.stop();});
+window.addEventListener('pagehide',()=>{petFeedback.cancel();interactions.cancel();play.stop();approach.stop();stopClock();save(true);try{if(localStorage.getItem(OWNER_KEY)===ownerId)localStorage.removeItem(OWNER_KEY);}catch{}ownsCat=false;life.stop();});
 window.addEventListener('pageshow',()=>{focused=document.hasFocus();if(assetsReady&&focused&&!document.hidden){takeCat();sync();}});
 window.addEventListener('resize',()=>{cancelDrag();render(true);});
 document.addEventListener('keydown',event=>{if(event.repeat&&['Enter',' '].includes(event.key)){event.preventDefault();return;}if(event.key==='Escape'&&drag){cancelDrag();render();}},{capture:true});

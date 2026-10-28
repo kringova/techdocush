@@ -1,0 +1,18 @@
+.corio-action-audio{display:grid;grid-template-columns:minmax(0,1fr) minmax(130px,1fr);gap:10px 20px;max-width:480px;margin-top:16px;padding-top:13px;border-top:1px solid #9cafa045;color:inherit;font:12px/1.5 system-ui,sans-serif}
+.corio-action-audio-title{grid-column:1/-1;margin:0 0 2px;font:15px/1.4 Georgia,serif;color:inherit}
+.ambient-controls .corio-action-audio label{display:flex;align-items:center;gap:9px;margin:0;opacity:1;font:inherit}
+.corio-action-audio-toggle{cursor:pointer}
+.ambient-controls .corio-action-audio input[type=checkbox]{width:16px;height:16px;flex:0 0 16px;margin:0;accent-color:#d99852}
+.ambient-controls .corio-action-audio .corio-action-audio-range{display:flex;justify-content:space-between;font-size:11px;gap:12px}
+.ambient-controls .corio-action-audio input[type=range]{width:90px;max-width:38%;height:22px;margin:0;accent-color:#d99852}
+.corio-action-audio small{grid-column:1/-1;text-align:left;font:10px/1.5 system-ui,sans-serif;opacity:.7}
+.ambient-controls .corio-action-audio input:focus-visible{outline:2px solid #d99852;outline-offset:3px}
+.corio-action-mark{position:fixed;z-index:1200;display:block;box-sizing:border-box;pointer-events:none;border:2px solid #e1b778;border-radius:50%;transform:translate(-50%,-50%);opacity:.6;background:transparent;contain:layout style;will-change:opacity,transform}
+.corio-action-ring{border-width:2px}
+.corio-action-pulse{background:#e1b77825;border-color:#e1b778b0}
+.corio-action-negative{border-color:#c9a383;border-style:dashed}
+.corio-action-success{border-color:#b7c6a2;background:#b7c6a220}
+@media(max-width:600px){.corio-action-audio{grid-template-columns:minmax(0,1fr);gap:10px;max-width:none;font-size:11px}.corio-action-audio-title,.corio-action-audio small{grid-column:1}.ambient-controls .corio-action-audio input[type=range]{width:120px;max-width:45%}.ambient-controls .corio-action-audio .corio-action-audio-range{padding-left:25px;font-size:10px}}
+@media(prefers-reduced-motion:reduce){.corio-action-mark{will-change:opacity}}
+
+.corio-action-fold{margin-top:9px;font:11px/1.5 system-ui,sans-serif;color:inherit}.corio-action-fold>summary{cursor:pointer;width:max-content;max-width:100%;opacity:.85}.corio-action-fold .corio-action-audio{margin-top:10px;padding-top:10px}.corio-action-fold .corio-action-audio-title{display:none}

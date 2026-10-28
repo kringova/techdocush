@@ -1,12 +1,12 @@
 // Finite reactions to one play activity. WAAPI owns interpolation; no frame loop.
 // Hooks are plain groups: body/toy in scene units, paw in raw atlas coordinates.
-export function createPetPlay({scene,blocked=()=>false,isApproaching=()=>false}){
+export function createPetPlay({scene,blocked=()=>false,isApproaching=()=>false,onContact=()=>{}}){
  const doc=scene.ownerDocument,win=doc.defaultView;
  const reduced=win.matchMedia('(prefers-reduced-motion: reduce)');
  let current=null,lastState=null;
  function cancel(){
   const old=current;current=null;
-  if(old)for(const animation of old.animations)animation.cancel();
+  if(old){for(const timer of old.contacts)win.clearTimeout(timer);for(const animation of old.animations)animation.cancel();}
   scene.removeAttribute('data-pet-play-active');
  }
  function stop(){cancel();lastState=null;}
@@ -45,7 +45,7 @@ export function createPetPlay({scene,blocked=()=>false,isApproaching=()=>false})
    frames.paw.push({offset,transform:`translate(235px,815px) rotate(${angle}deg) translate(-235px,-815px)`});
    frames.toy.push({offset,transform:`translate(${tease?tx*.6:tx}px,${tease?ty*2:ty}px) rotate(${tease?roll/8:roll}deg)`});
   }
-  const record={body,paw,toy,episode,animations:[],finished:false};current=record;
+  const record={body,paw,toy,episode,animations:[],contacts:[],finished:false};current=record;
   try{
    for(const [name,element]of Object.entries({body,paw,toy})){
     if(!element)continue;
@@ -55,6 +55,7 @@ export function createPetPlay({scene,blocked=()=>false,isApproaching=()=>false})
     record.animations.push(element.animate(keyframes,{duration,iterations:1,fill:'none',easing:'linear'}));
    }
   }catch{cancel();return;}
+  for(let tap=0;tap<taps;tap++)record.contacts.push(win.setTimeout(()=>{if(current===record&&!blocked()&&!doc.hidden&&!reduced.matches)onContact(state.activity);},(tap+.43)/taps*duration));
   scene.setAttribute('data-pet-play-active','true');
   Promise.all(record.animations.map(animation=>animation.finished.catch(()=>{}))).then(()=>{
    if(current!==record)return;

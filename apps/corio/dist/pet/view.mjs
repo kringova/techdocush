@@ -1,6 +1,6 @@
-import {catFigure,CAT_POSES,foodFigure} from '../characters.mjs?v=0.25.0';
-import {petHomeAvailable as petLifeAvailable} from '../mini/pet-home.mjs?v=0.25.0';
-import {petProp,petRibbon,petToolPreview,petTray} from './props.mjs?v=0.25.0';
+import {catFigure,CAT_POSES,foodFigure} from '../characters.mjs?v=0.26.0';
+import {petHomeAvailable as petLifeAvailable} from '../mini/pet-home.mjs?v=0.26.0';
+import {petProp,petRibbon,petToolPreview,petTray} from './props.mjs?v=0.26.0';
 const asset=file=>new URL('../assets/'+file,import.meta.url).href;
 const image=(file,x,y,w,h)=>`<image href="${asset(file)}" x="${x}" y="${y}" width="${w}" height="${h}"/>`;
 const names=['Сытость','Вода','Игра','Силы'];

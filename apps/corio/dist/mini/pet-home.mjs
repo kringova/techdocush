@@ -1,4 +1,4 @@
-import {PET_LIFE_MEMORIES,PET_LIFE_MESSAGES,PET_LIFE_RATES,createPetLifeState,validatePetLifeSave} from './pet-continuous.mjs?v=0.25.0';
+import {PET_LIFE_MEMORIES,PET_LIFE_MESSAGES,PET_LIFE_RATES,createPetLifeState,validatePetLifeSave} from './pet-continuous.mjs?v=0.26.0';
 
 // Fictional balancing for an active, continuous home. There is no absent time,
 // medical model, feeding recommendation, death, level or victory condition.

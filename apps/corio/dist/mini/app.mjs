@@ -1,15 +1,16 @@
-import {beginGroomRub,advanceGroomRub} from './grooming-gesture.mjs?v=0.25.0';
-import {groomToolIcon} from './grooming-tools.mjs?v=0.25.0';
-import {fitFoodScene,renderFoodInfo} from './food-view.mjs?v=0.25.0';
-import {createFoodFeedback,foodCatPortrait} from './food-feedback.mjs?v=0.25.0';
-import {tunnelWalkPoints} from './tunnel-art.mjs?v=0.25.0';
-import {setupFocusUI,fitFocusedScene} from './focus.mjs?v=0.25.0';
-import {GAMES,FOODS,GROOM_STEPS,createMini,miniAction,solutionFor,connectedRoute} from './engine.mjs?v=0.25.0';
-import {renderScene,toolsFor,goalText} from './views.mjs?v=0.25.0';
-import {createModeController} from '../modes.mjs?v=0.25.0';
-import {catFigure,setCatWalkFrame} from '../characters.mjs?v=0.25.0';
-import {createSearchLife} from './search-life.mjs?v=0.25.0';
-import {updateYarnPreview} from './yarn-view.mjs?v=0.25.0';
+import {beginGroomRub,advanceGroomRub} from './grooming-gesture.mjs?v=0.26.0';
+import {groomToolIcon} from './grooming-tools.mjs?v=0.26.0';
+import {fitFoodScene,renderFoodInfo} from './food-view.mjs?v=0.26.0';
+import {createFoodFeedback,foodCatPortrait} from './food-feedback.mjs?v=0.26.0';
+import {tunnelWalkPoints} from './tunnel-art.mjs?v=0.26.0';
+import {setupFocusUI,fitFocusedScene} from './focus.mjs?v=0.26.0';
+import {GAMES,FOODS,GROOM_STEPS,createMini,miniAction,solutionFor,connectedRoute,tunnelEdges,traceTunnelRoute} from './engine.mjs?v=0.26.0';
+import {renderScene,toolsFor,goalText} from './views.mjs?v=0.26.0';
+import {createModeController} from '../modes.mjs?v=0.26.0';
+import {catFigure,setCatWalkFrame} from '../characters.mjs?v=0.26.0';
+import {createSearchLife} from './search-life.mjs?v=0.26.0';
+import {updateYarnPreview} from './yarn-view.mjs?v=0.26.0';
+import {createActionFeedback} from '../action-feedback.mjs?v=0.26.0';
 const $=query=>document.querySelector(query),id=$('[data-game]').dataset.game,game=GAMES[id],scene=$('#scene'),tools=$('#tools'),win=$('#win');
 // Keep the live note/status nodes across scene renders; feedback owns this host.
 const foodNote=id==='food'?$('#food-note'):null;
@@ -19,28 +20,82 @@ function clearCareGesture(){careGesture?.remove();careGesture=null;}
 function moveCareGesture(event){if(!careGesture)return;careGesture.style.left=(event.clientX+12)+'px';careGesture.style.top=(event.clientY+8)+'px';}
 function startCareGesture(event){clearCareGesture();careGesture=document.createElement('div');careGesture.className='care-tool-gesture';careGesture.setAttribute('aria-hidden','true');careGesture.innerHTML=groomToolIcon(selected)+'<span class="care-rub-progress"><i></i></span>';careGesture.dataset.careProgress='0';document.body.append(careGesture);moveCareGesture(event);}
 let attempt=0,settleTimer=null,settleEpoch=0,routeWalking=false,routeAnimation=null,routeFrame=null,searchLife=null,foodFeedback=null;
-let state=createMini(id),history=[],selected=id==='grooming'?'wipe':id==='litter'?'scoop':id==='search'?1:null,drag=null,ignoreClickUntil=0,paused=false,platformPaused=false,sfx=true,audio=null,sandSource=null,sandBuffer=null,modes;
+let state=createMini(id),history=[],selected=id==='grooming'?'wipe':id==='litter'?'scoop':id==='search'?1:null,drag=null,ignoreClickUntil=0,paused=false,platformPaused=false,modes;
 const manyLevels=id==='search'||id==='tunnels'||id==='food'||id==='yarn'||id==='litter'||id==='grooming';
 const key=id==='grooming'?'corio-grooming-50-v1':id==='litter'?'corio-litter-50-v1':id==='search'?'corio-search-50-v3':id==='food'?'corio-food-50-v2':id==='tunnels'?'corio-tunnels-50-v2':id==='yarn'?'corio-yarn-50-v1':'corio-'+id+'-v1';let best=Array(game.levels.length).fill(null);
 const currentLevelKey=id==='grooming'?'corio-grooming-50-current-v1':id==='litter'?'corio-litter-50-current-v1':id==='tunnels'?'corio-tunnels-v2-current-v1':id==='food'?'corio-food-50-v2-current-v1':id==='yarn'?'corio-yarn-50-current-v1':'corio-'+id+'-current-v1';
-try{sfx=localStorage.getItem('corio-litter-sfx-v1')!=='off';const value=JSON.parse(localStorage.getItem(key));if(Array.isArray(value))best=best.map((_,i)=>Number.isInteger(value[i])?value[i]:null);}catch{}
+try{const value=JSON.parse(localStorage.getItem(key));if(Array.isArray(value))best=best.map((_,i)=>Number.isInteger(value[i])?value[i]:null);}catch{}
 const settingsOpen=()=>!!document.querySelector('[data-game-panel][open]');
 const blocked=()=>settingsOpen()||paused||platformPaused||win.open||modes?.isModalOpen();
+const actionFeedback=createActionFeedback({gameId:id,scene,isBlocked:blocked});
+const reducedActionMotion=matchMedia('(prefers-reduced-motion: reduce)');
+let foodDropCues=[];
+function clearFoodDropCues(){for(const animation of foodDropCues)animation.cancel();foodDropCues=[];}
+reducedActionMotion.addEventListener('change',clearFoodDropCues);
+function showFoodDropCues(){
+  clearFoodDropCues();if(reducedActionMotion.matches)return;
+  // Both destinations get exactly the same finite cue, regardless of the food.
+  for(const art of scene.querySelectorAll('.food-destination-art')){
+    const base=getComputedStyle(art).filter,filter=base==='none'?'':base+' ';
+    foodDropCues.push(art.animate([{filter:filter+'drop-shadow(0 0 0 rgba(237,210,150,0))'},{filter:filter+'drop-shadow(0 0 7px rgba(237,210,150,.65))',offset:.3},{filter:filter+'drop-shadow(0 0 0 rgba(237,210,150,0))'}],{duration:900,iterations:1,fill:'none',easing:'ease-out'}));
+  }
+}
+function clientPoint(svg,x,y){
+  const matrix=svg?.getScreenCTM();if(!matrix)return null;
+  const point=new DOMPoint(x,y).matrixTransform(matrix);return{x:point.x,y:point.y};
+}
+function searchTarget(item){return document.getElementById('find-'+item)?.querySelector('rect')||null;}
+function tunnelLinks(snapshot,index){
+  const piece=snapshot.pieces[index],edges=tunnelEdges(piece),deltas=[[0,-1],[1,0],[0,1],[-1,0]];
+  return edges.filter(edge=>{const [dx,dy]=deltas[edge],other=snapshot.pieces.find(p=>p.x===piece.x+dx&&p.y===piece.y+dy);return other&&tunnelEdges(other).includes((edge+2)%4);});
+}
+function acceptedCue(previous,next,action,{point=null,foodBefore=null}={}){
+  if(id==='tunnels'&&next.moves>previous.moves){
+    if(next.won){if(!matchMedia('(prefers-reduced-motion: reduce)').matches)actionFeedback.emit('tunnels.connected',{target:scene.querySelector('[data-checkpoint] circle')});return;}
+    const level=game.levels[next.index],before=traceTunnelRoute(previous,level),after=traceTunnelRoute(next,level);
+    const checkpoint=after.visitedCheckpoints.find(piece=>!before.visitedCheckpoints.includes(piece));
+    if(checkpoint!==undefined){actionFeedback.emit('tunnels.checkpoint',{target:scene.querySelector(`[data-checkpoint="${checkpoint}"] circle`)});return;}
+    const oldLinks=tunnelLinks(previous,action.piece),joint=tunnelLinks(next,action.piece).find(edge=>!oldLinks.includes(edge));
+    if(joint!==undefined){const p=next.pieces[action.piece],[dx,dy]=[[0,-1],[1,0],[0,1],[-1,0]][joint];actionFeedback.emit('tunnels.joint',{point:clientPoint(scene.querySelector('svg'),(p.x+1.5)*100+dx*50,(p.y+.5)*100+dy*50)});}
+    else actionFeedback.emit('tunnels.turn',{target:scene.querySelector(`#piece-${action.piece} .turn-handle`),material:'cloth'});
+  }else if(id==='food'&&action.type==='sort'&&next.moves>previous.moves){
+    const reaction=foodFeedback?.state(),target=scene.querySelector(`[data-bin="${action.bin}"] .food-destination-art`);
+    if(reaction?.retchShown&&!foodBefore?.retchShown)actionFeedback.emit('food.retch',{visual:'none'});
+    else if(reaction?.mood==='celebrate'&&foodBefore?.goodFeeds===2&&reaction.goodFeeds===0)actionFeedback.emit('food.hearts',{visual:'none'});
+    else if(next.mistakes>previous.mistakes)actionFeedback.emit('food.wrong',{target});
+    else if(next.remaining.length<previous.remaining.length)actionFeedback.emit(action.bin==='safe'?'food.cat':'food.trash',{target});
+  }else if(id==='grooming'){
+    if(next.workDone>previous.workDone)actionFeedback.emit(next.won?'grooming.finish':'grooming.'+action.tool,{point,target:point?null:scene.querySelector('#spot-'+action.spot)});
+    else if(action.type==='pause'&&next.patience>previous.patience)actionFeedback.emit('grooming.break',{target:scene.querySelector('.care-comfort')});
+  }else if(id==='litter'&&next.moves>previous.moves){
+    const target=scene.querySelector('#cell-'+action.cell);
+    const event=next.won?'win':next.empty.length>previous.empty.length?'empty':next.matched.length>previous.matched.length?'pair':next.pending&&!previous.pending?'mismatch':'reveal';
+    actionFeedback.emit('litter.'+event,{target});
+  }else if(id==='yarn'&&next.moves>previous.moves&&next.points.some((p,i)=>p.x!==previous.points[i].x||p.y!==previous.points[i].y)){
+    actionFeedback.emit(next.won?'yarn.win':'yarn.release',{target:scene.querySelector('#node-'+action.node)});
+  }else if(id==='search'){
+    if(action.type==='hint'){if(next.hint&&next.hint!==previous.hint)actionFeedback.emit('search.hint',{target:searchTarget(next.hint)});}
+    else if(next.found.length>previous.found.length)actionFeedback.emit(next.won?'search.win':'search.found',{target:searchTarget(action.item),point});
+    else if(next.mistakes>previous.mistakes)actionFeedback.emit('search.miss',{point});
+  }
+}
 function status(text){
   const message=String(text??''),host=$('#status');host.textContent=message;
   if(id==='food'){host.hidden=!message;foodNote.dataset.hasError=String(Boolean(message));foodFeedback?.message(message);fitFoodScene(scene);}
 }
 function selectFood(item){
-  if(selected!==item)status('');selected=item;render();
+  const changed=selected!==item;if(changed)status('');selected=item;render();
+  if(changed)actionFeedback.emit('food.select',{target:scene.querySelector(`[data-food="${item}"]`)});
 }
 function render(){
+  clearFoodDropCues();
   const level=game.levels[state.index],focused=document.activeElement?.id,viewport=scene.querySelector('.search-viewport'),scroll=viewport?{x:viewport.scrollLeft,y:viewport.scrollTop}:null;
   $('#level-name').textContent=level.name;$('#level-number').textContent=`${state.index+1} / ${game.levels.length}`;$('#moves').textContent=state.moves;$('#goal').textContent=goalText(id,state,level);$('#undo').disabled=!history.length;
   if(id==='search')$('#level-conditions').textContent=`${level.clues==='silhouettes'?'Силуэты':'Слова'} · ${level.lighting==='night'?'Ночной поиск':'Обычный свет'}`;
   if(manyLevels){
     const first=Math.max(0,Math.min(game.levels.length-5,state.index-2));$('#levels').innerHTML=Array.from({length:5},(_,i)=>levelButton(first+i)).join('');
   }
-  tools.innerHTML=toolsFor(id,selected,sfx);scene.innerHTML=renderScene(id,state,level,selected,drag?.type==='yarn'?drag.preview:null);
+  tools.innerHTML=toolsFor(id,selected);scene.innerHTML=renderScene(id,state,level,selected,drag?.type==='yarn'?drag.preview:null);
   for(const button of document.querySelectorAll('[data-level]')){const index=+button.dataset.level;button.setAttribute('aria-current',String(index===state.index));button.classList.toggle('completed',best[index]!==null);button.title=best[index]!==null?'Пройдено: '+best[index]+' действий':game.levels[index].name;}
   fitFocusedScene(id==='search'?selected:1);if(id==='food'){scene.querySelector('[data-food-note-slot]').append(foodNote);foodNote.hidden=false;$('#food-info').innerHTML=renderFoodInfo(state,selected);fitFoodScene(scene);foodFeedback?.afterRender();}
   if(scroll){const viewport=scene.querySelector('.search-viewport');viewport.scrollLeft=scroll.x;viewport.scrollTop=scroll.y;}
@@ -55,8 +110,9 @@ function restoreFoodDrag(current){
   if(current.parent?.isConnected)current.parent.insertBefore(item,current.nextSibling?.parentNode===current.parent?current.nextSibling:null);
   else item.remove();
 }
-function endDrag(){
-  const current=drag,restorePreview=current?.type==='yarn';drag=null;if(id==='grooming'){careKeyboard=null;clearCareGesture();}if(current?.type==='brush'){clearCareGesture();ignoreClickUntil=performance.now()+200;}
+function endDrag(cancelFeedback=true){
+  const current=drag,restorePreview=current?.type==='yarn';if(cancelFeedback&&(current||careKeyboard))actionFeedback.cancel();clearFoodDropCues();drag=null;if(id==='grooming'){careKeyboard=null;clearCareGesture();}if(current?.type==='brush'){clearCareGesture();ignoreClickUntil=performance.now()+200;}
+  if(cancelFeedback&&(current?.type==='food'||current?.type==='yarn'))ignoreClickUntil=performance.now()+200;
   restoreFoodDrag(current);
   if(current&&scene.hasPointerCapture(current.pointer))try{scene.releasePointerCapture(current.pointer);}catch{}
   document.querySelector('.drag-food')?.remove();if(current?.type==='food'){$('#food-info').innerHTML=renderFoodInfo(state,selected);if(current.active)status(current.noteMessage);}if(restorePreview)render();
@@ -73,23 +129,24 @@ function scheduleSettle(){
   settleTimer=setTimeout(settle,950);
 }
 function load(index){
-  stopSandSound();searchLife?.newLevel();foodFeedback?.newLevel();attempt++;cancelRouteWalk();cancelSettle();endDrag();history=[];foodCaptionHistory=[];state=createMini(id,index);selected=id==='grooming'?'wipe':id==='search'?1:null;paused=false;platformPaused=false;ignoreClickUntil=0;
+  actionFeedback.cancel();clearFoodDropCues();searchLife?.newLevel();foodFeedback?.newLevel();attempt++;cancelRouteWalk();cancelSettle();endDrag();history=[];foodCaptionHistory=[];state=createMini(id,index);selected=id==='grooming'?'wipe':id==='search'?1:null;paused=false;platformPaused=false;ignoreClickUntil=0;
   if(win.open)win.close();if($('#pause-dialog').open)$('#pause-dialog').close();modes?.newAttempt(id==='litter'?game.levels[index].w*game.levels[index].h*2:solutionFor(id,index).length);render();status(id==='food'?'':id==='yarn'?'Тяни кольца и свободный конец. Убери все пересечения.':id==='tunnels'?tunnelInstruction(game.levels[index]):id==='litter'?'Найди одинаковые формы. Пустые места можно оставить.':id==='grooming'?'Зажми и поводи инструментом по участку шерсти.':game.rule);window.dispatchEvent(new Event('corio:resume'));
   if(manyLevels)try{localStorage.setItem(currentLevelKey,String(index));}catch{}
 }
-function commit(action){
+function commit(action,cue={}){
   if(blocked()||!modes.guard())return false;
   const previous=state,next=miniAction(state,action);if(next===state)return false;
-  const foodSort=id==='food'&&action.type==='sort'&&next.moves>previous.moves;
+  const foodSort=id==='food'&&action.type==='sort'&&next.moves>previous.moves,foodBefore=foodSort?foodFeedback?.state():null;
   const foodError=foodSort&&next.mistakes>previous.mistakes?FOODS[previous.remaining.find(item=>item.id===action.item).type].why:'';
   if(next.moves>state.moves){history.push(state);if(id==='food')foodCaptionHistory.push({selected,message:$('#status').textContent});}
   state=next;if(id==='food'&&state.sorted.some(item=>item.id===selected))selected=null;render();
   if(id==='food')status(foodError);else if(id==='yarn')status(state.message);else if(state.message)status(state.message);modes.changed();
   if(foodSort)foodFeedback?.sorted({correct:next.mistakes===previous.mistakes,mistakes:next.mistakes,message:foodError,bin:action.bin});
-  if(id==='litter')sandSound(action.type);
+  if(id==='search'&&action.type==='hint'&&state.hint)document.getElementById('find-'+state.hint)?.scrollIntoView({block:'nearest',inline:'center',behavior:'auto'});
+  acceptedCue(previous,next,action,{...cue,foodBefore});
   if(id==='litter'&&state.pending)scheduleSettle();
   const portrait=win.querySelector('.win-cat');if(portrait)portrait.outerHTML=id==='grooming'?'<div class="win-cat care-finish-portrait">'+foodCatPortrait('celebrate').replace('Кориолан очень доволен угощением','Кориолан чистый, сухой и довольный')+'<span class="care-win-hearts" aria-hidden="true">♥ ♥ ♥</span></div>':catFigure(id==='pet'?'sleep':'loaf',{className:'win-cat'});
-  if(state.won){endDrag();best[state.index]=Math.min(best[state.index]??Infinity,state.moves);try{localStorage.setItem(key,JSON.stringify(best));}catch{}$('#win-title').textContent={search:'Все вещи нашлись',tunnels:'Кот добрался!',food:'Миска разобрана',pet:'Хороший вечер',grooming:'Чистый, сухой и довольный',litter:'Лоток в порядке',yarn:'Нить распутана'}[id];$('#win-copy').textContent=`${state.moves} действий. ${state.index===game.levels.length-1?'Все уровни пройдены.':'Можно попробовать следующий уровень.'}`;$('#next').textContent=state.index===game.levels.length-1?'С первой':'Дальше';if(id==='tunnels')walkRoute();else win.showModal();}
+  if(state.won){endDrag(false);best[state.index]=Math.min(best[state.index]??Infinity,state.moves);try{localStorage.setItem(key,JSON.stringify(best));}catch{}$('#win-title').textContent={search:'Все вещи нашлись',tunnels:'Кот добрался!',food:'Миска разобрана',pet:'Хороший вечер',grooming:'Чистый, сухой и довольный',litter:'Лоток в порядке',yarn:'Нить распутана'}[id];$('#win-copy').textContent=`${state.moves} действий. ${state.index===game.levels.length-1?'Все уровни пройдены.':'Можно попробовать следующий уровень.'}`;$('#next').textContent=state.index===game.levels.length-1?'С первой':'Дальше';if(id==='tunnels')walkRoute();else win.showModal();}
   return true;
 }
 function cancelRouteWalk(){
@@ -113,7 +170,7 @@ function walkRoute(){
   const level=game.levels[state.index],image=scene.querySelector('#route-cat'),points=tunnelWalkPoints(state,level);
   const lengths=[0];for(let i=1;i<points.length;i++)lengths.push(lengths.at(-1)+Math.hypot(points[i].x-points[i-1].x,points[i].y-points[i-1].y));
   const total=lengths.at(-1),duration=matchMedia('(prefers-reduced-motion: reduce)').matches?0:Math.min(6500,total*5.5);
-  routeAnimation={image,points,lengths,total,duration,attempt,previous:null,elapsed:0};syncRouteMotion();
+  routeAnimation={image,points,lengths,total,duration,attempt,previous:null,elapsed:0,hammocks:new Set()};syncRouteMotion();
 }
 function advanceRoute(time){
     routeFrame=null;
@@ -134,32 +191,26 @@ function advanceRoute(time){
       if(motion.module){motion.module.classList.add('is-current');motion.module.dataset.motionChannel=channel;}
       motion.piece=piece;motion.channel=channel;
     }
+    const hammock=points[a].piece;
+    if(points[a+1].piece===hammock&&state.pieces[hammock]?.kind==='hammock'&&!motion.hammocks.has(hammock)){motion.hammocks.add(hammock);actionFeedback.emit('tunnels.hammock',{point:clientPoint(scene.querySelector('svg'),x,y),material:'cloth'});}
     const facing=points[a+1].x<points[a].x?'left':'right',walkFrame=Math.floor(elapsed/140)%4;
     if(+image.dataset.walkFrame!==walkFrame||image.dataset.facing!==facing)setCatWalkFrame(image,walkFrame,facing);
-    if(progress<1)syncRouteMotion();else{cancelRouteWalk();if(!win.open)win.showModal();}
+    if(progress<1)syncRouteMotion();else{actionFeedback.emit('tunnels.arrive',{point:clientPoint(scene.querySelector('svg'),x,y)});cancelRouteWalk();if(!win.open)win.showModal();}
 }
 
 function undo(){
-  if(paused||platformPaused||!history.length)return;cancelRouteWalk();cancelSettle();if(win.open)win.close();endDrag();state=history.pop();
+  if(paused||platformPaused||!history.length)return;actionFeedback.cancel();const previous=state;cancelRouteWalk();cancelSettle();if(win.open)win.close();endDrag();state=history.pop();
   const caption=id==='food'?foodCaptionHistory.pop():null;if(caption)selected=caption.selected;render();
   if(id==='food'){foodFeedback?.undo(state.mistakes);status(caption?.message||'');}else status('Действие отменено.');modes.changed();scheduleSettle();
+  if(id==='yarn'){const node=state.points.findIndex((p,i)=>p.x!==previous.points[i].x||p.y!==previous.points[i].y);actionFeedback.emit('yarn.undo',{target:scene.querySelector('#node-'+node),material:'cloth'});}
 }
-function pause(){if(paused||platformPaused||win.open||state.won&&!routeWalking)return;paused=true;syncRouteMotion();cancelSettle();endDrag();$('#pause-dialog').showModal();window.dispatchEvent(new Event('corio:pause'));stopSandSound();if(audio)audio.suspend();}
+function pause(){if(paused||platformPaused||win.open||state.won&&!routeWalking)return;actionFeedback.cancel();paused=true;syncRouteMotion();cancelSettle();endDrag();$('#pause-dialog').showModal();window.dispatchEvent(new Event('corio:pause'));}
 function resume(){paused=false;if($('#pause-dialog').open)$('#pause-dialog').close();syncRouteMotion();scheduleSettle();window.dispatchEvent(new Event('corio:resume'));}
-function stopSandSound(){if(sandSource){try{sandSource.stop();}catch{}sandSource.disconnect();sandSource=null;}}
-function sandSound(){
-  if(!sfx)return;
-  try{
-    audio??=new(window.AudioContext||window.webkitAudioContext)();audio.resume();stopSandSound();
-    if(!sandBuffer){const duration=.17;sandBuffer=audio.createBuffer(1,Math.ceil(audio.sampleRate*duration),audio.sampleRate);const data=sandBuffer.getChannelData(0);for(let i=0;i<data.length;i++){const t=i/data.length;data[i]=(Math.random()*2-1)*Math.sin(Math.PI*t)**1.5*(.7+.3*Math.sin(i*.018));}}
-    const source=audio.createBufferSource(),filter=audio.createBiquadFilter(),gain=audio.createGain();sandSource=source;source.buffer=sandBuffer;filter.type='lowpass';filter.frequency.value=1050;gain.gain.value=.065;source.connect(filter);filter.connect(gain);gain.connect(audio.destination);source.onended=()=>{source.disconnect();filter.disconnect();gain.disconnect();if(sandSource===source)sandSource=null;};source.start();
-  }catch{}
-}
 scene.addEventListener('click',event=>{
   if(drag||blocked()||performance.now()<ignoreClickUntil&&!(id==='food'&&event.target.closest('[data-bin]')))return;
   if(event.target.closest('[data-crossing]')){status('Здесь два отдельных тоннеля: слева направо и сверху вниз. Повернуть между ними нельзя.');return;}
   const food=event.target.closest('[data-food]'),bin=event.target.closest('[data-bin]'),piece=event.target.closest('[data-piece]'),spot=event.target.closest('[data-spot]'),cell=event.target.closest('[data-cell]');
-  if(id==='search'){if(event.target.closest('[data-cat-react]')){searchLife.callCat();return;}const find=event.target.closest('[data-find]');if(find||event.target.closest('.search-viewport svg'))commit({type:'find',item:find?.dataset.find||null});return;}
+  if(id==='search'){if(event.target.closest('[data-cat-react]')){searchLife.callCat();return;}const find=event.target.closest('[data-find]');if(find||event.target.closest('.search-viewport svg'))commit({type:'find',item:find?.dataset.find||null},{point:{x:event.clientX,y:event.clientY}});return;}
   if(food&&food.dataset.exposed!=='true')return;
   if(food)selectFood(+food.dataset.food);
   if(bin){if(selected!==null)commit({type:'sort',item:selected,bin:bin.dataset.bin});}
@@ -185,21 +236,20 @@ scene.addEventListener('keydown',event=>{
   if(node&&event.key.startsWith('Arrow')){event.preventDefault();const index=+node.dataset.node,p=state.points[index],dx=event.key==='ArrowLeft'?-3:event.key==='ArrowRight'?3:0,dy=event.key==='ArrowUp'?-3:event.key==='ArrowDown'?3:0;commit({type:'move',node:index,x:p.x+dx,y:p.y+dy});}
 });
 tools.addEventListener('click',event=>{
-  if(event.target.closest('[data-sfx]')){sfx=!sfx;if(!sfx)stopSandSound();try{localStorage.setItem('corio-litter-sfx-v1',sfx?'on':'off');}catch{}render();return;}
   if(blocked())return;const tool=event.target.closest('[data-tool]'),care=event.target.closest('[data-care]');
   const zoom=event.target.closest('[data-zoom]');if(zoom){selected=Math.max(1,Math.min(2.5,selected+(zoom.dataset.zoom==='in'?.5:-.5)));render();}
-  if(event.target.closest('[data-hint]')){commit({type:'hint'});if(state.hint)document.getElementById('find-'+state.hint)?.scrollIntoView({block:'nearest',inline:'center',behavior:'auto'});}
-  if(tool){if(id==='grooming')endDrag();if(tool.dataset.tool==='pause'){commit({type:'pause'});return;}selected=tool.dataset.tool;render();}
+  if(event.target.closest('[data-hint]'))commit({type:'hint'});
+  if(tool){if(id==='grooming')endDrag();if(tool.dataset.tool==='pause'){commit({type:'pause'});return;}const changed=selected!==tool.dataset.tool;selected=tool.dataset.tool;render();if(id==='grooming'&&changed)actionFeedback.emit('grooming.tool',{target:document.getElementById('tool-'+selected)});}
   if(care)commit({type:care.dataset.care});
 });
-function pointFor(event){const r=scene.querySelector('.yarn-board').getBoundingClientRect();return{x:(event.clientX-r.left)/r.width*100,y:(event.clientY-r.top)/r.height*100};}
+function pointFor(event){const r=scene.querySelector('.yarn-board').getBoundingClientRect();return{x:(event.clientX-r.left)/r.width*100,y:(event.clientY-r.top)/r.height*100,width:r.width,height:r.height};}
 function careProgress(value){if(careGesture){careGesture.dataset.careProgress=String(value);careGesture.style.setProperty('--care-progress',String(value));}}
 function rubCare(holder,point){
   const at=document.elementFromPoint(point.x,point.y)?.closest('[data-spot]');
   const zone=at?Number(at.dataset.spot):null;
   const sample={...point,zone:state.patience>0?zone:null};
   const next=advanceGroomRub(holder.stroke,sample);holder.stroke=next.rub;careProgress(next.progress);
-  if(next.ready&&zone!==null){const before=state.workDone;commit({type:'clean',spot:zone,tool:holder.tool});careProgress(0);const mark=state.spots.find(s=>s.id===zone);if(state.workDone===before||state.patience===0||!mark||GROOM_STEPS[mark.kind][0]!==holder.tool)endDrag();}
+  if(next.ready&&zone!==null){const before=state.workDone;commit({type:'clean',spot:zone,tool:holder.tool},{point:{x:point.x,y:point.y}});careProgress(0);const mark=state.spots.find(s=>s.id===zone);if(state.workDone===before||state.patience===0||!mark||GROOM_STEPS[mark.kind][0]!==holder.tool)endDrag(false);}
 }
 scene.addEventListener('pointerdown',event=>{
   if(drag||event.isPrimary===false||event.button!==0||blocked()||state.won)return;
@@ -208,14 +258,14 @@ scene.addEventListener('pointerdown',event=>{
   const pixelTarget=id==='food'||id==='yarn'||id==='grooming'?(document.elementFromPoint(event.clientX,event.clientY)||event.target):event.target;
   const node=pixelTarget.closest('[data-node]'),food=pixelTarget.closest('[data-food]');
   if(id==='food'&&food&&food.dataset.exposed!=='true'){ignoreClickUntil=performance.now()+350;return;}
-  if(node){event.preventDefault();const at=pointFor(event),index=+node.dataset.node;drag={type:'yarn',pointer:event.pointerId,node:index,start:at,original:{...state.points[index]},preview:structuredClone(state.points)};scene.setPointerCapture(event.pointerId);}
+  if(node){event.preventDefault();const at=pointFor(event),index=+node.dataset.node;drag={type:'yarn',pointer:event.pointerId,node:index,start:at,original:{...state.points[index]},preview:structuredClone(state.points),pullDistance:0,lastPull:performance.now()};scene.setPointerCapture(event.pointerId);actionFeedback.emit('yarn.pick',{target:node});}
   else if(food&&food.dataset.exposed==='true'){drag={type:'food',pointer:event.pointerId,item:+food.dataset.food,x:event.clientX,y:event.clientY,element:food,active:false,noteMessage:$('#status').textContent};scene.setPointerCapture(event.pointerId);}
   else if(id==='grooming'&&pixelTarget.closest('.care-cat-wrap')){event.preventDefault();careKeyboard=null;drag={type:'brush',pointer:event.pointerId,tool:selected,stroke:beginGroomRub({x:event.clientX,y:event.clientY,time:event.timeStamp,zone:pixelTarget.closest('[data-spot]')?Number(pixelTarget.closest('[data-spot]').dataset.spot):null})};scene.setPointerCapture(event.pointerId);startCareGesture(event);}
 });
 scene.addEventListener('pointermove',event=>{
   if(!drag||event.pointerId!==drag.pointer||blocked())return;
   if((drag.type==='food'||drag.type==='yarn'||drag.type==='brush')&&event.pointerType==='mouse'&&event.buttons===0){endDrag();return;}
-  if(drag.type==='yarn'){event.preventDefault();const at=pointFor(event);drag.preview[drag.node]={x:Math.max(8,Math.min(92,drag.original.x+at.x-drag.start.x)),y:Math.max(8,Math.min(92,drag.original.y+at.y-drag.start.y))};const level=game.levels[state.index];updateYarnPreview(scene,drag.preview,level,drag.node);$('#goal').textContent=goalText(id,{...state,points:drag.preview},level);}
+  if(drag.type==='yarn'){event.preventDefault();const at=pointFor(event),before=drag.preview[drag.node],next={x:Math.max(8,Math.min(92,drag.original.x+at.x-drag.start.x)),y:Math.max(8,Math.min(92,drag.original.y+at.y-drag.start.y))};drag.preview[drag.node]=next;drag.pullDistance+=Math.hypot((next.x-before.x)*at.width/100,(next.y-before.y)*at.height/100);const level=game.levels[state.index];updateYarnPreview(scene,drag.preview,level,drag.node);$('#goal').textContent=goalText(id,{...state,points:drag.preview},level);if(drag.pullDistance>=18&&performance.now()-drag.lastPull>=250){drag.pullDistance=0;drag.lastPull=performance.now();actionFeedback.emit('yarn.pull',{visual:'none'});}}
   if(drag.type==='brush'){event.preventDefault();moveCareGesture(event);rubCare(drag,{x:event.clientX,y:event.clientY,time:event.timeStamp});}
   if(drag?.type==='food'){
     if(!drag.active&&Math.hypot(event.clientX-drag.x,event.clientY-drag.y)>8){
@@ -226,12 +276,14 @@ scene.addEventListener('pointermove',event=>{
       document.body.append(item);
       $('#food-info').innerHTML=renderFoodInfo(state,drag.item);
       status('');
+      item.style.left=(event.clientX-drag.offsetX)+'px';item.style.top=(event.clientY-drag.offsetY)+'px';
+      showFoodDropCues();actionFeedback.emit('food.pick',{target:item});
     }
     if(drag.active){event.preventDefault();drag.element.style.left=(event.clientX-drag.offsetX)+'px';drag.element.style.top=(event.clientY-drag.offsetY)+'px';}
   }
 });
 scene.addEventListener('pointerup',event=>{
-  if(!drag||event.pointerId!==drag.pointer)return;const current=drag;restoreFoodDrag(current);drag=null;
+  if(!drag||event.pointerId!==drag.pointer)return;const current=drag;clearFoodDropCues();restoreFoodDrag(current);drag=null;
   if(current.type==='yarn'){ignoreClickUntil=performance.now()+200;const p=current.preview[current.node];commit({type:'move',node:current.node,...p});render();}
   if(current.type==='food'){ignoreClickUntil=performance.now()+200;if(current.active){status(selected===current.item?current.noteMessage:'');selected=current.item;const bin=document.elementFromPoint(event.clientX,event.clientY)?.closest('[data-bin]');if(bin)commit({type:'sort',item:current.item,bin:bin.dataset.bin});else{status('');render();}}else selectFood(current.item);}
   if(current.type==='brush'){clearCareGesture();ignoreClickUntil=performance.now()+200;}
@@ -251,11 +303,12 @@ if(manyLevels)$('#level-grid').innerHTML=game.levels.map((_,index)=>levelButton(
 else $('#levels').innerHTML=game.levels.map((_,index)=>levelButton(index)).join('');
 const levelClick=event=>{const b=event.target.closest('[data-level]');if(b){load(+b.dataset.level);b.closest('dialog')?.close();}};
 $('#levels').addEventListener('click',levelClick);$('#level-grid')?.addEventListener('click',levelClick);
-document.addEventListener('keydown',event=>{if(event.ctrlKey||event.metaKey||event.altKey||settingsOpen()||modes.isModalOpen()||paused||platformPaused)return;if(event.code==='KeyZ'){event.preventDefault();undo();}if(event.code==='KeyR'&&!win.open){event.preventDefault();load(state.index);}});
+document.addEventListener('keydown',event=>{if(event.key==='Escape'&&drag&&(id==='food'||id==='yarn')){event.preventDefault();endDrag();return;}if(event.ctrlKey||event.metaKey||event.altKey||settingsOpen()||modes.isModalOpen()||paused||platformPaused)return;if(event.code==='KeyZ'){event.preventDefault();undo();}if(event.code==='KeyR'&&!win.open){event.preventDefault();load(state.index);}});
 window.addEventListener('blur',pause);document.addEventListener('visibilitychange',()=>{if(document.hidden)pause();});
-window.addEventListener('corio:platform-pause',()=>{platformPaused=true;syncRouteMotion();cancelSettle();endDrag();window.dispatchEvent(new Event('corio:pause'));stopSandSound();if(audio)audio.suspend();});window.addEventListener('corio:platform-resume',()=>{platformPaused=false;syncRouteMotion();scheduleSettle();if(!paused)window.dispatchEvent(new Event('corio:resume'));});
+window.addEventListener('corio:platform-pause',()=>{actionFeedback.cancel();platformPaused=true;syncRouteMotion();cancelSettle();endDrag();window.dispatchEvent(new Event('corio:pause'));});window.addEventListener('corio:platform-resume',()=>{platformPaused=false;syncRouteMotion();scheduleSettle();if(!paused)window.dispatchEvent(new Event('corio:resume'));});
 modes=createModeController({gameId:id,host:$('[data-modes]'),getMoves:()=>state.moves,isWon:()=>state.won,canUndo:()=>history.length>0,onUndo:undo,onRestart:()=>load(state.index),onBlock:endDrag});
 Object.defineProperty(window,'__mini',{value:()=>({...structuredClone(state),selected,paused,platformPaused,routeWalking,best:[...best]})});Object.defineProperty(window,'__corioModes',{value:()=>modes.state()});
+Object.defineProperty(window,'__corioActionFeedback',{value:()=>actionFeedback.state()});
 const requestedLevel=Number(new URL(location.href).searchParams.get('level'));
 let savedLevel=0;if(manyLevels)try{const index=Number(localStorage.getItem(currentLevelKey));if(Number.isInteger(index)&&index>=0&&index<game.levels.length)savedLevel=index;}catch{}
 if(id==='search')searchLife=createSearchLife({scene,isBlocked:blocked});

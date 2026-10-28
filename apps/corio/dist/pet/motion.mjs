@@ -1,5 +1,5 @@
-import {catWalkFrame,setCatWalkFrame} from '../characters.mjs?v=0.25.0';
-import {PET_CAT_SCALE} from './view.mjs?v=0.25.0';
+import {catWalkFrame,setCatWalkFrame} from '../characters.mjs?v=0.26.0';
+import {PET_CAT_SCALE} from './view.mjs?v=0.26.0';
 
 // At most fourteen low-frequency frames per approach; no idle animation loop.
 export function createPetApproach({scene,blocked,onArrive=()=>{}}){

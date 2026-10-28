@@ -1,5 +1,5 @@
-import {PET_RIBBON_SHAPE} from './ribbon-shape.mjs?v=0.25.0';
-import {litterShape} from '../characters.mjs?v=0.25.0';
+import {PET_RIBBON_SHAPE} from './ribbon-shape.mjs?v=0.26.0';
+import {litterShape} from '../characters.mjs?v=0.26.0';
 const asset=file=>new URL('../assets/'+file,import.meta.url).href;
 let serial=0;
 export function petProp(kind,x,y,width,height){
